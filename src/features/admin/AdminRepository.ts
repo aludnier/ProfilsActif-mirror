@@ -1,0 +1,1 @@
+execute toutes les Requetes SQL lies a l'admin 

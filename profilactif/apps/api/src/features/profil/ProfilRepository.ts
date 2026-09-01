@@ -1,0 +1,2 @@
+il execute les requetes sql directement sur la base de données et retourne les résultats au ProfileService. Il est responsable de la gestion des transactions, de l'optimisation des requêtes et de la sécurité des données.
+dans la table profil 

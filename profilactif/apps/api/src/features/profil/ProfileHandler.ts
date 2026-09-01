@@ -1,0 +1,2 @@
+Le but de ce fichier est de gérer les fonctionnalités liées au profil utilisateur dans l'application. Il contient des fonctions et des classes qui permettent de récupérer, mettre à jour et supprimer les informations du profil, ainsi que de gérer les préférences et les paramètres associés à l'utilisateur.
+il recoit les requetes du ProfileHandler et les transmet au ProfileService pour traitement. Il est responsable de la validation des données entrantes, de la gestion des erreurs et de la coordination des différentes opérations liées au profil utilisateur.
