@@ -14,6 +14,7 @@ env:
 
 jobs:
     push-to-mirror:
+        if: github.repository == 'aludnier/ProfilsActif-mirror'
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Code
