@@ -1,1 +1,1 @@
-POOL de connexion SQL pour la base de données
+POOL de connexion SQL pour la base de don
