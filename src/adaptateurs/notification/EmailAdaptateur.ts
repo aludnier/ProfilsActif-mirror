@@ -1,1 +1,0 @@
-envoie un email au candidat quand un recruteur cherche a le contacter

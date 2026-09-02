@@ -1,1 +1,0 @@
-POOL de connexion SQL pour la base de données
