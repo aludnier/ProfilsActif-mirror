@@ -1,1 +1,0 @@
-on enregistre les videos sur le systeme de fichiers et on enregistre les liens dans la base de données
