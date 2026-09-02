@@ -112,8 +112,12 @@ const calculateAge = computed(() => {
   --accent-hover: #c44844;
   --bg: #f4f6f9;
   --border: #e2e5eb;
-  --text: var(--navy);
+  --text: #1B3A6B;
   --text-light: #6b7280;
+}
+
+template {
+  font-family: 'Marianne';
 }
 
 form {
@@ -130,6 +134,7 @@ form {
 
 h1 {
   color: var(--navy);
+  font-family: 'Marianne';
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 24px;
@@ -137,7 +142,8 @@ h1 {
 
 label {
   display: block;
-  font-size: 13px;
+  font-family: 'Spectral';
+  font-size: 15px;
   font-weight: 600;
   color: var(--navy);
   margin-top: 16px;
@@ -176,6 +182,7 @@ select:focus {
 }
 
 ul {
+  font-family: 'Spectral';
   list-style: disc;
   padding: 1;
   margin: 8px 0 0;
@@ -183,6 +190,7 @@ ul {
 }
 
 li {
+  font-family: 'Spectral';
   padding: 2px 0;
 }
 
