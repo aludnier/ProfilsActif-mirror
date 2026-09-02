@@ -14,35 +14,35 @@ export class ErreurApp extends Error {
   }
 }
 
-// aucun jeton, jeton invalide, ou identifiants incorrects. */
+// aucun jeton, jeton invalide, ou identifiants incorrects.
 export class NonAuthentifie extends ErreurApp {
   constructor(message = "Authentification requise", code = 'NON_AUTHENTIFIE') {
     super(401, code, message)
   }
 }
 
-// authentifié, mais le rôle ne permet pas l'action. */
+// authentifié, mais le rôle ne permet pas l'action.
 export class Interdit extends ErreurApp {
   constructor(message = 'Accès refusé', code = 'INTERDIT') {
     super(403, code, message)
   }
 }
 
-// la ressource demandée n'existe pas (ou n'est pas visible). */
+// la ressource demandée n'existe pas (ou n'est pas visible).
 export class NonTrouve extends ErreurApp {
   constructor(message = 'Ressource introuvable', code = 'NON_TROUVE') {
     super(404, code, message)
   }
 }
 
-// conflit avec l'état actuel (email déjà pris, favori en double...). */
+// conflit avec l'état actuel (email déjà pris, favori en double...).
 export class Conflit extends ErreurApp {
   constructor(message = 'Conflit avec une ressource existante', code = 'CONFLIT') {
     super(409, code, message)
   }
 }
 
-// la requête est bien formée mais métier-invalide. */
+// la requête est bien formée mais métier-invalide.
 export class ValidationInvalide extends ErreurApp {
   constructor(message = 'Données invalides', code = 'VALIDATION_INVALIDE') {
     super(422, code, message)
