@@ -1,5 +1,5 @@
 <template>
-  <form>
+  <form @submit="verifySubmit" @keydown.enter.prevent>
     <h1>Inscription</h1>
     <label for="firstName">Prenom</label><br>
     <input id="firstName" v-model="firstName" required/><br>
@@ -11,7 +11,7 @@
     <input id="email" v-model="email" required/><br>
     
     <label for="password">Mot de passe</label><br>
-    <input id="password" type="password" v-model="password" required/><br>
+    <input id="password" type="password" :style="{'border-color': !passwordError ? '' : 'red' }" v-model="password" required/><br>
 
     <div v-if="password.length == 0 || !isPasswordValid">
       <p>le mot de passe doit contenir :</p>
@@ -24,10 +24,10 @@
     </div>
 
     <label v-bind:class="inputError" for="passwordConfirm">Confirmation du mot de passe</label><br>
-    <input id="passwordConfirm" type="password" v-model="confirmPasword" required/><br>
+    <input id="passwordConfirm" :style="{'border-color': !passwordError ? '' : 'red' }" type="password" v-model="confirmPasword" required/><br>
 
     <label for="birthday">Date de naissance</label><br>
-    <input id="birthday" type="date" v-model="birthday" required/><br>
+    <input id="birthday" :style="{'border-color': !AgeError ? '' : 'red' }" type="date" v-model="birthday" required/><br>
     <p id="error" v-if="birthday != null && calculateAge < 18">date de naissance invalide</p>
 
     <label for="Status">Status</label><br>
@@ -37,20 +37,29 @@
       <option value="Recruiter">Recruteur</option>
     </select><br>
     <div v-if="status == 'Seeker'">
-    <label for="location">Location</label><br>
-    <input id="location" v-model="location" required/><br>
-    
-    <label for="sector">Secteur de recherche</label><br>
-    <input id="sector"/><br>
+      <label for="location">Location</label><br>
+      <input id="location" v-model="location" required/><br>
+      
+      <label for="sector">Secteur de recherche</label><br>
+      <input id="sector"/><br>
 
-    <label for="skills">Skills</label><br>
-    <input id="skills" v-model="tempSkill" @keyup.enter="addSkill"/><br>
-    <p>{{ skills }}</p>
+      <label for="skills">Skills</label><br>
+      <input id="skills" v-model="tempSkill" @keyup.enter="addSkill"/><br>
+
+      <div class="skills-list">
+        <span class="skill-tag" v-for="(skill, index) in skills" :key="index">
+          {{ skill }}
+          <button type="button" class="skill-remove" @click="removeSkill(index)">✕</button>
+        </span>
+      </div>
     </div>
     <div>
       <input type="checkbox" v-model="CGU" required>
       <label>Accepter les conditions d'utilisation</label>
     </div>
+
+    <button type="submit">Créer le compte</button>
+
   </form>
 </template>
 
@@ -80,11 +89,16 @@ const isPasswordValid = computed(() => {
   )
 })
 
-const addSkill = computed(() => {
+function addSkill(){
   if (tempSkill != "")
   skills.value.push(tempSkill.value)
   tempSkill.value = ""
-})
+}
+
+
+function removeSkill(index) {
+  skills.value.splice(index, 1)
+}
 
 const calculateAge = computed(() => {
   if (!birthday.value) return null
@@ -102,16 +116,35 @@ const calculateAge = computed(() => {
   return age
 })
 
+const passwordError = ref(false)
+const AgeError = ref(false)
+
+function verifySubmit(event) {
+  event.preventDefault()
+
+  passwordError.value = false
+  AgeError.value = false
+
+  if (!isPasswordValid.value || password.value !== confirmPasword.value) {
+    passwordError.value = true
+  }
+  if (calculateAge.value < 16) {
+    AgeError.value = true
+  }
+
+  if (passwordError.value || AgeError.value) {
+    return
+  }
+}
 </script>
 
 <style>
 :root {
-  --navy: #1a2b4a;
-  --navy-light: #2c4270;
+  --navy: #1B3A6B;
+  --navy-light: #253e66;
   --accent: #d9534f;
   --accent-hover: #c44844;
   --bg: #f4f6f9;
-  --border: #e2e5eb;
   --text: #1B3A6B;
   --text-light: #6b7280;
 }
@@ -126,7 +159,7 @@ form {
   padding: 32px;
   background: #fff;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--navy);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
@@ -163,7 +196,7 @@ input,
 select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--navy-light);
   border-radius: 8px;
   background: var(--bg);
   font-size: 14px;
@@ -207,7 +240,6 @@ p#error {
   margin-top: 4px;
 }
 
-/* Checkbox CGU */
 div input[type="checkbox"] {
   width: auto;
   margin-right: 8px;
@@ -227,7 +259,48 @@ form > div:last-of-type label {
   color: var(--text);
 }
 
-/* Bouton de soumission (à ajouter dans le template si besoin) */
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 16px;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--navy);
+  color: #fff;
+  font-family: 'Spectral';
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px 6px 14px;
+  border-radius: 5px;
+  line-height: 1;
+}
+
+.skill-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--navy-light);
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.skill-remove:hover {
+  background: var(--accent);
+}
+
 button[type="submit"] {
   width: 100%;
   margin-top: 24px;
