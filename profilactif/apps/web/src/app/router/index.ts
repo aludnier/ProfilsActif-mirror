@@ -32,6 +32,11 @@ const routes: RouteRecordRaw[] = [
     name: 'recruiter-catalog',
     component: () => import('@/features/recruteur/views/CatalogueView.vue'),
   },
+  {
+    path: '/admin/question-edition',
+    name: 'edition-ceritification',
+    component: () => import('@/features/admin/views/GestionQuestionsView.vue'),
+  },
 ];
 
 export const router = createRouter({

@@ -1,7 +1,9 @@
 <template>
-    <label for="question">Question</label><br>
-    <input id="question" v-model="tempQuestion"><br>
-
+  <div class="question-form">
+    <span>
+      <label for="question">Question</label><br>
+      <input id="question" v-model="tempQuestion"><br>
+    </span>
     <label for="Questiontype">Type de question</label>
     <select id="Questiontype" v-model="questionType">
         <option value="personalized">Persionaliser</option>
@@ -20,9 +22,10 @@
         <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
       </span>
     </div>
-    </div>
+  </div>
 
     <button @click="addQuestion">Ajouter la question</button>
+    </div>
     <div class="question-block" v-for="(question, index) in questionary" :key="index">
         <p class="question-title">{{ question }}</p>
         <button type="button" class="answer-remove" @click="removeQuestion(index)">✕</button>
@@ -99,6 +102,18 @@ function removeQuestion(index) {
   --border: #e2e5eb;
   --text: #1B3A6B;
   --text-light: #6b7280;
+}
+
+.question-form {
+  max-width: 100%;
+  text-align: center;
+  padding: 32px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--navy);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  color: var(--text);
 }
 
 label {
