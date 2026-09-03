@@ -19,6 +19,14 @@ export const updateProfilSchema = z.object({
     .nullable()
     .optional(),
 
+  age: z
+    .number()
+    .int('L’âge doit être un nombre entier')
+    .min(0, 'L’âge ne peut pas être négatif')
+    .max(120, 'L’âge ne peut pas dépasser 120 ans')
+    .nullable()
+    .optional(),
+
   location: z
     .string()
     .min(1, 'La localisation est obligatoire')

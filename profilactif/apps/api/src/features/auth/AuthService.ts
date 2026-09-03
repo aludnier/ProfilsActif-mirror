@@ -60,6 +60,8 @@ export class AuthService {
         phone: input.phone ?? null,
         passwordHash,
         role: input.role,
+        location: input.location,
+        targetSector: input.targetSector ?? null,
       })
     } catch (err) {
       // Deux inscriptions simultanées sur le même email : la contrainte UNIQUE

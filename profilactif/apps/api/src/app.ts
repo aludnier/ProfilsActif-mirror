@@ -10,6 +10,7 @@ import { recruiterRoutes } from './features/recruiter/RecruiterRoutes.js'
 import { profilRoutes } from './features/profil/ProfilRoutes.js'
 import { videoRoutes } from './features/video/VideoRoutes.js'
 import { contactRoutes } from './features/contact/ContactRoutes.js'
+import { certificationRoutes } from './features/certification/CertificationRoutes.js'
 
 const app = new Hono()
 
@@ -36,5 +37,6 @@ app.route('/profiles', profilRoutes)
 app.route('/favorites', favoriteRoutes)
 app.route('/videos', videoRoutes)
 app.route('/contacts', contactRoutes)
+app.route('/certifications', certificationRoutes)
 
 export default app
