@@ -52,6 +52,14 @@
             </div>
           </section>
         </div>
+        <div v-if="currentView == 'videos'">
+            <section class="card">
+              <label v-if="videos.length <= 0">Aucune videos</label>
+              <div class="video-frame" v-for="(link, index) in videos" :key="index">
+                <!-- Video player -->
+              </div>
+            </section>
+        </div>
 
           <section class="card">
             <h2>Ma vidéo de présentation</h2>
@@ -59,9 +67,9 @@
             <div class="video-frame">
               <!-- Video player -->
             </div>
-
+            <input class="" v-model="videoLink" placeholder="lien de la video" />
             <div class="video-actions">
-              <button class="btn-light full">Enregistrer à nouveau</button>
+              <button class="btn-light full" v-on:click="changeVideo">Changer de vidéo</button>
               <button class="btn-icon-danger">🗑</button>
             </div>
 
@@ -81,10 +89,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+const videoLink = ref("")
 const currentView = ref("profile")
 const fullname = ref("")
 const headline = ref("")
 const tempSkill = ref("")
+const allVideos = ref([])
 const skills = ref(["Direction Générale", "Affaires Publiques", "Gestion de crise", "Souveraineté numérique"])
 
 function addSkill() {
@@ -93,6 +103,10 @@ function addSkill() {
     skills.value.push(value)
     tempSkill.value = ""
   }
+}
+
+function changeVideo() {
+
 }
 
 function removeSkill(index) {
