@@ -1,15 +1,17 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import BrandFooter from '@/shared/ui/BrandFooter.vue';
+import BrandHeader from '@/shared/ui/BrandHeader.vue';
+</script>
 
 <template>
-  <nav>
-    <router-link :to="{ name: 'home' }">Accueil</router-link>
-    <router-link :to="{ name: 'login' }">Connexion</router-link>
-    <router-link :to="{ name: 'logout' }">Déconnexion</router-link>
-    <router-link :to="{ name: 'signup' }">Inscription</router-link>
-    <router-link :to="{ name: 'candidate-profile', params: { id: '1' } }">Fiche profil candidat</router-link>
-    <router-link :to="{ name: 'recruiter-catalog' }">Catalogue recruteur</router-link>
-    <router-link :to="{ name: 'edition-ceritification' }">Edition des questions</router-link>
-  </nav>
+  <!-- `flex-1` sur <main> garde le pied de page en bas sur les pages courtes. -->
+  <div class="flex min-h-screen flex-col">
+    <BrandHeader />
 
-  <router-view />
+    <main class="flex-1">
+      <router-view />
+    </main>
+
+    <BrandFooter />
+  </div>
 </template>

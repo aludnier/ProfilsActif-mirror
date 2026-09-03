@@ -4,6 +4,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
+    component: () => import('@/features/landing/views/LandingView.vue'),
+  },
+  {
+    path: '/profiles',
+    name: 'profiles',
     component: () => import('@/features/profil/views/FeedView.vue'),
   },
   {
@@ -31,11 +36,6 @@ const routes: RouteRecordRaw[] = [
     path: '/recruiter/catalog',
     name: 'recruiter-catalog',
     component: () => import('@/features/recruteur/views/CatalogueView.vue'),
-  },
-  {
-    path: '/admin/question-edition',
-    name: 'edition-ceritification',
-    component: () => import('@/features/admin/views/GestionQuestionsView.vue'),
   },
 ];
 

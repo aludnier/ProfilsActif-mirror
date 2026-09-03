@@ -1,1 +1,3 @@
-verifier que l'utilisateur a le role addmin maybe by a middlewaree 
+/*
+verifier que l'utilisateur a le role addmin maybe by a middlewaree
+*/
