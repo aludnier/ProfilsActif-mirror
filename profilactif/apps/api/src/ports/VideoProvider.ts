@@ -1,1 +1,3 @@
+/*
 definir avec une classe abstraite les methodes de la video port
+*/

@@ -1,1 +1,3 @@
+/*
 POOL de connexion SQL pour la base de don
+*/
