@@ -1,8 +1,5 @@
 <script setup lang="ts">
-/*
- * Témoignage figé issu de la maquette. Contenu éditorial, pas de la donnée
- * applicative : il n'a pas vocation à venir de l'API.
- */
+
 const temoignage = {
   citation:
     "Le format vidéo a permis à notre service RH de présélectionner des candidats sur leur motivation réelle plutôt que sur la forme de leur CV papier. Une innovation inclusive majeure pour notre agence de l'eau.",
@@ -23,8 +20,6 @@ const temoignage = {
       Récit d'expérience
     </h2>
 
-    <!-- <figure>/<blockquote>/<figcaption> : c'est le balisage prévu pour une
-         citation et son attribution. -->
     <figure class="flex flex-col items-center gap-8">
       <blockquote class="max-w-[800px] text-center text-[24px] italic leading-9 text-brand">
         <p>«&nbsp;{{ temoignage.citation }}&nbsp;»</p>

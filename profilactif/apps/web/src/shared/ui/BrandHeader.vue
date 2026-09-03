@@ -10,17 +10,17 @@ type LienNav = {
 };
 
 /*
- * Les trois derniers libellés viennent de la maquette mais n'ont pas encore de
- * vue : ils sont rendus en texte inerte tant que la route n'existe pas, plutôt
- * qu'en lien mort.
+ * The last three labels come from the mockup but don't have a view yet:
+ * they're rendered as inert text until the route exists, rather than as a
+ * dead link.
  */
 const liensNav: LienNav[] = [
   /*
-   * Pointe sur le catalogue et non sur `profiles` : le feed public
-   * (features/profil/views/FeedView.vue) n'est encore qu'un stub vide, alors
-   * que le catalogue affiche réellement des profils. À rebasculer sur
-   * `profiles` quand le feed existera — les deux vues sont distinctes dans
-   * docs/README.md, le feed étant public et le catalogue réservé au recruteur.
+   * Points at the catalog rather than `profiles`: the public feed
+   * (features/profil/views/FeedView.vue) is still just an empty stub, while
+   * the catalog actually displays profiles. Switch back to `profiles` once
+   * the feed exists — the two views are distinct in docs/README.md, the feed
+   * being public and the catalog reserved for recruiters.
    */
   { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
   { libelle: 'Comment ça marche' },
@@ -37,12 +37,6 @@ function estActif(lien: LienNav): boolean {
 
 <template>
   <header>
-    <!--
-      Le padding interne du Toolbar tient lieu de zone de protection du
-      bloc-marque (règle de marque, cf. CLAUDE.md) : la marge minimale autour du
-      logo est portée par le token du composant, pas par une marge codée à la main.
-      `role` est neutralisé car la sémantique de repère vient du <header> et du <nav>.
-    -->
     <Toolbar
       class="h-header rounded-none border-0 border-b border-surface-line"
       :dt="{
@@ -54,23 +48,12 @@ function estActif(lien: LienNav): boolean {
       :pt="{ root: { role: undefined } }"
     >
       <template #start>
-        <!--
-          Le bloc-marque entier ramène à l'accueil. C'est un lien et non un
-          bouton : l'action est une navigation. `aria-label` remplace le
-          libellé qu'un lecteur d'écran énoncerait sinon en trois morceaux
-          (« République Française ProfilsActifs Service public numérique »).
-        -->
         <router-link
           :to="{ name: 'home' }"
           :aria-current="route.name === 'home' ? 'page' : undefined"
           aria-label="ProfilsActifs, retour à l'accueil"
           class="-mx-2 flex items-center gap-4 rounded-control px-2 py-1 hover:bg-surface-subtle"
         >
-          <!--
-            La maquette fixe ce bloc à 44px de large alors que le libellé y
-            déborde (Figma : texte de 51px posé à x=-3.5). On laisse donc le
-            bloc s'ajuster à son texte, sinon le blanc dépasse sur le fond blanc.
-          -->
           <div
             class="flex h-[54px] min-w-[44px] flex-col items-center gap-0.5 bg-brand px-1 py-1.5 font-heading text-[8px] font-bold uppercase leading-none text-on-brand"
           >
@@ -111,30 +94,12 @@ function estActif(lien: LienNav): boolean {
 
       <template #end>
         <div class="flex items-center gap-3">
-          <!--
-            Ajouts hors maquette : elle ne montre qu'« Espace Recruteur », or
-            sans ces deux entrées les pages de connexion et d'inscription ne
-            sont atteignables qu'en tapant l'URL à la main.
-          -->
           <router-link
             :to="{ name: 'login' }"
             class="font-heading text-[14px] font-medium text-ink hover:text-brand"
           >
             Se connecter
           </router-link>
-
-          <!--
-            Renvoie vers la connexion, pas vers l'annuaire : « Espace
-            Recruteur » est un espace de compte (favoris, prises de contact,
-            tableau de bord), il suppose d'être identifié. Y accéder
-            directement laisserait un visiteur anonyme dans une zone réservée.
-            À faire pointer vers le tableau de bord recruteur une fois
-            l'authentification en place.
-
-            Pastille à fond clair + texte bleu : le bleu institutionnel est
-            interdit en fond de bouton, et la couleur d'action reste réservée aux
-            actions primaires (créer un profil), pas à une entrée de navigation.
-          -->
           <Button
             as="router-link"
             :to="{ name: 'login' }"
@@ -142,7 +107,7 @@ function estActif(lien: LienNav): boolean {
             class="rounded-control border-0 bg-brand-50 px-4 py-3 font-heading text-[14px] font-medium tracking-[0.75px] text-brand hover:bg-brand-100"
           />
 
-          <!-- Action primaire : seule entrée du header sur la couleur d'action. -->
+          <!-- Primary action: the only header entry using the action color. -->
           <Button
             as="router-link"
             :to="{ name: 'signup' }"

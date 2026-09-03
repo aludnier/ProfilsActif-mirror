@@ -19,8 +19,8 @@ defineEmits<{ retirerFiltre: [filtre: string] }>();
         </p>
       </div>
 
-      <!-- La maquette écrit « 1,284 » à l'anglaise, alors que sa propre
-           pagination affiche « 1 284 ». On formate à la française. -->
+      <!-- The mockup writes "1,284" the English way, while its own pagination
+           shows "1 284". We format it the French way. -->
       <p
         class="rounded-badge bg-surface-muted px-3 py-1.5 font-heading text-[13px] font-bold uppercase text-brand"
       >
@@ -41,8 +41,8 @@ defineEmits<{ retirerFiltre: [filtre: string] }>();
           class="flex cursor-pointer items-center"
           @click="$emit('retirerFiltre', filtre)"
         >
-          <!-- Tracé repris de l'export Figma, dont le `stroke` figeait le bleu
-               de marque hors des tokens. -->
+          <!-- Path copied from the Figma export, whose `stroke` hardcoded the
+               brand blue outside the design tokens. -->
           <svg class="size-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
             <path
               d="M7.50012 4.49988L4.49988 7.50012M4.49988 4.49988L7.50012 7.50012M11.0004 6C11.0004 8.76164 8.76164 11.0004 6 11.0004C3.23836 11.0004 0.9996 8.76164 0.9996 6C0.9996 3.23836 3.23836 0.9996 6 0.9996C8.76164 0.9996 11.0004 3.23836 11.0004 6Z"

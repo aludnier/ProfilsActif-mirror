@@ -15,10 +15,11 @@ import { formaterNombre } from '@/shared/formatage';
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue';
 
 /*
- * Profils figés issus de la maquette, en attendant `GET /api/profils` avec
- * ses filtres (la requête vit dans ProfilRepository côté API, cf.
- * docs/README.md : le catalogue ne réimplémente pas le filtrage du feed).
- * L'état de la vue reste dans la vue — pas de store pour ça.
+ * Hardcoded profiles for now, before fetching them from the API. To be
+ * replaced by `GET /api/profils` with its filters (the query lives in
+ * ProfilRepository on the API side, cf. docs/README.md: the catalog does not
+ * reimplement the feed's filtering). View state stays in the view — no store
+ * for this.
  */
 const profils: ProfilResume[] = [
   {
@@ -96,11 +97,11 @@ const profils: ProfilResume[] = [
 ];
 
 /*
- * Les filtres actifs vivent dans la vue, pas dans un store. À terme ils
- * passeront dans la query string (partageable, rechargeable), conformément à
- * docs/README.md — et c'est à ce moment-là qu'ils filtreront réellement la
- * liste. Aujourd'hui les retirer ne change pas les résultats, faute de
- * requête derrière.
+ * Active filters live in the view, not in a store. TODO: implement Pinia to
+ * move this into a store. Eventually they'll also move into the query
+ * string (shareable, reloadable), per docs/README.md — that's when they'll
+ * actually filter the list. Removing one today doesn't change the results,
+ * since there's no request behind it yet.
  */
 const filtresActifs = ref(['Temps plein', 'Hybride', 'Expérience > 5 ans']);
 
@@ -112,10 +113,11 @@ const niveau = ref('Tous niveaux');
 const dureesVideo = ref<string[]>([]);
 
 /*
- * Les six profils ci-dessus représentent la première page d'un catalogue qui
- * en compte 1 284 dans la maquette. Le Paginator est donc réel et navigable,
- * mais changer de page ne rechargera rien tant que `GET /api/profils` n'existe
- * pas : c'est la requête paginée côté API qui fournira les pages suivantes.
+ * TODO: wire up real pagination against `GET /api/profils`. The six
+ * profiles above represent the first page of a catalog that has 1,284
+ * entries in the mockup. The Paginator is real and navigable, but changing
+ * page won't reload anything until `GET /api/profils` exists — the paginated
+ * API query will supply the following pages.
  */
 const TOTAL_PROFILS = 1284;
 const PROFILS_PAR_PAGE = 6;
@@ -150,9 +152,9 @@ const premierProfil = ref(0);
           :dt="{
             background: 'transparent',
             padding: '0',
-            // La maquette met la page courante en bleu plein, ce que les règles
-            // de marque interdisent en fond de bouton. On reprend le motif
-            // « pastille à fond clair + texte bleu » prévu pour ce cas.
+            // The mockup fills the current page with solid blue, which the brand
+            // rules forbid as a button background. Reusing the light-pill-with-
+            // blue-text pattern used for this case elsewhere.
             navButton: {
               selectedBackground: 'var(--color-brand-50)',
               selectedColor: 'var(--color-brand)',
