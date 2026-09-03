@@ -23,7 +23,7 @@ defineProps<{ profil: ProfilResume }>();
   >
     <div class="relative h-[180px] w-full">
       <img :src="profil.miniature" alt="" class="absolute inset-0 size-full object-cover" />
-      <!-- Voile sombre : sans lui, les pastilles ne tiennent pas sur une image claire. -->
+      <!-- Dark overlay: without it, the badges don't hold up against a light image. -->
       <div class="absolute inset-0 bg-black/25" aria-hidden="true" />
 
       <div class="absolute inset-x-0 bottom-0 flex items-center justify-between p-3">
@@ -32,10 +32,6 @@ defineProps<{ profil: ProfilResume }>();
         >
           <span class="sr-only">Durée de la vidéo : </span>{{ profil.dureeVideo }}
         </p>
-        <!--
-          Texte foncé et non blanc sur ce vert : blanc donnerait 2,09:1.
-          Voir --color-on-status-verified dans tokens.css.
-        -->
         <p
           v-if="profil.certifie"
           class="rounded-badge bg-status-verified px-2 py-1 font-heading text-[11px] font-bold uppercase text-on-status-verified"
@@ -55,9 +51,14 @@ defineProps<{ profil: ProfilResume }>();
       </div>
 
       <!--
-        Pas de hauteur fixe ici, contrairement à la maquette qui rogne les
-        compétences au-delà d'une ligne : une compétence masquée est une
-        information perdue. Les cartes restent alignées grâce à l'étirement.
+        No fixed height here, unlike the mockup which clips skills past one
+        line: a hidden skill is lost information. Cards stay aligned thanks
+        to the stretch layout.
+
+        TODO: these hand-rolled badges could be replaced by the PrimeVue Tag
+        (or Chip) component instead of recreating the style from scratch —
+        cf. the "don't recreate existing PrimeVue components" rule in
+        CLAUDE.md.
       -->
       <ul class="flex flex-wrap gap-1.5">
         <li
@@ -78,8 +79,6 @@ defineProps<{ profil: ProfilResume }>();
           class="flex items-center justify-between font-heading text-[13px] font-bold text-action hover:underline"
         >
           Visionner le profil
-          <!-- Tracé repris de l'export Figma ; `currentColor` évite de figer
-               l'accent une seconde fois hors des tokens. -->
           <svg class="size-4 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path
               d="M3.3328 8H12.6672M8 12.6672L12.6672 8L8 3.3328"

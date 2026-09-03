@@ -67,6 +67,14 @@
   --color-status-verified: #28ca9e;
   --color-on-status-verified: #1b1d21;
 
+  /*
+   * Vert de validation, à poser en TEXTE (règle satisfaite, champ valide).
+   * --color-status-verified est une couleur de fond : en texte sur blanc elle
+   * ne donne que 2,28:1. Contrastes mesurés ici : 5,40:1 sur blanc et 4,99:1
+   * sur --color-surface-subtle — AA dans les deux cas.
+   */
+  --color-status-valid: #1e7a34;
+
   /* ---- Typographie ------------------------------------------------------
    * Titres + UI en Marianne, texte courant en Spectral (cf. CLAUDE.md).
    */

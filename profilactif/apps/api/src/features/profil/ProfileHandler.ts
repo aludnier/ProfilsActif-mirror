@@ -1,4 +1,50 @@
-/*
-Le but de ce fichier est de gérer les fonctionnalités liées au profil utilisateur dans l'application. Il contient des fonctions et des classes qui permettent de récupérer, mettre à jour et supprimer les informations du profil, ainsi que de gérer les préférences et les paramètres associés à l'utilisateur.
-il recoit les requetes du ProfileHandler et les transmet au ProfileService pour traitement. Il est responsable de la validation des données entrantes, de la gestion des erreurs et de la coordination des différentes opérations liées au profil utilisateur.
-*/
+import type { Context } from 'hono'
+import { ValidationInvalide } from '../../shared/errors.js'
+import { ProfileService } from './ProfileService.js'
+import { updateProfilSchema } from './ProfilSchema.js'
+
+const profileService = new ProfileService()
+
+export async function getProfilHandler(c: Context) {
+  const id = c.req.param('id')
+
+  if (!id) {
+    throw new ValidationInvalide(
+      'Identifiant de profil invalide',
+      'PROFIL_ID_INVALIDE',
+    )
+  }
+
+  const profil = await profileService.getProfil(id)
+
+  return c.json(profil)
+}
+
+export async function updateProfilHandler(c: Context) {
+  const id = c.req.param('id')
+
+  if (!id) {
+    throw new ValidationInvalide(
+      'Identifiant de profil invalide',
+      'PROFIL_ID_INVALIDE',
+    )
+  }
+
+  const body = await c.req.json()
+
+  const result = updateProfilSchema.safeParse(body)
+
+  if (!result.success) {
+    throw new ValidationInvalide(
+      'Données du profil invalides',
+      'PROFIL_DONNEES_INVALIDES',
+    )
+  }
+
+  const profil = await profileService.updateProfil(
+    id,
+    result.data,
+  )
+
+  return c.json(profil)
+}

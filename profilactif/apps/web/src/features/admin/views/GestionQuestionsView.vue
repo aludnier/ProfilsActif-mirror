@@ -12,47 +12,50 @@
     </select><br>
 
     <div v-if="questionType === 'personalized'">
-    <label for="Answer">Réponses</label><br>
-    <input id="Answer" v-model="tempResponse" @keyup.enter="addanswer"/><br>
+      <label for="Answer">Réponses</label><br>
+      <input id="Answer" v-model="tempResponse" @keyup.enter="addanswer"/><br>
 
-    <p>{{ tempQuestion }}</p>
-    <div class="Answer-list">
-      <span v-for="(response, index) in responses" :key="index" class="Answer-tag">
-        {{ response }}
-        <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
-      </span>
+      <p>{{ tempQuestion }}</p>
+      <div class="Answer-list">
+        <span v-for="(response, index) in responses" :key="index" class="Answer-tag">
+          {{ response }}
+          <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
+        </span>
+      </div>
     </div>
-  </div>
 
     <button @click="addQuestion">Ajouter la question</button>
     </div>
-    <div v-for="(question, index) in questionary" :key="index" class="question-block">
-        <p class="question-title">{{ question }}</p>
-        <button type="button" class="answer-remove" @click="removeQuestion(index)">✕</button>
-        <div class="Answer-list">
-          <span
-            v-for="(response, indexReponse) in questionaryResponses[index]"
-            :key="indexReponse"
-            class="Answer-tag"
-          >
-            {{ response }}
-          </span>
-        </div>
+    <div class="Questionnary-block">
+      <div v-for="(question, index) in questionary" :key="index" class="question-block">
+        <button type="button" class="question-remove" @click="removeQuestion(index)">✕</button>
+          <p class="question-title">{{ question }}</p>
+          <div class="Answer-list">
+            <span
+              v-for="(response, indexReponse) in questionaryResponses[index]"
+              :key="indexReponse"
+              class="Answer-tag"
+            >
+              {{ response }}
+            </span>
+          </div>
+      </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 
+const questionTemplateYesNo = ["Oui", "Non"]
+const questionTemplateScale = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+
 const tempQuestion = ref("")
 const tempResponse = ref("")
 const responses = ref<string[]>([])
-const questionary = ref<string[]>([])
-const questionaryResponses = ref<string[][]>([])
+const questionary = ref<string[]>(["Qui", "Quoi"])
+const questionaryResponses = ref<string[][]>([questionTemplateYesNo, questionTemplateYesNo])
 const questionType = ref("personalized")
 
-const questionTemplateYesNo = ["Oui", "Non"]
-const questionTemplateScale = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 
 function addanswer() {
     if (tempResponse.value == "") {
@@ -116,7 +119,7 @@ function removeQuestion(index: number) {
   border-radius: 12px;
   border: 1px solid var(--navy);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Marianne', 'Spectral', system-ui, sans-serif;
   color: var(--text);
 }
 
@@ -191,7 +194,6 @@ p {
   height: 16px;
   padding: 0;
   border: none;
-  border-radius: 50%;
   background: var(--navy-light);
   color: #fff;
   font-size: 10px;
@@ -220,7 +222,6 @@ button:hover {
   background: var(--accent-hover);
 }
 
-/* Bloc "question ajoutée" */
 div[v-for] > p,
 .question-block p {
   font-family: 'Marianne', sans-serif;
@@ -230,12 +231,41 @@ div[v-for] > p,
 }
 
 .question-block {
-  max-width: 480px;
-  margin: 20px 0;
+  position: relative;
+  max-width: 1000px;
+  margin-top: 60px;
+  margin: 15px;
+  margin-right: 20%;
   padding: 16px;
   background: #fff;
-  border: 1px solid var(--border);
+  border: 1px solid var(--navy);
   border-radius: 10px;
+}
+
+.question-remove {
+  position: absolute;
+  top: 0px;
+  right: 5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: var(--navy-light);
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.Questionnary-block {
+  max-width: 100%;
+  display : grid;
+  padding: 32px;
+  background: #fff;
+  border-radius: 12px;
 }
 
 .question-title {

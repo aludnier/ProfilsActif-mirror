@@ -1,12 +1,5 @@
 <script setup lang="ts">
-/*
- * La maquette annonçait « CONFORME RGPD & RGAA ». La mention RGAA a été
- * retirée : le pied de page déclare l'accessibilité non conforme faute
- * d'audit, les deux se seraient contredits sur la même page.
- *
- * Ces quatre organismes sont rendus en texte, comme dans la maquette : il n'y
- * a pas de fichier de logo à intégrer.
- */
+
 const mentionHebergement = 'Hébergé souverainement en France — conforme RGPD';
 
 const organismes = ['Ministère du Travail', 'France Travail', 'DINUM', 'ANSSI sécurisé'];

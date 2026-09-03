@@ -1,27 +1,24 @@
 <script setup lang="ts">
+import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
+import Drawer from 'primevue/drawer';
 import Toolbar from 'primevue/toolbar';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { RouteLocationNamedRaw } from 'vue-router';
+
+import { useAuth } from '@/shared/stores/auth';
+import { LIBELLES_ROLE } from '@/shared/types/roles';
+import type { Role } from '@/shared/types/roles';
 
 type LienNav = {
   libelle: string;
   to?: RouteLocationNamedRaw;
 };
 
-/*
- * Les trois derniers libellés viennent de la maquette mais n'ont pas encore de
- * vue : ils sont rendus en texte inerte tant que la route n'existe pas, plutôt
- * qu'en lien mort.
- */
+/* Labels without a `to` have no view yet: inert text rather than a dead link. */
 const liensNav: LienNav[] = [
-  /*
-   * Pointe sur le catalogue et non sur `profiles` : le feed public
-   * (features/profil/views/FeedView.vue) n'est encore qu'un stub vide, alors
-   * que le catalogue affiche réellement des profils. À rebasculer sur
-   * `profiles` quand le feed existera — les deux vues sont distinctes dans
-   * docs/README.md, le feed étant public et le catalogue réservé au recruteur.
-   */
+  /* Points at the catalog: the public feed (FeedView.vue) is still an empty stub. */
   { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
   { libelle: 'Comment ça marche' },
   { libelle: 'Institutionnel' },
@@ -33,16 +30,64 @@ const route = useRoute();
 function estActif(lien: LienNav): boolean {
   return lien.to !== undefined && route.name === lien.to.name;
 }
+
+const { utilisateur } = useAuth();
+
+/* Neither the recruiter dashboard nor an admin home has a route yet, so both
+   land on the screen they actually work from. */
+const ROUTE_ESPACE: Record<Role, string> = {
+  demandeur: 'candidate-dashboard',
+  recruteur: 'recruiter-catalog',
+  admin: 'admin-questions',
+};
+
+/*
+ * Everything the header shows about the logged-in user, or `null` when nobody
+ * is logged in. That `null` is the condition the template switches on.
+ */
+const compteConnecte = computed(() => {
+  const compte = utilisateur.value;
+  if (compte === null) {
+    return null;
+  }
+
+  return {
+    initiales: `${compte.prenom.charAt(0)}${compte.nom.charAt(0)}`.toUpperCase(),
+    libelleEspace: `Espace ${LIBELLES_ROLE[compte.role]}`,
+    routeEspace: { name: ROUTE_ESPACE[compte.role] },
+  };
+});
+
+/* Header content needs ~1130px; below `xl` the nav and actions move to the drawer. */
+const menuOuvert = ref(false);
+
+/* Any navigation closes the menu, browser back/forward included. */
+watch(
+  () => route.fullPath,
+  () => {
+    menuOuvert.value = false;
+  },
+);
+
+/* Same threshold as the `xl:` classes (Tailwind's xl = 80rem): widening the
+   window brings the header back, and the drawer would stay stuck open. */
+const widthOffice = window.matchMedia('(min-width: 80rem)');
+
+function fermerSiBureau(evenement: MediaQueryListEvent): void {
+  if (evenement.matches) {
+    menuOuvert.value = false;
+  }
+}
+
+widthOffice.addEventListener('change', fermerSiBureau);
+
+onBeforeUnmount(() => {
+  widthOffice.removeEventListener('change', fermerSiBureau);
+});
 </script>
 
 <template>
   <header>
-    <!--
-      Le padding interne du Toolbar tient lieu de zone de protection du
-      bloc-marque (règle de marque, cf. CLAUDE.md) : la marge minimale autour du
-      logo est portée par le token du composant, pas par une marge codée à la main.
-      `role` est neutralisé car la sémantique de repère vient du <header> et du <nav>.
-    -->
     <Toolbar
       class="h-header rounded-none border-0 border-b border-surface-line"
       :dt="{
@@ -54,23 +99,12 @@ function estActif(lien: LienNav): boolean {
       :pt="{ root: { role: undefined } }"
     >
       <template #start>
-        <!--
-          Le bloc-marque entier ramène à l'accueil. C'est un lien et non un
-          bouton : l'action est une navigation. `aria-label` remplace le
-          libellé qu'un lecteur d'écran énoncerait sinon en trois morceaux
-          (« République Française ProfilsActifs Service public numérique »).
-        -->
         <router-link
           :to="{ name: 'home' }"
           :aria-current="route.name === 'home' ? 'page' : undefined"
           aria-label="ProfilsActifs, retour à l'accueil"
           class="-mx-2 flex items-center gap-4 rounded-control px-2 py-1 hover:bg-surface-subtle"
         >
-          <!--
-            La maquette fixe ce bloc à 44px de large alors que le libellé y
-            déborde (Figma : texte de 51px posé à x=-3.5). On laisse donc le
-            bloc s'ajuster à son texte, sinon le blanc dépasse sur le fond blanc.
-          -->
           <div
             class="flex h-[54px] min-w-[44px] flex-col items-center gap-0.5 bg-brand px-1 py-1.5 font-heading text-[8px] font-bold uppercase leading-none text-on-brand"
           >
@@ -92,7 +126,8 @@ function estActif(lien: LienNav): boolean {
       </template>
 
       <template #center>
-        <nav aria-label="Navigation principale">
+        <!-- Below `xl` the drawer serves these same links. -->
+        <nav aria-label="Navigation principale" class="hidden xl:block">
           <ul class="flex items-center gap-8 font-heading text-[14px]">
             <li v-for="lien in liensNav" :key="lien.libelle">
               <router-link
@@ -110,47 +145,134 @@ function estActif(lien: LienNav): boolean {
       </template>
 
       <template #end>
-        <div class="flex items-center gap-3">
-          <!--
-            Ajouts hors maquette : elle ne montre qu'« Espace Recruteur », or
-            sans ces deux entrées les pages de connexion et d'inscription ne
-            sont atteignables qu'en tapant l'URL à la main.
-          -->
+        <!-- Logged in: avatar + space. Logged out: login + signup. -->
+        <div class="hidden items-center gap-3 xl:flex">
+          <template v-if="compteConnecte">
+            <router-link
+              :to="compteConnecte.routeEspace"
+              class="-mx-2 flex items-center gap-2 rounded-control px-2 py-1 font-heading text-[14px] font-medium text-brand hover:bg-surface-subtle"
+            >
+              <Avatar
+                :label="compteConnecte.initiales"
+                shape="circle"
+                class="bg-brand font-heading text-[13px] font-bold text-on-brand"
+              />
+              {{ compteConnecte.libelleEspace }}
+            </router-link>
+
+            <router-link
+              :to="{ name: 'logout' }"
+              class="font-heading text-[14px] font-medium text-ink hover:text-brand"
+            >
+              Déconnexion
+            </router-link>
+          </template>
+
+          <template v-else>
+            <router-link
+              :to="{ name: 'login' }"
+              class="font-heading text-[14px] font-medium text-ink hover:text-brand"
+            >
+              Se connecter
+            </router-link>
+
+            <!-- Primary action: the only header entry using the action color. -->
+            <Button
+              as="router-link"
+              :to="{ name: 'signup' }"
+              label="Créer un compte"
+              class="rounded-control px-4 py-3 font-heading text-[14px] font-bold tracking-[0.75px]"
+            />
+          </template>
+        </div>
+
+        <!-- Text button: brand blue and the action colour are both barred from a
+             button background here. Inline icon, primeicons isn't installed. -->
+        <Button
+          variant="text"
+          severity="secondary"
+          class="px-3 py-3 text-brand xl:hidden"
+          aria-label="Ouvrir le menu de navigation"
+          aria-controls="menu-principal"
+          :aria-expanded="menuOuvert"
+          @click="menuOuvert = true"
+        >
+          <svg class="size-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M4 7h16M4 12h16M4 17h16"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </Button>
+      </template>
+    </Toolbar>
+
+    <Drawer
+      id="menu-principal"
+      v-model:visible="menuOuvert"
+      position="left"
+      header="Menu"
+      block-scroll
+      class="w-[min(20rem,85vw)]"
+    >
+      <nav aria-label="Menu principal">
+        <ul class="flex flex-col font-heading text-[16px]">
+          <li v-for="lien in liensNav" :key="lien.libelle" class="border-b border-surface-line">
+            <router-link
+              v-if="lien.to"
+              :to="lien.to"
+              :class="estActif(lien) ? 'font-medium text-brand' : 'text-ink hover:text-brand'"
+              :aria-current="estActif(lien) ? 'page' : undefined"
+              class="block py-3"
+            >
+              {{ lien.libelle }}
+            </router-link>
+            <span v-else class="block py-3 text-ink-muted">{{ lien.libelle }}</span>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Same switch as the toolbar: logged in vs logged out. -->
+      <div class="mt-6 flex flex-col gap-3">
+        <template v-if="compteConnecte">
+          <router-link
+            :to="compteConnecte.routeEspace"
+            class="flex items-center gap-3 rounded-control border border-surface-line px-4 py-3 font-heading text-[14px] font-medium text-brand"
+          >
+            <Avatar
+              :label="compteConnecte.initiales"
+              shape="circle"
+              class="bg-brand font-heading text-[13px] font-bold text-on-brand"
+            />
+            {{ compteConnecte.libelleEspace }}
+          </router-link>
+
+          <router-link
+            :to="{ name: 'logout' }"
+            class="rounded-control border border-surface-line px-4 py-3 text-center font-heading text-[14px] font-medium text-ink"
+          >
+            Déconnexion
+          </router-link>
+        </template>
+
+        <template v-else>
           <router-link
             :to="{ name: 'login' }"
-            class="font-heading text-[14px] font-medium text-ink hover:text-brand"
+            class="rounded-control border border-surface-line px-4 py-3 text-center font-heading text-[14px] font-medium text-ink hover:text-brand"
           >
             Se connecter
           </router-link>
 
-          <!--
-            Renvoie vers la connexion, pas vers l'annuaire : « Espace
-            Recruteur » est un espace de compte (favoris, prises de contact,
-            tableau de bord), il suppose d'être identifié. Y accéder
-            directement laisserait un visiteur anonyme dans une zone réservée.
-            À faire pointer vers le tableau de bord recruteur une fois
-            l'authentification en place.
-
-            Pastille à fond clair + texte bleu : le bleu institutionnel est
-            interdit en fond de bouton, et la couleur d'action reste réservée aux
-            actions primaires (créer un profil), pas à une entrée de navigation.
-          -->
-          <Button
-            as="router-link"
-            :to="{ name: 'login' }"
-            label="Espace Recruteur"
-            class="rounded-control border-0 bg-brand-50 px-4 py-3 font-heading text-[14px] font-medium tracking-[0.75px] text-brand hover:bg-brand-100"
-          />
-
-          <!-- Action primaire : seule entrée du header sur la couleur d'action. -->
           <Button
             as="router-link"
             :to="{ name: 'signup' }"
             label="Créer un compte"
-            class="rounded-control px-4 py-3 font-heading text-[14px] font-bold tracking-[0.75px]"
+            class="justify-center rounded-control px-4 py-3 font-heading text-[14px] font-bold tracking-[0.75px]"
           />
-        </div>
-      </template>
-    </Toolbar>
+        </template>
+      </div>
+    </Drawer>
   </header>
 </template>
