@@ -17,7 +17,7 @@
 
     <p>{{ tempQuestion }}</p>
     <div class="Answer-list">
-      <span class="Answer-tag" v-for="(response, index) in responses" :key="index">
+      <span v-for="(response, index) in responses" :key="index" class="Answer-tag">
         {{ response }}
         <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
       </span>
@@ -26,25 +26,29 @@
 
     <button @click="addQuestion">Ajouter la question</button>
     </div>
-    <div class="question-block" v-for="(question, index) in questionary" :key="index">
+    <div v-for="(question, index) in questionary" :key="index" class="question-block">
         <p class="question-title">{{ question }}</p>
         <button type="button" class="answer-remove" @click="removeQuestion(index)">✕</button>
         <div class="Answer-list">
-          <span class="Answer-tag" v-for="response in questionaryResponses[index]">
+          <span
+            v-for="(response, indexReponse) in questionaryResponses[index]"
+            :key="indexReponse"
+            class="Answer-tag"
+          >
             {{ response }}
           </span>
         </div>
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 
 const tempQuestion = ref("")
 const tempResponse = ref("")
-const responses = ref([])
-const questionary = ref([])
-const questionaryResponses = ref([])
+const responses = ref<string[]>([])
+const questionary = ref<string[]>([])
+const questionaryResponses = ref<string[][]>([])
 const questionType = ref("personalized")
 
 const questionTemplateYesNo = ["Oui", "Non"]
@@ -81,11 +85,11 @@ function addQuestion() {
     responses.value = []
 }
 
-function removeAnswer(index) {
+function removeAnswer(index: number) {
   responses.value.splice(index, 1)
 }
 
-function removeQuestion(index) {
+function removeQuestion(index: number) {
   questionary.value.splice(index, 1)
   questionaryResponses.value.splice(index, 1)
 }

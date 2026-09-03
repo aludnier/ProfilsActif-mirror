@@ -27,7 +27,9 @@ const colonnes: ColonnePied[] = [
   {
     titre: 'Recruteurs',
     liens: [
-      { libelle: 'Accéder à la base', to: { name: 'recruiter-catalog' } },
+      // Même raison qu'« Espace Recruteur » dans le header : accéder à la base
+      // suppose un compte recruteur, donc on passe par la connexion.
+      { libelle: 'Accéder à la base', to: { name: 'login' } },
       { libelle: "Charte d'éthique" },
       { libelle: 'Partenariats publics' },
     ],

@@ -1,17 +1,23 @@
 <template>
   <form @submit="verifySubmit" @keydown.enter.prevent>
     <h1>Inscription</h1>
-    <label for="firstName">Prenom</label><br>
-    <input id="firstName" v-model="firstName" required/><br>
-    
-    <label for="lastName">Nom</label><br>
-    <input id="lastName" v-model="lastName" required/><br>
-    
-    <label for="email">Email</label><br>
-    <input id="email" v-model="email" required/><br>
-    
-    <label for="password">Mot de passe</label><br>
-    <input id="password" type="password" :style="{'border-color': !passwordError ? '' : 'red' }" v-model="password" required/><br>
+    <label for="firstName">Prenom</label><br />
+    <input id="firstName" v-model="firstName" required /><br />
+
+    <label for="lastName">Nom</label><br />
+    <input id="lastName" v-model="lastName" required /><br />
+
+    <label for="email">Email</label><br />
+    <input id="email" v-model="email" required /><br />
+
+    <label for="password">Mot de passe</label><br />
+    <input
+      id="password"
+      v-model="password"
+      type="password"
+      :style="{ 'border-color': !passwordError ? '' : 'red' }"
+      required
+    /><br />
 
     <div v-if="password.length == 0 || !isPasswordValid">
       <p>le mot de passe doit contenir :</p>
@@ -23,129 +29,180 @@
       </ul>
     </div>
 
-    <label v-bind:class="inputError" for="passwordConfirm">Confirmation du mot de passe</label><br>
-    <input id="passwordConfirm" :style="{'border-color': !passwordError ? '' : 'red' }" type="password" v-model="confirmPasword" required/><br>
+    <!-- `inputError` n'existait nulle part dans le script : la classe valait
+         toujours undefined. Liaison morte retirée — à réimplémenter si un
+         état visuel était prévu sur ce libellé. -->
+    <label for="passwordConfirm">Confirmation du mot de passe</label><br />
+    <input
+      id="passwordConfirm"
+      v-model="confirmPasword"
+      :style="{ 'border-color': !passwordError ? '' : 'red' }"
+      type="password"
+      required
+    /><br />
 
-    <label for="birthday">Date de naissance</label><br>
-    <input id="birthday" :style="{'border-color': !AgeError ? '' : 'red' }" type="date" v-model="birthday" required/><br>
-    <p id="error" v-if="birthday != null && calculateAge < 18">date de naissance invalide</p>
+    <label for="birthday">Date de naissance</label><br />
+    <input
+      id="birthday"
+      v-model="birthday"
+      :style="{ 'border-color': !AgeError ? '' : 'red' }"
+      type="date"
+      required
+    /><br />
+    <!-- Le template testait 18 ans et le script 16 : les deux seuils sont
+         désormais la même constante. -->
+    <p v-if="calculateAge !== null && calculateAge < AGE_MINIMUM" id="error">
+      date de naissance invalide
+    </p>
 
-    <label for="Status">Status</label><br>
+    <label for="Status">Status</label><br />
     <select id="Status" v-model="status">
       <option value="">--choisir un status--</option>
       <option value="Seeker">Chercheur d'emplois</option>
-      <option value="Recruiter">Recruteur</option>
-    </select><br>
+      <option value="Recruiter">Recruteur</option></select
+    ><br />
     <div v-if="status == 'Seeker'">
-      <label for="location">Location</label><br>
-      <input id="location" v-model="location" required/><br>
-      
-      <label for="sector">Secteur de recherche</label><br>
-      <input id="sector"/><br>
+      <label for="location">Location</label><br />
+      <input id="location" v-model="location" required /><br />
 
-      <label for="skills">Skills</label><br>
-      <input id="skills" v-model="tempSkill" @keyup.enter="addSkill"/><br>
+      <label for="sector">Secteur de recherche</label><br />
+      <input id="sector" /><br />
+
+      <label for="skills">Skills</label><br />
+      <input id="skills" v-model="tempSkill" @keyup.enter="addSkill" /><br />
 
       <div class="skills-list">
-        <span class="skill-tag" v-for="(skill, index) in skills" :key="index">
+        <span v-for="(skill, index) in skills" :key="index" class="skill-tag">
           {{ skill }}
           <button type="button" class="skill-remove" @click="removeSkill(index)">✕</button>
         </span>
       </div>
     </div>
     <div>
-      <input type="checkbox" v-model="CGU" required>
+      <input v-model="CGU" type="checkbox" required />
       <label>Accepter les conditions d'utilisation</label>
     </div>
 
     <button type="submit">Créer le compte</button>
-
   </form>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 
-const firstName = ref("")
-const lastName = ref("")
-const email = ref("")
-const password = ref("")
-const confirmPasword = ref("")
-const birthday = ref(null)
-const status = ref("")
-const CGU = ref(false)
-const character = /[ `!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/
-const location = ref("")
-const tempSkill = ref("")
-const skills = ref([])
+const router = useRouter();
+
+/*
+ * Âge minimum requis. Le template affichait 18 et le script en validait 16 :
+ * une seule constante désormais, pour que les deux ne redivergent pas.
+ * 16 ans est l'âge légal minimum de travail en France.
+ */
+const AGE_MINIMUM = 16;
+
+const firstName = ref('');
+const lastName = ref('');
+const email = ref('');
+const password = ref('');
+const confirmPasword = ref('');
+const birthday = ref<string | null>(null);
+const status = ref('');
+const CGU = ref(false);
+const character = /[ `!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
+const location = ref('');
+const tempSkill = ref('');
+const skills = ref<string[]>([]);
 
 const isPasswordValid = computed(() => {
-
   return (
     password.value.length >= 8 &&
     /[0-9]/.test(password.value) &&
     /[A-Z]/.test(password.value) &&
     character.test(password.value)
-  )
-})
+  );
+});
 
-function addSkill(){
-  if (tempSkill != "")
-  skills.value.push(tempSkill.value)
-  tempSkill.value = ""
+function addSkill() {
+  /*
+   * Le test portait sur `tempSkill` et non sur `tempSkill.value` : on comparait
+   * l'objet Ref à une chaîne, jamais égaux, donc la condition était toujours
+   * vraie et une compétence vide pouvait être ajoutée.
+   */
+  if (tempSkill.value !== '') {
+    skills.value.push(tempSkill.value);
+  }
+  tempSkill.value = '';
 }
 
-
-function removeSkill(index) {
-  skills.value.splice(index, 1)
+function removeSkill(index: number) {
+  skills.value.splice(index, 1);
 }
 
 const calculateAge = computed(() => {
-  if (!birthday.value) return null
-  
-  const dob = new Date(birthday.value)
-  const today = new Date()
-  
-  let age = today.getFullYear() - dob.getFullYear()
-  const monthDiff = today.getMonth() - dob.getMonth()
-  
+  if (!birthday.value) return null;
+
+  const dob = new Date(birthday.value);
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-    age--
+    age--;
   }
-  
-  return age
-})
 
-const passwordError = ref(false)
-const AgeError = ref(false)
+  return age;
+});
 
-function verifySubmit(event) {
-  event.preventDefault()
+const passwordError = ref(false);
+const AgeError = ref(false);
 
-  passwordError.value = false
-  AgeError.value = false
+function verifySubmit(event: Event) {
+  event.preventDefault();
+
+  passwordError.value = false;
+  AgeError.value = false;
 
   if (!isPasswordValid.value || password.value !== confirmPasword.value) {
-    passwordError.value = true
+    passwordError.value = true;
   }
-  if (calculateAge.value < 16) {
-    AgeError.value = true
+  /*
+   * `calculateAge` vaut null tant qu'aucune date n'est saisie, et `null < 16`
+   * est vrai en JavaScript : le cas « pas de date » est traité explicitement
+   * plutôt que de reposer sur cette coercition.
+   */
+  if (calculateAge.value === null || calculateAge.value < AGE_MINIMUM) {
+    AgeError.value = true;
   }
 
   if (passwordError.value || AgeError.value) {
-    return
+    return;
   }
+
+  /*
+   * Destination selon le rôle : un candidat vient de créer un compte dont le
+   * profil est vide, on l'amène donc là où il peut le compléter ; un recruteur
+   * veut l'annuaire, immédiatement utilisable. Renvoyer sur l'accueil
+   * ramènerait sur la page d'argumentaire juste après la conversion.
+   *
+   * ATTENTION — aucun compte n'est réellement créé : POST /api/auth/inscription
+   * n'existe pas. Cette navigation est à déplacer après la réponse de l'API,
+   * pour ne pas laisser croire à un succès en cas d'échec (e-mail déjà pris).
+   */
+  router.push(
+    status.value === 'Recruiter' ? { name: 'recruiter-catalog' } : { name: 'candidate-dashboard' },
+  );
 }
 </script>
 
 <style>
 :root {
-  --navy: #1B3A6B;
+  --navy: #1b3a6b;
   --navy-light: #253e66;
   --accent: #d9534f;
   --accent-hover: #c44844;
   --bg: #f4f6f9;
-  --text: #1B3A6B;
+  --text: #1b3a6b;
   --text-light: #6b7280;
 }
 
@@ -183,7 +240,6 @@ label {
   margin-bottom: 6px;
 }
 
-
 input:focus,
 select:focus {
   outline: re;
@@ -202,9 +258,10 @@ select {
   font-size: 14px;
   color: var(--text);
   box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
-
 
 input:focus,
 select:focus {
@@ -240,7 +297,7 @@ p#error {
   margin-top: 4px;
 }
 
-div input[type="checkbox"] {
+div input[type='checkbox'] {
   width: auto;
   margin-right: 8px;
   accent-color: var(--navy);
@@ -301,7 +358,7 @@ form > div:last-of-type label {
   background: var(--accent);
 }
 
-button[type="submit"] {
+button[type='submit'] {
   width: 100%;
   margin-top: 24px;
   padding: 12px;
@@ -315,7 +372,7 @@ button[type="submit"] {
   transition: background 0.15s;
 }
 
-button[type="submit"]:hover {
+button[type='submit']:hover {
   background: var(--accent-hover);
 }
 </style>
