@@ -13,6 +13,46 @@ env:
     MIRROR_URL: "git@github.com:EpitechPGE3-2026/G-SVR-500-PAR-5-1-survivor-2.git"
 
 jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+                  cache-dependency-path: |
+                      profilactif/apps/web/package-lock.json
+                      profilactif/apps/api/package-lock.json
+
+            - name: Install web dependencies
+              working-directory: profilactif/apps/web
+              run: npm install
+
+            - name: Build web app
+              working-directory: profilactif/apps/web
+              run: npm run build --if-present
+
+            - name: Install api dependencies
+              working-directory: profilactif/apps/api
+              run: npm install
+
+            - name: Build api app
+              working-directory: profilactif/apps/api
+              run: npm run build --if-present
+
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-build
+                  path: |
+                      profilactif/apps/web/dist
+                      profilactif/apps/api/dist
+                  if-no-files-found: warn
+
     push-to-mirror:
         if: github.repository == 'aludnier/ProfilsActif-mirror'
         runs-on: ubuntu-latest
