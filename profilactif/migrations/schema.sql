@@ -33,6 +33,7 @@ CREATE TABLE `app_user` (
   `status` enum('active','suspended','deleted') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `age` tinyint unsigned DEFAULT NULL,
   PRIMARY KEY (`uuid`),
   UNIQUE KEY `uq_app_user_mail` (`mail`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -44,7 +45,7 @@ CREATE TABLE `app_user` (
 
 LOCK TABLES `app_user` WRITE;
 /*!40000 ALTER TABLE `app_user` DISABLE KEYS */;
-INSERT INTO `app_user` VALUES ('7230192e-a71a-11f1-9986-1cce51bbf125','Jean','Dupont','jean.dupont@test.fr','0612345678','$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890','seeker','active','2026-09-03 00:05:45','2026-09-03 00:05:45');
+INSERT INTO `app_user` VALUES ('7230192e-a71a-11f1-9986-1cce51bbf125','Jean','Dupont','jean.dupont@test.fr','0612345678','$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890','seeker','active','2026-09-03 00:05:45','2026-09-03 00:05:45',NULL);
 /*!40000 ALTER TABLE `app_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -253,4 +254,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-09-03 10:12:21
+-- Dump completed on 2026-09-03 19:24:23

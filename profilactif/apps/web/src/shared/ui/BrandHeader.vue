@@ -7,9 +7,9 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { RouteLocationNamedRaw } from 'vue-router';
 
-import { useAuth } from '@/shared/stores/auth';
+import { useAuthStore } from '@/shared/stores/auth';
 import { LIBELLES_ROLE } from '@/shared/types/roles';
-import type { Role } from '@/shared/types/roles';
+import type { Role } from '@/shared/types/api';
 
 type LienNav = {
   libelle: string;
@@ -31,13 +31,13 @@ function estActif(lien: LienNav): boolean {
   return lien.to !== undefined && route.name === lien.to.name;
 }
 
-const { utilisateur } = useAuth();
+const authStore = useAuthStore();
 
 /* Neither the recruiter dashboard nor an admin home has a route yet, so both
    land on the screen they actually work from. */
 const ROUTE_ESPACE: Record<Role, string> = {
-  demandeur: 'candidate-dashboard',
-  recruteur: 'recruiter-catalog',
+  seeker: 'candidate-dashboard',
+  recruiter: 'recruiter-catalog',
   admin: 'admin-questions',
 };
 
@@ -46,13 +46,13 @@ const ROUTE_ESPACE: Record<Role, string> = {
  * is logged in. That `null` is the condition the template switches on.
  */
 const compteConnecte = computed(() => {
-  const compte = utilisateur.value;
+  const compte = authStore.user;
   if (compte === null) {
     return null;
   }
 
   return {
-    initiales: `${compte.prenom.charAt(0)}${compte.nom.charAt(0)}`.toUpperCase(),
+    initiales: `${compte.firstName.charAt(0)}${compte.lastName.charAt(0)}`.toUpperCase(),
     libelleEspace: `Espace ${LIBELLES_ROLE[compte.role]}`,
     routeEspace: { name: ROUTE_ESPACE[compte.role] },
   };
