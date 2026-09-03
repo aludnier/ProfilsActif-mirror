@@ -17,6 +17,7 @@ const passwordSchema = z
   .max(72, 'Le mot de passe ne peut pas dépasser 72 caractères')
 
 const nameSchema = z.string().trim().min(1, 'Ce champ est requis').max(100, 'Ce champ est trop long')
+const optionalTextSchema = z.string().trim().max(150).optional()
 
 export const signupSchema = z.object({
   firstName: nameSchema,
@@ -25,6 +26,8 @@ export const signupSchema = z.object({
   phone: z.string().trim().max(30).optional(),
   password: passwordSchema,
   role: z.enum(SIGNUP_ROLES),
+  location: optionalTextSchema,
+  targetSector: optionalTextSchema,
 })
 
 export const loginSchema = z.object({

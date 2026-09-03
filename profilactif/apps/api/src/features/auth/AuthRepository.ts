@@ -63,11 +63,42 @@ export class AuthRepository {
     phone: string | null
     passwordHash: string
     role: SignupRole
+    location?: string
+    targetSector?: string | null
   }): Promise<void> {
-    await db.execute(
-      `INSERT INTO app_user (uuid, first_name, last_name, mail, phone, password_hash, role)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [data.id, data.firstName, data.lastName, data.mail, data.phone, data.passwordHash, data.role],
-    )
+    const connection = await db.getConnection()
+
+    try {
+      await connection.beginTransaction()
+
+      await connection.execute(
+        `INSERT INTO app_user (uuid, first_name, last_name, mail, phone, password_hash, role)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [data.id, data.firstName, data.lastName, data.mail, data.phone, data.passwordHash, data.role],
+      )
+
+      if (data.role === 'seeker') {
+        await connection.execute(
+          `INSERT INTO seeker (id, location, target_sector)
+           VALUES (?, ?, ?)`,
+          [data.id, data.location ?? 'Non renseigné', data.targetSector ?? null],
+        )
+      }
+
+      if (data.role === 'recruiter') {
+        await connection.execute(
+          `INSERT INTO recruiter (id)
+           VALUES (?)`,
+          [data.id],
+        )
+      }
+
+      await connection.commit()
+    } catch (err) {
+      await connection.rollback()
+      throw err
+    } finally {
+      connection.release()
+    }
   }
 }

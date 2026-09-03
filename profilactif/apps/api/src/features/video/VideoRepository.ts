@@ -8,6 +8,7 @@ export interface Video extends RowDataPacket {
   seekerId: string
   url: string
   title: string | null
+  description: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -23,6 +24,7 @@ export class VideoRepository {
         seeker_id AS seekerId,
         url,
         title,
+        description,
         created_at AS createdAt,
         updated_at AS updatedAt
       FROM video
@@ -42,6 +44,7 @@ export class VideoRepository {
         seeker_id AS seekerId,
         url,
         title,
+        description,
         created_at AS createdAt,
         updated_at AS updatedAt
       FROM video
@@ -63,15 +66,17 @@ export class VideoRepository {
         id,
         seeker_id,
         url,
-        title
+        title,
+        description
       )
-      VALUES (?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?)
       `,
       [
         id,
         data.seekerId,
         data.url,
         data.title ?? null,
+        data.description ?? null,
       ],
     )
 
@@ -99,6 +104,11 @@ export class VideoRepository {
     if (data.title !== undefined) {
       fields.push('title = ?')
       values.push(data.title)
+    }
+
+    if (data.description !== undefined) {
+      fields.push('description = ?')
+      values.push(data.description)
     }
 
     if (fields.length === 0) {
