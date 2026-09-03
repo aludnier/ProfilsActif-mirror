@@ -37,6 +37,11 @@ const routes: RouteRecordRaw[] = [
     name: 'recruiter-catalog',
     component: () => import('@/features/recruteur/views/CatalogueView.vue'),
   },
+  {
+    path: '/candidate/dashboard',
+    name: 'candidate-dashboard',
+    component: () => import('@/features/profil/views/MonProfilView.vue'),
+  },
 ];
 
 export const router = createRouter({
