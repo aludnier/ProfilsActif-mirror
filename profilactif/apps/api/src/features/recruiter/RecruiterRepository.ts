@@ -1,1 +1,3 @@
+/*
 interroge directement la data base par rapport aux differents filtres SELECT FROM etc
+*/
