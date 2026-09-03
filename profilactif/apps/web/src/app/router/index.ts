@@ -4,6 +4,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
+    component: () => import('@/features/landing/views/LandingView.vue'),
+  },
+  {
+    path: '/profiles',
+    name: 'profiles',
     component: () => import('@/features/profil/views/FeedView.vue'),
   },
   {
