@@ -1,0 +1,5 @@
+node_modules
+dist
+
+# Texte de licence tiers (DSFR) : doit rester verbatim, jamais reformaté.
+apps/web/src/assets/fonts/**/LICENSE*.md
