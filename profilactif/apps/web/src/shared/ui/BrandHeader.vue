@@ -15,7 +15,14 @@ type LienNav = {
  * qu'en lien mort.
  */
 const liensNav: LienNav[] = [
-  { libelle: 'Découvrir les profils', to: { name: 'profiles' } },
+  /*
+   * Pointe sur le catalogue et non sur `profiles` : le feed public
+   * (features/profil/views/FeedView.vue) n'est encore qu'un stub vide, alors
+   * que le catalogue affiche réellement des profils. À rebasculer sur
+   * `profiles` quand le feed existera — les deux vues sont distinctes dans
+   * docs/README.md, le feed étant public et le catalogue réservé au recruteur.
+   */
+  { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
   { libelle: 'Comment ça marche' },
   { libelle: 'Institutionnel' },
   { libelle: 'Aide' },
@@ -47,7 +54,18 @@ function estActif(lien: LienNav): boolean {
       :pt="{ root: { role: undefined } }"
     >
       <template #start>
-        <div class="flex items-center gap-4">
+        <!--
+          Le bloc-marque entier ramène à l'accueil. C'est un lien et non un
+          bouton : l'action est une navigation. `aria-label` remplace le
+          libellé qu'un lecteur d'écran énoncerait sinon en trois morceaux
+          (« République Française ProfilsActifs Service public numérique »).
+        -->
+        <router-link
+          :to="{ name: 'home' }"
+          :aria-current="route.name === 'home' ? 'page' : undefined"
+          aria-label="ProfilsActifs, retour à l'accueil"
+          class="-mx-2 flex items-center gap-4 rounded-control px-2 py-1 hover:bg-surface-subtle"
+        >
           <!--
             La maquette fixe ce bloc à 44px de large alors que le libellé y
             déborde (Figma : texte de 51px posé à x=-3.5). On laisse donc le
@@ -70,7 +88,7 @@ function estActif(lien: LienNav): boolean {
               Service public numérique
             </span>
           </div>
-        </div>
+        </router-link>
       </template>
 
       <template #center>
@@ -92,17 +110,46 @@ function estActif(lien: LienNav): boolean {
       </template>
 
       <template #end>
-        <!--
-          Pastille à fond clair + texte bleu : le bleu institutionnel est
-          interdit en fond de bouton, et la couleur d'action reste réservée aux
-          actions primaires (créer un profil), pas à une entrée de navigation.
-        -->
-        <Button
-          as="router-link"
-          :to="{ name: 'recruiter-catalog' }"
-          label="Espace Recruteur"
-          class="rounded-control border-0 bg-brand-50 px-4 py-3 font-heading text-[14px] font-medium tracking-[0.75px] text-brand hover:bg-brand-100"
-        />
+        <div class="flex items-center gap-3">
+          <!--
+            Ajouts hors maquette : elle ne montre qu'« Espace Recruteur », or
+            sans ces deux entrées les pages de connexion et d'inscription ne
+            sont atteignables qu'en tapant l'URL à la main.
+          -->
+          <router-link
+            :to="{ name: 'login' }"
+            class="font-heading text-[14px] font-medium text-ink hover:text-brand"
+          >
+            Se connecter
+          </router-link>
+
+          <!--
+            Renvoie vers la connexion, pas vers l'annuaire : « Espace
+            Recruteur » est un espace de compte (favoris, prises de contact,
+            tableau de bord), il suppose d'être identifié. Y accéder
+            directement laisserait un visiteur anonyme dans une zone réservée.
+            À faire pointer vers le tableau de bord recruteur une fois
+            l'authentification en place.
+
+            Pastille à fond clair + texte bleu : le bleu institutionnel est
+            interdit en fond de bouton, et la couleur d'action reste réservée aux
+            actions primaires (créer un profil), pas à une entrée de navigation.
+          -->
+          <Button
+            as="router-link"
+            :to="{ name: 'login' }"
+            label="Espace Recruteur"
+            class="rounded-control border-0 bg-brand-50 px-4 py-3 font-heading text-[14px] font-medium tracking-[0.75px] text-brand hover:bg-brand-100"
+          />
+
+          <!-- Action primaire : seule entrée du header sur la couleur d'action. -->
+          <Button
+            as="router-link"
+            :to="{ name: 'signup' }"
+            label="Créer un compte"
+            class="rounded-control px-4 py-3 font-heading text-[14px] font-bold tracking-[0.75px]"
+          />
+        </div>
       </template>
     </Toolbar>
   </header>
