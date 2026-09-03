@@ -1,0 +1,97 @@
+<script setup lang="ts">
+import type { RouteLocationNamedRaw } from 'vue-router';
+
+type LienPied = {
+  libelle: string;
+  to?: RouteLocationNamedRaw;
+};
+
+type ColonnePied = {
+  titre: string;
+  liens: LienPied[];
+};
+
+/*
+ * Même convention que BrandHeader : un libellé sans `to` est rendu en texte
+ * inerte tant que la vue n'existe pas, plutôt qu'en lien mort.
+ */
+const colonnes: ColonnePied[] = [
+  {
+    titre: 'Candidats',
+    liens: [
+      { libelle: 'Créer mon profil vidéo', to: { name: 'signup' } },
+      { libelle: 'Guide de tournage' },
+      { libelle: 'Protection des données' },
+    ],
+  },
+  {
+    titre: 'Recruteurs',
+    liens: [
+      { libelle: 'Accéder à la base', to: { name: 'recruiter-catalog' } },
+      { libelle: "Charte d'éthique" },
+      { libelle: 'Partenariats publics' },
+    ],
+  },
+];
+
+/*
+ * La mention d'accessibilité est une déclaration RGAA à valeur légale : elle
+ * doit refléter le niveau réellement constaté. La maquette annonce
+ * « totalement conforme », mais aucun audit n'a été mené — on affiche donc le
+ * niveau par défaut. À faire évoluer vers « partiellement conforme » puis
+ * « totalement conforme » quand un audit le justifiera, jamais avant.
+ */
+const liensLegaux: LienPied[] = [
+  { libelle: 'Mentions légales' },
+  { libelle: 'Accessibilité : non conforme' },
+  { libelle: 'Données personnelles' },
+];
+
+const annee = new Date().getFullYear();
+</script>
+
+<template>
+  <footer class="flex flex-col items-start gap-10 bg-brand px-gutter pb-12 pt-16">
+    <div class="flex w-full flex-wrap items-start justify-between gap-10">
+      <div class="flex w-[400px] max-w-full flex-col gap-4">
+        <p class="font-heading text-[24px] font-bold text-on-brand">ProfilsActifs</p>
+        <p class="text-[15px] leading-[1.6] text-ink-invert">
+          Une initiative de l'État pour moderniser l'accès à l'emploi. Le profil vidéo permet
+          d'humaniser le premier contact de recrutement de manière éthique, sécurisée et souveraine.
+        </p>
+      </div>
+
+      <nav aria-label="Liens de bas de page" class="flex flex-wrap items-start gap-16">
+        <div v-for="colonne in colonnes" :key="colonne.titre" class="flex flex-col gap-3">
+          <h2 class="font-heading text-[12px] font-bold uppercase tracking-[1px] text-on-brand">
+            {{ colonne.titre }}
+          </h2>
+          <ul class="flex flex-col gap-3 text-[14px] text-ink-invert">
+            <li v-for="lien in colonne.liens" :key="lien.libelle">
+              <router-link v-if="lien.to" :to="lien.to" class="hover:underline">
+                {{ lien.libelle }}
+              </router-link>
+              <span v-else>{{ lien.libelle }}</span>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <span class="h-px w-full bg-ink-invert/20" aria-hidden="true" />
+
+    <div
+      class="flex w-full flex-wrap items-start justify-between gap-4 font-heading text-[12px] text-ink-invert"
+    >
+      <p>© {{ annee }} ProfilsActifs. Un service public numérique développé sous licence libre.</p>
+      <ul class="flex flex-wrap items-start gap-6">
+        <li v-for="lien in liensLegaux" :key="lien.libelle">
+          <router-link v-if="lien.to" :to="lien.to" class="hover:underline">
+            {{ lien.libelle }}
+          </router-link>
+          <span v-else>{{ lien.libelle }}</span>
+        </li>
+      </ul>
+    </div>
+  </footer>
+</template>

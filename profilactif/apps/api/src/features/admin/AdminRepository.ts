@@ -1,1 +1,3 @@
-execute toutes les Requetes SQL lies a l'admin 
+/*
+execute toutes les Requetes SQL lies a l'admin
+*/
