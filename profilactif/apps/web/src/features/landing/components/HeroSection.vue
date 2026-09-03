@@ -46,10 +46,14 @@ import studioVideo from '@/assets/images/hero-studio.webp';
           <img :src="flecheDroite" alt="" class="size-5" />
         </Button>
 
-        <!-- Action secondaire : contour bleu institutionnel, jamais en aplat. -->
+        <!--
+          Action secondaire : contour bleu institutionnel, jamais en aplat.
+          Même destination que « Découvrir les profils » du header : deux
+          libellés identiques doivent mener au même endroit.
+        -->
         <Button
           as="router-link"
-          :to="{ name: 'profiles' }"
+          :to="{ name: 'recruiter-catalog' }"
           class="rounded-control border-2 border-brand bg-transparent px-7 py-4 font-heading text-[16px] font-bold text-brand hover:bg-brand-50"
         >
           Découvrir les profils
