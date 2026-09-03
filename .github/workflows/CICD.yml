@@ -54,6 +54,7 @@ jobs:
                   if-no-files-found: warn
 
     push-to-mirror:
+        needs: build
         if: github.repository == 'aludnier/ProfilsActif-mirror'
         runs-on: ubuntu-latest
         steps:
