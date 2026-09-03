@@ -1,16 +1,14 @@
+// Source unique de vérité des rôles. Doit rester alignée avec l'ENUM
+// `app_user.role` du schéma MySQL et avec le front.
 
- // source unique de vérité des rôles. Doit rester alignée avec l'ENUM l`utilisateur.role` du schéma MySQL et avec le front.
-
-export const ROLES = ['demandeur', 'recruteur', 'admin'] as const
+export const ROLES = ['seeker', 'recruiter', 'admin'] as const
 export type Role = (typeof ROLES)[number]
 
- // un visiteur peut choisir lui-même à l'inscription.
- //`admin` en est volontairement absent : un compte administrateur se crée
- //en base (seed) ou par un autre admin, jamais via l'API publique.
- 
-export const ROLES_INSCRIPTION = ['demandeur', 'recruteur'] as const
-export type RoleInscription = (typeof ROLES_INSCRIPTION)[number]
+// Rôles qu'un visiteur peut choisir lui-même à l'inscription.
+// `admin` en est volontairement absent : ces comptes se créent en base.
+export const SIGNUP_ROLES = ['seeker', 'recruiter'] as const
+export type SignupRole = (typeof SIGNUP_ROLES)[number]
 
-export function estRole(valeur: unknown): valeur is Role {
-  return typeof valeur === 'string' && (ROLES as readonly string[]).includes(valeur)
+export function isRole(value: unknown): value is Role {
+  return typeof value === 'string' && (ROLES as readonly string[]).includes(value)
 }
