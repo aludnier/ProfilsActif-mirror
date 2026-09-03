@@ -232,8 +232,10 @@ div[v-for] > p,
 
 .question-block {
   position: relative;
-  max-width: 480px;
+  max-width: 1000px;
+  margin-top: 60px;
   margin: 15px;
+  margin-right: 20%;
   padding: 16px;
   background: #fff;
   border: 1px solid var(--navy);
