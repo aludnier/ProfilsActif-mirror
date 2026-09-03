@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/shared/stores/auth'
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
-const router = useRouter()
-const authStore = useAuthStore()
+import { useAuth } from '@/shared/stores/auth';
 
+const router = useRouter();
+const { deconnecter } = useAuth();
+
+/* A route rather than a button, so the header only has to link here. */
 onMounted(() => {
-  authStore.logout()
-  router.replace({ name: 'home' })
-})
+  deconnecter();
+  router.replace({ name: 'home' });
+});
 </script>
 
 <template>

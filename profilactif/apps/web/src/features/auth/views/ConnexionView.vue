@@ -1,42 +1,39 @@
 <script setup lang="ts">
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
-import Password from 'primevue/password'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/shared/stores/auth'
-import type { LoginInput } from '@/shared/types/api'
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Message from 'primevue/message';
+import Password from 'primevue/password';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-const router = useRouter()
-const authStore = useAuthStore()
+import { useAuth } from '@/shared/stores/auth';
 
-const email = ref('')
-const motDePasse = ref('')
-const erreur = ref('')
-const isSubmitting = ref(false)
+const router = useRouter();
+const { connecter } = useAuth();
 
-async function seConnecter(): Promise<void> {
-  erreur.value = ''
+const email = ref('');
+const motDePasse = ref('');
+const erreur = ref('');
+
+/*
+ * Only checks that both fields are filled — the credentials are the API's call.
+ * No password-rules checklist here unlike signup: on a login form it only tells
+ * an attacker what to try.
+ */
+function seConnecter(): void {
+  erreur.value = '';
 
   if (email.value.trim() === '' || motDePasse.value === '') {
-    erreur.value = 'Renseignez votre email et votre mot de passe.'
-    return
+    erreur.value = 'Renseignez votre email et votre mot de passe.';
+    return;
   }
 
-  try {
-    isSubmitting.value = true
-    const input: LoginInput = {
-      mail: email.value,
-      password: motDePasse.value,
-    }
-    await authStore.login(input)
-    router.push({ name: 'home' })
-  } catch (err: any) {
-    erreur.value = err.message || 'Erreur de connexion'
-  } finally {
-    isSubmitting.value = false
-  }
+  /*
+   * Placeholder until POST /api/auth/login exists: the API will return the user
+   * and their role. Change the role here to preview the other spaces.
+   */
+  connecter({ prenom: 'Camille', nom: 'Durand', role: 'demandeur' });
+  router.push({ name: 'home' });
 }
 </script>
 
@@ -49,6 +46,7 @@ async function seConnecter(): Promise<void> {
       <h1 class="text-[24px]">Connexion</h1>
       <p class="mt-2 text-[15px] text-ink-muted">Accédez à votre espace ProfilsActifs.</p>
 
+      <!-- Message already carries role="alert" and aria-live="assertive". -->
       <Message v-if="erreur" severity="error" :closable="false" class="mt-6">
         {{ erreur }}
       </Message>

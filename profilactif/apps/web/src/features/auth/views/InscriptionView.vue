@@ -1,135 +1,6 @@
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/shared/stores/auth'
-import type { SignupInput } from '@/shared/types/api'
-import { LIBELLES_ROLE, ROLES_INSCRIPTION } from '@/shared/types/roles'
-import type { RoleInscription } from '@/shared/types/roles'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const AGE_MINIMUM = 16
-
-const firstName = ref('')
-const lastName = ref('')
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const birthday = ref<string | null>(null)
-const status = ref<RoleInscription | ''>('')
-const cgu = ref(false)
-const location = ref('')
-const sector = ref('')
-const tempSkill = ref('')
-const skills = ref<string[]>([])
-
-const character = /[\s`!@#$%^&*()_+\-=\[\]{};:"|,./<>?~]/
-
-const isPasswordValid = computed(() => {
-  return (
-    password.value.length >= 8 &&
-    /[0-9]/.test(password.value) &&
-    /[A-Z]/.test(password.value) &&
-    character.test(password.value)
-  )
-})
-
-function addSkill() {
-  if (tempSkill.value !== '') {
-    skills.value.push(tempSkill.value)
-    tempSkill.value = ''
-  }
-}
-
-function removeSkill(index: number) {
-  skills.value.splice(index, 1)
-}
-
-const calculateAge = computed(() => {
-  if (!birthday.value) return null
-
-  const dob = new Date(birthday.value)
-  const today = new Date()
-
-  let age = today.getFullYear() - dob.getFullYear()
-  const monthDiff = today.getMonth() - dob.getMonth()
-
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-    age--
-  }
-
-  return age
-})
-
-const passwordError = ref(false)
-const ageError = ref(false)
-const isSubmitting = ref(false)
-const errorMessage = ref('')
-
-async function verifySubmit(event: Event) {
-  event.preventDefault()
-
-  passwordError.value = false
-  ageError.value = false
-  errorMessage.value = ''
-
-  if (!isPasswordValid.value || password.value !== confirmPassword.value) {
-    passwordError.value = true
-    return
-  }
-
-  if (calculateAge.value === null || calculateAge.value < AGE_MINIMUM) {
-    ageError.value = true
-    return
-  }
-
-  if (!cgu.value) {
-    errorMessage.value = 'Veuillez accepter les conditions d\'utilisation'
-    return
-  }
-
-  if (!status.value) {
-    errorMessage.value = 'Veuillez choisir un statut'
-    return
-  }
-
-  try {
-    isSubmitting.value = true
-
-    const signupData: SignupInput = {
-      firstName: firstName.value,
-      lastName: lastName.value,
-      mail: email.value,
-      phone: '', // Sera ajouté si nécessaire
-      password: password.value,
-      role: status.value,
-      ...(status.value === 'seeker' && {
-        location: location.value,
-        targetSector: sector.value,
-      }),
-    }
-
-    await authStore.signup(signupData)
-    router.push(
-      status.value === 'recruiter' ? { name: 'recruiter-catalog' } : { name: 'candidate-dashboard' },
-    )
-  } catch (err: any) {
-    errorMessage.value = err.message || 'Erreur lors de l\'inscription'
-  } finally {
-    isSubmitting.value = false
-  }
-}
-</script>
-
 <template>
   <form @submit="verifySubmit">
     <h1>Inscription</h1>
-    
-    <div v-if="errorMessage" style="color: red; margin-bottom: 16px;">
-      {{ errorMessage }}
-    </div>
-
     <label for="firstName">Prenom</label><br />
     <input id="firstName" v-model="firstName" required /><br />
 
@@ -177,11 +48,18 @@ async function verifySubmit(event: Event) {
       type="date"
       required
     /><br />
+    <!-- The template checked 18 and the script 16: both thresholds are now
+         the same constant. -->
     <p v-if="calculateAge !== null && calculateAge < AGE_MINIMUM" class="invalide">
       date de naissance invalide
     </p>
 
     <label for="status">Statut</label><br />
+    <!--
+      Options built from ROLES_INSCRIPTION rather than hardcoded: the values
+      must match the `utilisateur.role` ENUM the API expects, and `admin` is
+      excluded from public signup by that very constant.
+    -->
     <select id="status" v-model="status">
       <option value="">-- choisir un statut --</option>
       <option v-for="role in ROLES_INSCRIPTION" :key="role" :value="role">
@@ -190,7 +68,7 @@ async function verifySubmit(event: Event) {
     </select>
     <br />
 
-    <div v-if="status === 'seeker'">
+    <div v-if="status === 'demandeur'">
       <label for="location">Ville</label><br />
       <input id="location" v-model="location" required /><br />
 
@@ -198,6 +76,11 @@ async function verifySubmit(event: Event) {
       <input id="sector" v-model="sector" /><br />
 
       <label for="skills">Compétences</label><br />
+      <!--
+        Enter adds a skill without submitting: the constraint sits on this
+        field alone, where it belongs, instead of on the <form> where it also
+        blocked keyboard submission from every other field.
+      -->
       <input id="skills" v-model="tempSkill" @keydown.enter.prevent="addSkill" /><br />
 
       <div class="skills-list">
@@ -212,14 +95,128 @@ async function verifySubmit(event: Event) {
       <label for="cgu">Accepter les conditions d'utilisation</label>
     </div>
 
-    <button type="submit" :disabled="isSubmitting">
-      {{ isSubmitting ? 'Création en cours...' : 'Créer le compte' }}
-    </button>
+    <button type="submit">Créer le compte</button>
   </form>
 </template>
 
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+import { LIBELLES_ROLE, ROLES_INSCRIPTION } from '@/shared/types/roles';
+import type { RoleInscription } from '@/shared/types/roles';
+
+const router = useRouter();
+
+/*
+ * Minimum required age. The template showed 18 while the script validated 16:
+ * a single constant now, so the two can't drift apart again. 16 is the legal
+ * minimum working age in France.
+ */
+const AGE_MINIMUM = 16;
+
+const firstName = ref('');
+const lastName = ref('');
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const birthday = ref<string | null>(null);
+/* Empty string is the "not chosen yet" state of the <select>. */
+const status = ref<RoleInscription | ''>('');
+const cgu = ref(false);
+const character = /[ `!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
+const location = ref('');
+const sector = ref('');
+const tempSkill = ref('');
+const skills = ref<string[]>([]);
+
+const isPasswordValid = computed(() => {
+  return (
+    password.value.length >= 8 &&
+    /[0-9]/.test(password.value) &&
+    /[A-Z]/.test(password.value) &&
+    character.test(password.value)
+  );
+});
+
+function addSkill() {
+  /*
+   * The test used `tempSkill` instead of `tempSkill.value`: it compared the
+   * Ref object to a string, never equal, so the condition was always true and
+   * an empty skill could be added.
+   */
+  if (tempSkill.value !== '') {
+    skills.value.push(tempSkill.value);
+  }
+  tempSkill.value = '';
+}
+
+function removeSkill(index: number) {
+  skills.value.splice(index, 1);
+}
+
+const calculateAge = computed(() => {
+  if (!birthday.value) return null;
+
+  const dob = new Date(birthday.value);
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+
+  return age;
+});
+
+const passwordError = ref(false);
+const ageError = ref(false);
+
+function verifySubmit(event: Event) {
+  event.preventDefault();
+
+  passwordError.value = false;
+  ageError.value = false;
+
+  if (!isPasswordValid.value || password.value !== confirmPassword.value) {
+    passwordError.value = true;
+  }
+
+  if (calculateAge.value === null || calculateAge.value < AGE_MINIMUM) {
+    ageError.value = true;
+  }
+
+  if (passwordError.value || ageError.value) {
+    return;
+  }
+
+  router.push(
+    status.value === 'recruteur' ? { name: 'recruiter-catalog' } : { name: 'candidate-dashboard' },
+  );
+}
+</script>
+
 <style scoped>
+/*
+ * `scoped` so these rules stop styling every `form`, `input`, `label` and `h1`
+ * of the app: the block was global, and being unlayered it even outranked the
+ * Tailwind and PrimeVue layers (cf. the layer order set in assets/styles/main.css)
+ * on every other page, once this route had been visited.
+ *
+ * The palette moves from `:root` onto `form`, the component's root element: a
+ * scoped block rewrites `:root` into `:root[data-v-…]`, which matches nothing
+ * and would leave every variable undefined. Descendants inherit them from the
+ * form just the same.
+ */
 form {
+  /*
+   * Local aliases onto the design tokens: no colour is hardcoded in this
+   * component any more. `--accent` used to be #d9534f, which only reached
+   * 3,96:1 against white — below AA for the white label of the submit
+   * button. The token is the validated action colour, at 5,02:1.
+   */
   --navy: var(--color-brand);
   --navy-light: var(--color-brand);
   --accent: var(--color-action);
@@ -235,6 +232,7 @@ form {
   border-radius: 12px;
   border: 1px solid var(--navy);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  /* Spectral for body text, not Inter — brand rule, cf. CLAUDE.md. */
   font-family: var(--font-body);
   color: var(--text);
 }
@@ -280,6 +278,11 @@ select:focus {
   background: var(--color-surface-page);
 }
 
+/*
+ * Set by the view when submission failed on this field. The `:focus` variant
+ * is needed because `input:focus` above is more specific than a lone class,
+ * and the error border would vanish as soon as the user came back to fix it.
+ */
 .champ-invalide,
 .champ-invalide:focus {
   border-color: var(--accent);
@@ -352,6 +355,11 @@ form > div:last-of-type label {
   line-height: 1;
 }
 
+/*
+ * Transparent background: the brand blue is forbidden behind a button, and
+ * the action colour may not sit flat on the blue of the surrounding tag
+ * either (2,25:1). The hover state is a translucent white instead.
+ */
 .skill-remove {
   display: flex;
   align-items: center;
@@ -386,12 +394,7 @@ button[type='submit'] {
   transition: background 0.15s;
 }
 
-button[type='submit']:hover:not(:disabled) {
+button[type='submit']:hover {
   background: var(--accent-hover);
-}
-
-button[type='submit']:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 </style>
