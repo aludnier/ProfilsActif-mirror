@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import mysql from 'mysql2/promise'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 
 export const db = mysql.createPool({
   host: process.env.DB_HOST ?? 'localhost',
@@ -28,4 +29,35 @@ export async function testDatabaseConnection(): Promise<void> {
   } finally {
     connection?.release()
   }
+}
+
+// Utilisés par les slices écrits en style fonctionnel (auth). Les slices en
+// style classe (skill, video...) utilisent `db` directement, c'est équivalent.
+
+// Types acceptés comme paramètre lié (`?`) d'une requête préparée.
+export type ParamSql = string | number | boolean | Date | null
+
+// SELECT renvoyant plusieurs lignes.
+export async function query<T extends RowDataPacket>(
+  sql: string,
+  params: ParamSql[] = [],
+): Promise<T[]> {
+  const [rows] = await db.query<T[]>(sql, params)
+  return rows
+}
+
+// SELECT dont on n'attend qu'une ligne : `null` plutôt qu'un tableau vide.
+
+export async function queryOne<T extends RowDataPacket>(
+  sql: string,
+  params: ParamSql[] = [],
+): Promise<T | null> {
+  const rows = await query<T>(sql, params)
+  return rows[0] ?? null
+}
+
+// INSERT / UPDATE / DELETE : renvoie l'en-tête (`insertId`, `affectedRows`).
+export async function execute(sql: string, params: ParamSql[] = []): Promise<ResultSetHeader> {
+  const [result] = await db.execute<ResultSetHeader>(sql, params)
+  return result
 }

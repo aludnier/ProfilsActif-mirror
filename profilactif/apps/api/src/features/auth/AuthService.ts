@@ -1,98 +1,103 @@
 // Logique applicative de l'authentification. Ne connaît ni Hono ni MySQL :
-// il reçoit des données déjà validées et lève des `ErreurApp`, c'est
-// `AuthRoutes` qui traduit en HTTP.
+// il reçoit des données déjà validées et lève des `ErreurApp` ; c'est le
+// handler qui traduit en HTTP.
+
+import { randomUUID } from 'node:crypto'
 
 import bcrypt from 'bcryptjs'
+
+import { signToken } from '../../infrastructure/auth.middleware.js'
 import { Conflit, NonAuthentifie, NonTrouve } from '../../shared/errors.js'
-import { signerToken } from '../../infrastructure/auth.middleware.js'
-import * as depot from './AuthRepository.js'
-import type { LigneUtilisateurPublic } from './AuthRepository.js'
-import type { Connexion, Inscription, ReponseAuth, UtilisateurPublic } from './AuthSchema.js'
+import { AuthRepository, type AppUserRow } from './AuthRepository.js'
+import type { AuthResponse, LoginInput, PublicUser, SignupInput } from './AuthSchema.js'
 
+// Hash bcrypt valide qui n'appartient à personne : sert à comparer un mot de
+// passe même quand l'email est inconnu, pour que le temps de réponse ne
+// révèle pas l'existence d'un compte.
+const DUMMY_HASH = '$2b$10$L0jdsnnBNcoVa44tWidwFOYulYM39d6TDR1KDWb4MsNjKGW68Cj4i'
 
- // Hash valide d'un mot de passe qui n'appartient à personne. Sert à faire
- // travailler bcrypt même quand l'email est inconnu : sans ça, le temps de
-
-const HASH_FACTICE = '$2b$10$L0jdsnnBNcoVa44tWidwFOYulYM39d6TDR1KDWb4MsNjKGW68Cj4i'
-
-function coutBcrypt(): number {
-  const valeur = Number(process.env.BCRYPT_ROUNDS ?? 10)
-  return Number.isInteger(valeur) && valeur >= 4 && valeur <= 15 ? valeur : 10
+function bcryptCost(): number {
+  const value = Number(process.env.BCRYPT_ROUNDS ?? 10)
+  return Number.isInteger(value) && value >= 4 && value <= 15 ? value : 10
 }
 
-function versPublic(ligne: LigneUtilisateurPublic): UtilisateurPublic {
-  return {
-    id: ligne.id,
-    prenom: ligne.prenom,
-    nom: ligne.nom,
-    email: ligne.email,
-    role: ligne.role,
-    creeLe: ligne.cree_le,
-  }
-}
-
-function estEmailEnDouble(err: unknown): boolean {
-  return typeof err === 'object' && err !== null && (err as { code?: string }).code === 'ER_DUP_ENTRY'
-}
-
-export async function inscrire(entree: Inscription): Promise<ReponseAuth> {
-  if (await depot.trouverParEmail(entree.email)) {
-    throw new Conflit('Cette adresse email est déjà utilisée', 'EMAIL_DEJA_UTILISE')
-  }
-
-  const motDePasseHash = await bcrypt.hash(entree.motDePasse, coutBcrypt())
-
-  let id: number
-  try {
-    id = await depot.creer({
-      prenom: entree.prenom,
-      nom: entree.nom,
-      email: entree.email,
-      motDePasseHash,
-      role: entree.role,
-    })
-  } catch (err) {
-    // Deux inscriptions simultanées sur le même email : la contrainte UNIQUE
-    // tranche, on renvoie le même conflit que la vérification ci-dessus.
-    if (estEmailEnDouble(err)) {
-      throw new Conflit('Cette adresse email est déjà utilisée', 'EMAIL_DEJA_UTILISE')
-    }
-    throw err
-  }
-
-  const cree = await depot.trouverParId(id)
-  if (!cree) throw new Error(`Utilisateur ${id} introuvable juste après sa création`)
-
-  return {
-    token: signerToken({ id: cree.id, role: cree.role }),
-    utilisateur: versPublic(cree),
-  }
-}
-
-export async function connecter(entree: Connexion): Promise<ReponseAuth> {
-  const ligne = await depot.trouverParEmail(entree.email)
-
-  // Comparaison systématique, même si l'email est inconnu (voir HASH_FACTICE).
-  const correspond = await bcrypt.compare(
-    entree.motDePasse,
-    ligne?.mot_de_passe_hash ?? HASH_FACTICE,
+function isDuplicateMail(err: unknown): boolean {
+  return (
+    typeof err === 'object' && err !== null && (err as { code?: string }).code === 'ER_DUP_ENTRY'
   )
+}
 
-  if (!ligne || !correspond) {
-    // Message identique que l'email soit inconnu ou le mot de passe faux :
-    // on ne confirme pas l'existence d'un compte.
-    throw new NonAuthentifie('Email ou mot de passe incorrect', 'IDENTIFIANTS_INVALIDES')
-  }
-
+function toPublicUser(row: AppUserRow): PublicUser {
   return {
-    token: signerToken({ id: ligne.id, role: ligne.role }),
-    utilisateur: versPublic(ligne),
+    id: row.id,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    mail: row.mail,
+    phone: row.phone,
+    role: row.role,
+    status: row.status,
+    createdAt: row.createdAt,
   }
 }
 
-// Jeton encore valide mais compte supprimé entre-temps : on ne peut pas renvoyer un utilisateur inexistant.
-export async function utilisateurCourant(id: number): Promise<UtilisateurPublic> {
-  const ligne = await depot.trouverParId(id)
-  if (!ligne) throw new NonTrouve('Utilisateur introuvable', 'UTILISATEUR_INTROUVABLE')
-  return versPublic(ligne)
+export class AuthService {
+  constructor(private readonly repo: AuthRepository = new AuthRepository()) {}
+
+  async signup(input: SignupInput): Promise<AuthResponse> {
+    if (await this.repo.findByMail(input.mail)) {
+      throw new Conflit('Cette adresse email est déjà utilisée', 'MAIL_DEJA_UTILISE')
+    }
+
+    const passwordHash = await bcrypt.hash(input.password, bcryptCost())
+    const id = randomUUID()
+
+    try {
+      await this.repo.create({
+        id,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        mail: input.mail,
+        phone: input.phone ?? null,
+        passwordHash,
+        role: input.role,
+      })
+    } catch (err) {
+      // Deux inscriptions simultanées sur le même email : la contrainte UNIQUE
+      // tranche, on renvoie le même conflit que la vérification ci-dessus.
+      if (isDuplicateMail(err)) {
+        throw new Conflit('Cette adresse email est déjà utilisée', 'MAIL_DEJA_UTILISE')
+      }
+      throw err
+    }
+
+    const created = await this.repo.findById(id)
+    if (!created) throw new Error(`Utilisateur ${id} introuvable juste après sa création`)
+
+    return { token: signToken({ id: created.id, role: created.role }), user: toPublicUser(created) }
+  }
+
+  async login(input: LoginInput): Promise<AuthResponse> {
+    const row = await this.repo.findByMail(input.mail)
+
+    // Comparaison systématique, même si l'email est inconnu (voir DUMMY_HASH).
+    const matches = await bcrypt.compare(input.password, row?.passwordHash ?? DUMMY_HASH)
+
+    if (!row || !matches) {
+      // Message identique que l'email soit inconnu ou le mot de passe faux.
+      throw new NonAuthentifie('Email ou mot de passe incorrect', 'IDENTIFIANTS_INVALIDES')
+    }
+
+    if (row.status !== 'active') {
+      throw new NonAuthentifie('Ce compte est suspendu', 'COMPTE_SUSPENDU')
+    }
+
+    return { token: signToken({ id: row.id, role: row.role }), user: toPublicUser(row) }
+  }
+
+  // Jeton encore valide mais compte supprimé entre-temps.
+  async me(id: string): Promise<PublicUser> {
+    const row = await this.repo.findById(id)
+    if (!row) throw new NonTrouve('Utilisateur introuvable', 'UTILISATEUR_INTROUVABLE')
+    return toPublicUser(row)
+  }
 }
