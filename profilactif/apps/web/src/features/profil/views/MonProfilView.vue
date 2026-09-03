@@ -5,24 +5,22 @@
       <aside class="sidebar">
         <div class="sidebar-label">Espace candidat</div>
         <nav class="sidebar-nav">
-          <a href="#" class="side-link active">Mon profil public</a>
-          <a href="#" class="side-link">Tableau de bord</a>
-          <a href="#" class="side-link">Mes vidéos</a>
+          <button type="button" class="side-link" :class="{ active: currentView === 'profile' }" @click="currentView = 'profile'">
+            Mon profil public
+          </button>
+          <button type="button" class="side-link" :class="{ active: currentView === 'dashboard' }" @click="currentView = 'dashboard'">
+            Tableau de bord
+          </button>
+          <button type="button" class="side-link" :class="{ active: currentView === 'videos' }" @click="currentView = 'videos'">
+            Mes vidéos
+            </button>
         </nav>
       </aside>
 
-      <!-- Main content -->
       <main class="main">
-        <div class="page-header">
-          <div class="progress-wrap">
-            <div class="progress-label">Profil complété à {{ completion }}%</div>
-            <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: completion + '%' }"></div>
-            </div>
-          </div>
-        </div>
 
         <div class="grid">
+        <div v-if="currentView == 'profile'" >
           <section class="card">
             <div class="field">
               <label for="fullname">Nom complet</label>
@@ -40,7 +38,7 @@
                 <div class="skills-block" v-if="skills.length > 0">
                   <span class="tag" v-for="(skill, index) in skills" :key="index">
                     {{ skill }}
-                    <button type="button+" class="tag-remove" @click="removeSkill(index)">✕</button>
+                    <button type="button" class="tag-remove" @click="removeSkill(index)">✕</button>
                   </span>
                 </div>
 
@@ -53,6 +51,7 @@
               </div>
             </div>
           </section>
+        </div>
 
           <section class="card">
             <h2>Ma vidéo de présentation</h2>
@@ -82,17 +81,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+const currentView = ref("profile")
 const fullname = ref("")
 const headline = ref("")
 const tempSkill = ref("")
 const skills = ref(["Direction Générale", "Affaires Publiques", "Gestion de crise", "Souveraineté numérique"])
-const recruiterCount = ref("5 000")
-
-const criteria = ref([
-  "Qualité sonore (voix claire et audible)",
-  "Cadrage correct (buste et visage centrés)",
-  "Contenu déontologique neutre (Loi Service Public)"
-])
 
 function addSkill() {
   const value = tempSkill.value.trim()
@@ -106,15 +99,6 @@ function removeSkill(index) {
   skills.value.splice(index, 1)
 }
 
-const completion = computed(() => {
-  let filled = 0
-  const total = 4
-  if (fullname.value) filled++
-  if (headline.value) filled++
-  if (skills.value.length > 0) filled++
-  filled++ // vidéo déjà présente dans cet exemple
-  return Math.round((filled / total) * 100)
-})
 </script>
 
 <style>
@@ -137,73 +121,6 @@ const completion = computed(() => {
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
   min-height: 100vh;
-}
-
-/* Header */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #fff;
-  border-bottom: 1px solid var(--border);
-  padding: 16px 32px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo {
-  width: 34px;
-  height: 34px;
-  border: 2px solid var(--navy);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.brand-name {
-  font-weight: 700;
-  color: var(--navy);
-  font-size: 15px;
-}
-
-.brand-sub {
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  color: var(--text-light);
-}
-
-.nav {
-  display: flex;
-  gap: 28px;
-}
-
-.nav-link {
-  color: var(--text-light);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.nav-link.active {
-  color: var(--navy);
-  font-weight: 700;
-}
-
-.btn-outline {
-  background: #eceffb;
-  color: var(--navy);
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
 }
 
 /* Layout */
@@ -235,7 +152,6 @@ const completion = computed(() => {
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 20px;
 }
 
 .side-link {
@@ -259,36 +175,6 @@ const completion = computed(() => {
   color: var(--navy);
 }
 
-.badge {
-  background: var(--accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.ethics-box {
-  background: #eceffb;
-  border-radius: 10px;
-  padding: 16px;
-}
-
-.ethics-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--navy);
-  margin-bottom: 8px;
-}
-
-.ethics-box p {
-  font-size: 12.5px;
-  color: var(--text);
-  line-height: 1.5;
-  margin: 0;
-}
-
 /* Main */
 .main {
   flex: 1;
@@ -297,22 +183,8 @@ const completion = computed(() => {
 
 .page-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-end;
   margin-bottom: 24px;
-  gap: 24px;
-}
-
-.page-header h1 {
-  color: var(--navy);
-  font-size: 26px;
-  margin: 0 0 6px;
-}
-
-.subtitle {
-  color: var(--text-light);
-  font-size: 14px;
-  margin: 0;
 }
 
 .progress-wrap {
@@ -375,12 +247,6 @@ const completion = computed(() => {
   width: 100%;
 }
 
-.hint {
-  font-size: 12px;
-  color: var(--text-light);
-  margin: 8px 0 0;
-}
-
 .field {
   margin-top: 20px;
 }
@@ -412,9 +278,23 @@ const completion = computed(() => {
 
 .tags {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skills-block {
+  max-width: 480px;
+  max-height: 130px;
+  overflow-y: scroll;
+  display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  align-items: center;
+  align-content: flex-start;
+  margin: 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 .tag {
@@ -427,6 +307,7 @@ const completion = computed(() => {
   font-weight: 600;
   padding: 6px 10px 6px 14px;
   border-radius: 6px;
+  height: fit-content;
 }
 
 .tag-remove {
@@ -450,11 +331,11 @@ const completion = computed(() => {
 .tag-input {
   border: 1px dashed var(--navy-light);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   font-size: 13px;
   background: #fff;
   color: var(--navy);
-  width: 110px;
+  width: 100%;
 }
 
 .tag-input:focus {
@@ -468,62 +349,6 @@ const completion = computed(() => {
   border-radius: 10px;
   overflow: hidden;
   background: linear-gradient(135deg, #33445c, #1a2436);
-  display: flex;
-  align-items: flex-end;
-  padding: 14px;
-  color: #fff;
-}
-
-.video-play {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.video-meta {
-  z-index: 1;
-}
-
-.video-title {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.video-sub {
-  font-size: 11px;
-  opacity: 0.8;
-}
-
-.video-time {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  font-size: 11px;
-  z-index: 1;
-}
-
-.video-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.video-progress-fill {
-  width: 45%;
-  height: 100%;
-  background: var(--accent);
 }
 
 .video-actions {
@@ -541,68 +366,17 @@ const completion = computed(() => {
   cursor: pointer;
 }
 
-.criteria-box {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-}
-
-.criteria-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--navy);
-  margin-bottom: 12px;
-}
-
-.criteria-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.criteria-list li {
-  font-size: 13.5px;
-  color: var(--text);
-}
-
-.check {
-  color: #2e7d32;
-  font-weight: 700;
-  margin-right: 6px;
-}
-
 .footer-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-end;
   border-top: 1px solid var(--border);
   margin-top: 24px;
   padding-top: 20px;
 }
 
-.footer-note {
-  font-size: 13px;
-  color: var(--text-light);
-  margin: 0;
-}
-
 .footer-actions {
   display: flex;
   gap: 12px;
-}
-
-.skills-block {
-  max-width: 480px;
-  max-height: 130px;
-  overflow-y: scroll;
-  margin: 20px 0;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 10px;
 }
 
 .btn-primary {
@@ -619,7 +393,6 @@ const completion = computed(() => {
 .btn-primary:hover {
   background: var(--accent-hover);
 }
-
 
 @media (max-width: 900px) {
   .layout {
