@@ -1,0 +1,15 @@
+{
+  "extends": ["@vue/tsconfig/tsconfig.dom.json", "../../tsconfig.base.json"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    // tsconfig.base.json fixe "lib": ["ES2022"] et, comme il est étendu en
+    // dernier, il écrase la bibliothèque DOM apportée par @vue/tsconfig — une
+    // application navigateur se retrouvait sans les types du DOM (Event,
+    // HTMLElement…). On la rétablit explicitement ici.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"]
+}

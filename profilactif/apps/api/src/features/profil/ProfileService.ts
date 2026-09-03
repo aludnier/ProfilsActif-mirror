@@ -1,1 +1,40 @@
-Il orchestre les interactions entre les différentes parties du système liées au profil utilisateur et sa création, en s'assurant que les données sont correctement manipulées et que les actions de l'utilisateur sont traitées de manière appropriée.
+import { NonTrouve } from '../../shared/errors.js'
+import { ProfilRepository } from './ProfilRepository.js'
+import type { UpdateProfilInput } from './ProfilSchema.js'
+
+export class ProfileService {
+  constructor(
+    private readonly profilRepository = new ProfilRepository(),
+  ) {}
+
+  async getProfil(id: string) {
+    const profil = await this.profilRepository.findById(id)
+
+    if (!profil) {
+      throw new NonTrouve(
+        'Profil introuvable',
+        'PROFIL_NON_TROUVE',
+      )
+    }
+
+    return profil
+  }
+
+  async updateProfil(
+    id: string,
+    data: UpdateProfilInput,
+  ) {
+    const profil = await this.profilRepository.findById(id)
+
+    if (!profil) {
+      throw new NonTrouve(
+        'Profil introuvable',
+        'PROFIL_NON_TROUVE',
+      )
+    }
+
+    await this.profilRepository.update(id, data)
+
+    return this.profilRepository.findById(id)
+  }
+}

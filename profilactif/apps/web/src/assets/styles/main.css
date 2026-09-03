@@ -1,0 +1,51 @@
+/*
+ * Feuille de style d'entrée. Importée une seule fois depuis src/main.ts.
+ *
+ * L'ordre des couches CSS est important : PrimeVue déclare ses styles dans une
+ * couche `primevue` placée après `theme` et `base` (cf. app/plugins/primevue.ts),
+ * donc après la couche `utilities` de Tailwind — les utilitaires Tailwind
+ * peuvent surcharger un composant PrimeVue sans `!important`.
+ */
+
+@import 'tailwindcss';
+@import './fonts.css';
+@import './tokens.css';
+
+/*
+ * Correctifs de tokens PrimeVue, volontairement hors couche CSS pour trancher.
+ * Passer par `components` dans definePreset ne suffit pas ici : PrimeVue
+ * réémet ses valeurs par défaut après nos surcharges, et ce sont les siennes
+ * qui l'emportent.
+ *
+ * ToggleButton — donc SelectButton, qui s'appuie dessus — signale l'option
+ * retenue par du blanc sur gris très clair : 1,05:1 entre les deux états,
+ * l'utilisateur ne distingue pas son choix. On reprend la pastille bleu clair
+ * du système. `content` doit suivre, sinon il repeint du blanc par-dessus.
+ */
+:root {
+  --p-togglebutton-checked-background: var(--color-brand-50);
+  --p-togglebutton-checked-color: var(--color-brand);
+  --p-togglebutton-checked-border-color: var(--color-brand);
+  --p-togglebutton-content-checked-background: var(--color-brand-50);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-surface-page);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+  }
+
+  /* Titres en Marianne — règle de marque, y compris là où la maquette Figma
+   * utilise Inter. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-brand);
+    font-family: var(--font-heading);
+    font-weight: 700;
+  }
+}
