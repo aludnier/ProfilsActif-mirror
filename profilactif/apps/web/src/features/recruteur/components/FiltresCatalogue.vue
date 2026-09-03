@@ -3,14 +3,14 @@ import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 
 /*
- * La maquette dessine ces options en simple texte, sans radio ni case à
- * cocher : un panneau « FILTRES AVANCÉS » sans état visible ni cible
- * cliquable. On pose de vrais contrôles PrimeVue — « Niveau d'expérience »
- * est un choix unique (« Tous niveaux » en fait partie), « Durée de la vidéo »
- * un choix multiple.
+ * The mockup draws these options as plain text, with no radio or checkbox: a
+ * "FILTRES AVANCÉS" panel with no visible state and no clickable target. We
+ * use real PrimeVue controls instead — "Niveau d'expérience" is a single
+ * choice ("Tous niveaux" being one of them), "Durée de la vidéo" a multiple
+ * one.
  *
- * L'état remonte à la vue via defineModel : à terme il vivra dans la query
- * string, comme les chips de l'en-tête.
+ * State goes up to the view through defineModel: eventually it will live in
+ * the query string, like the header's chips.
  */
 const niveau = defineModel<string>('niveau', { required: true });
 const durees = defineModel<string[]>('durees', { required: true });

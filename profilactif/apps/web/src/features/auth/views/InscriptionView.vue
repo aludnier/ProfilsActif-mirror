@@ -1,5 +1,5 @@
 <template>
-  <form @submit="verifySubmit" @keydown.enter.prevent>
+  <form @submit="verifySubmit">
     <h1>Inscription</h1>
     <label for="firstName">Prenom</label><br />
     <input id="firstName" v-model="firstName" required /><br />
@@ -15,25 +15,27 @@
       id="password"
       v-model="password"
       type="password"
-      :style="{ 'border-color': !passwordError ? '' : 'red' }"
+      :class="{ 'champ-invalide': passwordError }"
       required
     /><br />
 
     <div v-if="password.length == 0 || !isPasswordValid">
       <p>le mot de passe doit contenir :</p>
       <ul>
-        <li :id="password.length < 8 ? 'error' : 'green'">au moins 8 caractères</li>
-        <li :id="!/[0-9]/.test(password) ? 'error' : 'green'">au moins 1 chiffre</li>
-        <li :id="!/[A-Z]/.test(password) ? 'error' : 'green'">au moins 1 majuscule</li>
-        <li :id="!character.test(password) ? 'error' : 'green'">au moins 1 character special</li>
+        <li :class="password.length < 8 ? 'invalide' : 'valide'">au moins 8 caractères</li>
+        <li :class="!/[0-9]/.test(password) ? 'invalide' : 'valide'">au moins 1 chiffre</li>
+        <li :class="!/[A-Z]/.test(password) ? 'invalide' : 'valide'">au moins 1 majuscule</li>
+        <li :class="!character.test(password) ? 'invalide' : 'valide'">
+          au moins 1 caractère spécial
+        </li>
       </ul>
     </div>
 
     <label for="passwordConfirm">Confirmation du mot de passe</label><br />
     <input
       id="passwordConfirm"
-      v-model="confirmPasword"
-      :style="{ 'border-color': !passwordError ? '' : 'red' }"
+      v-model="confirmPassword"
+      :class="{ 'champ-invalide': passwordError }"
       type="password"
       required
     /><br />
@@ -42,31 +44,44 @@
     <input
       id="birthday"
       v-model="birthday"
-      :style="{ 'border-color': !AgeError ? '' : 'red' }"
+      :class="{ 'champ-invalide': ageError }"
       type="date"
       required
     /><br />
-    <!-- Le template testait 18 ans et le script 16 : les deux seuils sont
-         désormais la même constante. -->
-    <p v-if="calculateAge !== null && calculateAge < AGE_MINIMUM" id="error">
+    <!-- The template checked 18 and the script 16: both thresholds are now
+         the same constant. -->
+    <p v-if="calculateAge !== null && calculateAge < AGE_MINIMUM" class="invalide">
       date de naissance invalide
     </p>
 
-    <label for="Status">Status</label><br />
-    <select id="Status" v-model="status">
-      <option value="">--choisir un status--</option>
-      <option value="Seeker">Chercheur d'emplois</option>
-      <option value="Recruiter">Recruteur</option></select
-    ><br />
-    <div v-if="status == 'Seeker'">
-      <label for="location">Location</label><br />
+    <label for="status">Statut</label><br />
+    <!--
+      Options built from ROLES_INSCRIPTION rather than hardcoded: the values
+      must match the `utilisateur.role` ENUM the API expects, and `admin` is
+      excluded from public signup by that very constant.
+    -->
+    <select id="status" v-model="status">
+      <option value="">-- choisir un statut --</option>
+      <option v-for="role in ROLES_INSCRIPTION" :key="role" :value="role">
+        {{ LIBELLES_ROLE[role] }}
+      </option>
+    </select>
+    <br />
+
+    <div v-if="status === 'demandeur'">
+      <label for="location">Ville</label><br />
       <input id="location" v-model="location" required /><br />
 
       <label for="sector">Secteur de recherche</label><br />
-      <input id="sector" /><br />
+      <input id="sector" v-model="sector" /><br />
 
-      <label for="skills">Skills</label><br />
-      <input id="skills" v-model="tempSkill" @keyup.enter="addSkill" /><br />
+      <label for="skills">Compétences</label><br />
+      <!--
+        Enter adds a skill without submitting: the constraint sits on this
+        field alone, where it belongs, instead of on the <form> where it also
+        blocked keyboard submission from every other field.
+      -->
+      <input id="skills" v-model="tempSkill" @keydown.enter.prevent="addSkill" /><br />
 
       <div class="skills-list">
         <span v-for="(skill, index) in skills" :key="index" class="skill-tag">
@@ -76,8 +91,8 @@
       </div>
     </div>
     <div>
-      <input v-model="CGU" type="checkbox" required />
-      <label>Accepter les conditions d'utilisation</label>
+      <input id="cgu" v-model="cgu" type="checkbox" required />
+      <label for="cgu">Accepter les conditions d'utilisation</label>
     </div>
 
     <button type="submit">Créer le compte</button>
@@ -88,12 +103,15 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { LIBELLES_ROLE, ROLES_INSCRIPTION } from '@/shared/types/roles';
+import type { RoleInscription } from '@/shared/types/roles';
+
 const router = useRouter();
 
 /*
- * Âge minimum requis. Le template affichait 18 et le script en validait 16 :
- * une seule constante désormais, pour que les deux ne redivergent pas.
- * 16 ans est l'âge légal minimum de travail en France.
+ * Minimum required age. The template showed 18 while the script validated 16:
+ * a single constant now, so the two can't drift apart again. 16 is the legal
+ * minimum working age in France.
  */
 const AGE_MINIMUM = 16;
 
@@ -101,12 +119,14 @@ const firstName = ref('');
 const lastName = ref('');
 const email = ref('');
 const password = ref('');
-const confirmPasword = ref('');
+const confirmPassword = ref('');
 const birthday = ref<string | null>(null);
-const status = ref('');
-const CGU = ref(false);
+/* Empty string is the "not chosen yet" state of the <select>. */
+const status = ref<RoleInscription | ''>('');
+const cgu = ref(false);
 const character = /[ `!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
 const location = ref('');
+const sector = ref('');
 const tempSkill = ref('');
 const skills = ref<string[]>([]);
 
@@ -121,9 +141,9 @@ const isPasswordValid = computed(() => {
 
 function addSkill() {
   /*
-   * Le test portait sur `tempSkill` et non sur `tempSkill.value` : on comparait
-   * l'objet Ref à une chaîne, jamais égaux, donc la condition était toujours
-   * vraie et une compétence vide pouvait être ajoutée.
+   * The test used `tempSkill` instead of `tempSkill.value`: it compared the
+   * Ref object to a string, never equal, so the condition was always true and
+   * an empty skill could be added.
    */
   if (tempSkill.value !== '') {
     skills.value.push(tempSkill.value);
@@ -152,62 +172,74 @@ const calculateAge = computed(() => {
 });
 
 const passwordError = ref(false);
-const AgeError = ref(false);
+const ageError = ref(false);
 
 function verifySubmit(event: Event) {
   event.preventDefault();
 
   passwordError.value = false;
-  AgeError.value = false;
+  ageError.value = false;
 
-  if (!isPasswordValid.value || password.value !== confirmPasword.value) {
+  if (!isPasswordValid.value || password.value !== confirmPassword.value) {
     passwordError.value = true;
   }
-  
+
   if (calculateAge.value === null || calculateAge.value < AGE_MINIMUM) {
-    AgeError.value = true;
+    ageError.value = true;
   }
 
-  if (passwordError.value || AgeError.value) {
+  if (passwordError.value || ageError.value) {
     return;
   }
 
   router.push(
-    status.value === 'Recruiter' ? { name: 'recruiter-catalog' } : { name: 'candidate-dashboard' },
+    status.value === 'recruteur' ? { name: 'recruiter-catalog' } : { name: 'candidate-dashboard' },
   );
 }
 </script>
 
-<style>
-:root {
-  --navy: #1b3a6b;
-  --navy-light: #253e66;
-  --accent: #d9534f;
-  --accent-hover: #c44844;
-  --bg: #f4f6f9;
-  --text: #1b3a6b;
-  --text-light: #6b7280;
-}
-
-template {
-  font-family: 'Marianne';
-}
-
+<style scoped>
+/*
+ * `scoped` so these rules stop styling every `form`, `input`, `label` and `h1`
+ * of the app: the block was global, and being unlayered it even outranked the
+ * Tailwind and PrimeVue layers (cf. the layer order set in assets/styles/main.css)
+ * on every other page, once this route had been visited.
+ *
+ * The palette moves from `:root` onto `form`, the component's root element: a
+ * scoped block rewrites `:root` into `:root[data-v-…]`, which matches nothing
+ * and would leave every variable undefined. Descendants inherit them from the
+ * form just the same.
+ */
 form {
+  /*
+   * Local aliases onto the design tokens: no colour is hardcoded in this
+   * component any more. `--accent` used to be #d9534f, which only reached
+   * 3,96:1 against white — below AA for the white label of the submit
+   * button. The token is the validated action colour, at 5,02:1.
+   */
+  --navy: var(--color-brand);
+  --navy-light: var(--color-brand);
+  --accent: var(--color-action);
+  --accent-hover: var(--color-action-600);
+  --bg: var(--color-surface-subtle);
+  --text: var(--color-brand);
+  --anneau-focus: color-mix(in srgb, var(--color-brand) 12%, transparent);
+
   max-width: 480px;
   margin: 40px auto;
   padding: 32px;
-  background: #fff;
+  background: var(--color-surface-page);
   border-radius: 12px;
   border: 1px solid var(--navy);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  /* Spectral for body text, not Inter — brand rule, cf. CLAUDE.md. */
+  font-family: var(--font-body);
   color: var(--text);
 }
 
 h1 {
   color: var(--navy);
-  font-family: 'Marianne';
+  font-family: var(--font-heading);
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 24px;
@@ -215,20 +247,12 @@ h1 {
 
 label {
   display: block;
-  font-family: 'Spectral';
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
   color: var(--navy);
   margin-top: 16px;
   margin-bottom: 6px;
-}
-
-input:focus,
-select:focus {
-  outline: re;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(44, 66, 112, 0.12);
-  background: #ffb9b9;
 }
 
 input,
@@ -250,32 +274,42 @@ input:focus,
 select:focus {
   outline: none;
   border-color: var(--navy-light);
-  box-shadow: 0 0 0 3px rgba(44, 66, 112, 0.12);
-  background: #fff;
+  box-shadow: 0 0 0 3px var(--anneau-focus);
+  background: var(--color-surface-page);
+}
+
+/*
+ * Set by the view when submission failed on this field. The `:focus` variant
+ * is needed because `input:focus` above is more specific than a lone class,
+ * and the error border would vanish as soon as the user came back to fix it.
+ */
+.champ-invalide,
+.champ-invalide:focus {
+  border-color: var(--accent);
 }
 
 ul {
-  font-family: 'Spectral';
+  font-family: var(--font-body);
   list-style: disc;
-  padding: 1;
+  padding-left: 20px;
   margin: 8px 0 0;
   font-size: 13px;
 }
 
 li {
-  font-family: 'Spectral';
+  font-family: var(--font-body);
   padding: 2px 0;
 }
 
-#error {
+.invalide {
   color: var(--accent);
 }
 
-#green {
-  color: #3fc445;
+.valide {
+  color: var(--color-status-valid);
 }
 
-p#error {
+p.invalide {
   font-size: 13px;
   margin-top: 4px;
 }
@@ -312,8 +346,8 @@ form > div:last-of-type label {
   align-items: center;
   gap: 6px;
   background: var(--navy);
-  color: #fff;
-  font-family: 'Spectral';
+  color: var(--color-on-brand);
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   padding: 6px 10px 6px 14px;
@@ -321,6 +355,11 @@ form > div:last-of-type label {
   line-height: 1;
 }
 
+/*
+ * Transparent background: the brand blue is forbidden behind a button, and
+ * the action colour may not sit flat on the blue of the surrounding tag
+ * either (2,25:1). The hover state is a translucent white instead.
+ */
 .skill-remove {
   display: flex;
   align-items: center;
@@ -330,15 +369,15 @@ form > div:last-of-type label {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--navy-light);
-  color: #fff;
+  background: transparent;
+  color: var(--color-on-brand);
   font-size: 10px;
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .skill-remove:hover {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--color-on-brand) 30%, transparent);
 }
 
 button[type='submit'] {
@@ -346,7 +385,7 @@ button[type='submit'] {
   margin-top: 24px;
   padding: 12px;
   background: var(--accent);
-  color: #fff;
+  color: var(--color-on-action);
   border: none;
   border-radius: 8px;
   font-weight: 600;
