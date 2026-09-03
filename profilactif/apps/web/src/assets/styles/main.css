@@ -1,0 +1,33 @@
+/*
+ * Feuille de style d'entrée. Importée une seule fois depuis src/main.ts.
+ *
+ * L'ordre des couches CSS est important : PrimeVue déclare ses styles dans une
+ * couche `primevue` placée après `theme` et `base` (cf. app/plugins/primevue.ts),
+ * donc après la couche `utilities` de Tailwind — les utilitaires Tailwind
+ * peuvent surcharger un composant PrimeVue sans `!important`.
+ */
+
+@import 'tailwindcss';
+@import './fonts.css';
+@import './tokens.css';
+
+@layer base {
+  body {
+    background-color: var(--color-surface-page);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+  }
+
+  /* Titres en Marianne — règle de marque, y compris là où la maquette Figma
+   * utilise Inter. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-brand);
+    font-family: var(--font-heading);
+    font-weight: 700;
+  }
+}
