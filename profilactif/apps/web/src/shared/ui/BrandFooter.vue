@@ -11,10 +11,6 @@ type ColonnePied = {
   liens: LienPied[];
 };
 
-/*
- * Même convention que BrandHeader : un libellé sans `to` est rendu en texte
- * inerte tant que la vue n'existe pas, plutôt qu'en lien mort.
- */
 const colonnes: ColonnePied[] = [
   {
     titre: 'Candidats',
@@ -27,8 +23,8 @@ const colonnes: ColonnePied[] = [
   {
     titre: 'Recruteurs',
     liens: [
-      // Même raison qu'« Espace Recruteur » dans le header : accéder à la base
-      // suppose un compte recruteur, donc on passe par la connexion.
+      // Same reason as "Espace Recruteur" in the header: accessing the
+      // database requires a recruiter account, so this goes through login.
       { libelle: 'Accéder à la base', to: { name: 'login' } },
       { libelle: "Charte d'éthique" },
       { libelle: 'Partenariats publics' },
@@ -37,11 +33,11 @@ const colonnes: ColonnePied[] = [
 ];
 
 /*
- * La mention d'accessibilité est une déclaration RGAA à valeur légale : elle
- * doit refléter le niveau réellement constaté. La maquette annonce
- * « totalement conforme », mais aucun audit n'a été mené — on affiche donc le
- * niveau par défaut. À faire évoluer vers « partiellement conforme » puis
- * « totalement conforme » quand un audit le justifiera, jamais avant.
+ * The accessibility notice is a legally-binding RGAA declaration: it must
+ * reflect the level actually verified. The mockup claims "fully compliant",
+ * but no audit has been carried out — so the default level is shown instead.
+ * Move it to "partially compliant" then "fully compliant" only once an audit
+ * justifies it, never before.
  */
 const liensLegaux: LienPied[] = [
   { libelle: 'Mentions légales' },

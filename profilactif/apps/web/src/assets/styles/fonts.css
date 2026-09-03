@@ -3,12 +3,6 @@
  * consorts), pour un service public : pas de fuite d'IP visiteur vers un
  * tiers, et le site reste fonctionnel sans réseau externe.
  *
- * Spectral : paquet npm @fontsource/spectral.
- * Marianne : fichiers extraits du DSFR (@gouvfr/dsfr 1.15.2) et versionnés
- *   dans src/assets/fonts/marianne/. Le paquet npm n'est volontairement PAS
- *   une dépendance : son script preinstall refuse de s'installer hors d'un
- *   projet DSFR complet et casserait le `npm install` de tout le monde.
- *
  * Marianne n'existe qu'en 4 graisses ; correspondance avec la maquette Figma
  * (qui utilise Inter, remplacé par Marianne selon la règle de marque) :
  *   Inter Regular 400    -> Marianne 400

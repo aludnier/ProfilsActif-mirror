@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /*
- * Chiffres figés issus de la maquette. Ils n'ont pas vocation à le rester :
- * dès que l'API expose ces agrégats (slice admin, tableau de bord global),
- * cette liste devient une prop du composant.
+ * It's number for illustrating before the API is set up.
+ * 
+ * 
  */
 const statistiques = [
   { valeur: '45 000 +', libelle: 'Profils vidéos validés' },

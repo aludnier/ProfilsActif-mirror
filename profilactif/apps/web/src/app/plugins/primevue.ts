@@ -4,16 +4,9 @@ import PrimeVue from 'primevue/config';
 import type { App } from 'vue';
 
 /*
- * Préréglage PrimeVue de ProfilsActifs.
- *
- * Point clé : la palette `primary` de PrimeVue pilote le fond des boutons.
- * Elle est donc branchée sur la COULEUR D'ACTION (#C2452F), pas sur le bleu
- * institutionnel — les règles de marque interdisent un bouton à fond bleu.
- * Le bleu reste réservé à l'identité et au texte (token `--color-brand`).
- *
- * Aucune valeur n'est écrite en dur ici : tout pointe vers les tokens définis
- * dans assets/styles/tokens.css.
- */
+    PrimeVue Settings
+*/
+
 const ProfilsActifsPreset = definePreset(Aura, {
   semantic: {
     primary: {
@@ -47,9 +40,7 @@ export function installPrimeVue(app: App): void {
     theme: {
       preset: ProfilsActifsPreset,
       options: {
-        // La maquette ne prévoit pas de thème sombre.
         darkModeSelector: 'none',
-        // Voir le commentaire sur les couches CSS dans assets/styles/main.css.
         cssLayer: { name: 'primevue', order: 'theme, base, primevue' },
       },
     },

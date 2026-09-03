@@ -6,11 +6,10 @@ import thibaultsoyer from '@/assets/images/profils/thibault-soyer.webp';
 import CarteProfil from '@/shared/ui/CarteProfil.vue';
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue';
 
-/*
- * Profils figés issus de la maquette, en attendant `GET /api/profils`
- * (slice profil). Cette liste deviendra une prop, ou un appel à
- * features/profil/api.ts une fois l'API disponible.
- */
+
+// It's for testing this component.
+// Function takes information from database
+
 const profils: ProfilResume[] = [
   {
     nom: 'Amélie Dubois',
@@ -73,13 +72,6 @@ const profils: ProfilResume[] = [
         <h2 id="talents-en-avant" class="text-[32px]">Talents mis en avant cette semaine</h2>
       </div>
 
-      <!--
-        Les flèches de carrousel de la maquette ne sont pas reprises : avec
-        quatre profils tous affichés, elles ne piloteraient rien. Le jour où
-        l'API en renvoie davantage, cette grille devient un <Carousel> PrimeVue
-        (numVisible=4), qui fournit ses propres boutons accessibles — plutôt
-        que des chevrons maison sans effet.
-      -->
       <ul class="flex list-none flex-wrap gap-6">
         <li v-for="profil in profils" :key="profil.nom" class="flex min-w-[280px] flex-1">
           <CarteProfil :profil="profil" />

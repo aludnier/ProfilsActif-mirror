@@ -29,9 +29,6 @@
       </ul>
     </div>
 
-    <!-- `inputError` n'existait nulle part dans le script : la classe valait
-         toujours undefined. Liaison morte retirée — à réimplémenter si un
-         état visuel était prévu sur ce libellé. -->
     <label for="passwordConfirm">Confirmation du mot de passe</label><br />
     <input
       id="passwordConfirm"
@@ -166,11 +163,7 @@ function verifySubmit(event: Event) {
   if (!isPasswordValid.value || password.value !== confirmPasword.value) {
     passwordError.value = true;
   }
-  /*
-   * `calculateAge` vaut null tant qu'aucune date n'est saisie, et `null < 16`
-   * est vrai en JavaScript : le cas « pas de date » est traité explicitement
-   * plutôt que de reposer sur cette coercition.
-   */
+  
   if (calculateAge.value === null || calculateAge.value < AGE_MINIMUM) {
     AgeError.value = true;
   }
@@ -179,16 +172,6 @@ function verifySubmit(event: Event) {
     return;
   }
 
-  /*
-   * Destination selon le rôle : un candidat vient de créer un compte dont le
-   * profil est vide, on l'amène donc là où il peut le compléter ; un recruteur
-   * veut l'annuaire, immédiatement utilisable. Renvoyer sur l'accueil
-   * ramènerait sur la page d'argumentaire juste après la conversion.
-   *
-   * ATTENTION — aucun compte n'est réellement créé : POST /api/auth/inscription
-   * n'existe pas. Cette navigation est à déplacer après la réponse de l'API,
-   * pour ne pas laisser croire à un succès en cas d'échec (e-mail déjà pris).
-   */
   router.push(
     status.value === 'Recruiter' ? { name: 'recruiter-catalog' } : { name: 'candidate-dashboard' },
   );

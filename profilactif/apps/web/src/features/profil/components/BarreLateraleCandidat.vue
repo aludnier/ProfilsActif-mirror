@@ -8,10 +8,6 @@ type EntreeEspace = {
   requis?: boolean;
 };
 
-/*
- * Même convention que BrandHeader et BrandFooter : sans route, l'entrée est
- * rendue en texte inerte plutôt qu'en lien mort.
- */
 const entrees: EntreeEspace[] = [
   { libelle: 'Tableau de bord', to: { name: 'candidate-dashboard' } },
   { libelle: 'Mon profil public', to: { name: 'candidate-profile', params: { id: '1' } } },
@@ -52,11 +48,6 @@ function estActive(entree: EntreeEspace): boolean {
             "
           >
             {{ entree.libelle }}
-            <!--
-              La maquette pose ce badge en #D1523E, l'accent d'origine : du
-              blanc dessus ne donne que 4,36:1. Via le token il hérite de la
-              couleur d'action validée et remonte à 5,02:1.
-            -->
             <span
               v-if="entree.requis"
               class="rounded-full bg-action px-1.5 py-0.5 text-[10px] font-bold uppercase text-on-action"

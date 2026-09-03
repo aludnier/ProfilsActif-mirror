@@ -24,19 +24,12 @@ const etapes = [
     class="flex flex-col items-start gap-14 px-gutter py-22"
   >
     <div class="flex w-full flex-col items-start gap-4">
-      <!-- L'accent en texte sur fond blanc : 5,02:1, l'usage pour lequel le token a été validé. -->
       <p class="font-heading text-[12px] font-bold uppercase tracking-[1px] text-action">
         Processus sécurisé
       </p>
       <h2 id="comment-ca-marche" class="text-[32px]">Comment fonctionne le service ?</h2>
     </div>
 
-    <!--
-      <ol> plutôt que <div> : les étapes sont ordonnées, l'ordre porte du sens.
-      Hauteurs étirées (et non `items-start` comme la maquette) : aujourd'hui les
-      trois textes tiennent en 3 lignes, mais la rangée deviendrait irrégulière
-      dès qu'un libellé change.
-    -->
     <ol class="flex w-full list-none flex-wrap gap-8">
       <li
         v-for="(etape, index) in etapes"
