@@ -14,7 +14,7 @@ const emit = defineEmits<{ (e: 'video-presente', presente: boolean): void }>();
 
 const authStore = useAuthStore();
 
-/* The mockup shows a single presentation video, so of the seeker's videos only
+/* The mockup sh a single presentation video, so of the seeker's videos only
    the first one is handled here. */
 const video = ref<Video | null>(null);
 const lien = ref('');
