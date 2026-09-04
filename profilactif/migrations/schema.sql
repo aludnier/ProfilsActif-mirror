@@ -144,6 +144,7 @@ CREATE TABLE `seeker` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `location` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `target_sector` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
   `certification_rate` int NOT NULL DEFAULT '0',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

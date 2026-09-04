@@ -54,6 +54,7 @@ export class ProfilRepository {
           u.age AS age,
           s.location AS location,
           s.target_sector AS targetSector,
+          s.bio AS bio,
           u.role AS role,
           u.status AS status,
           s.created_at AS createdAt,
@@ -123,6 +124,9 @@ export class ProfilRepository {
     if (data.experienceYears !== undefined) {
       seekerFields.push('experience_years = ?')
       seekerValues.push(data.experienceYears)
+    if (data.bio !== undefined) {
+      seekerFields.push('bio = ?')
+      seekerValues.push(data.bio)
     }
 
     if (userFields.length > 0) {

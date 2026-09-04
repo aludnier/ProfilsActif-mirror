@@ -8,30 +8,35 @@ import { useRoute } from 'vue-router';
 import type { RouteLocationNamedRaw } from 'vue-router';
 
 import { useAuthStore } from '@/shared/stores/auth';
-import { LIBELLES_ROLE } from '@/shared/types/roles';
-import type { Role } from '@/shared/types/api';
+import { LIBELLES_ROLE, ROUTE_ESPACE } from '@/shared/types/roles';
 
 type LienNav = {
   libelle: string;
   to?: RouteLocationNamedRaw;
 };
 
-/* Labels without a `to` have no view yet: inert text rather than a dead link. */
-const liensNav: LienNav[] = [
-  /* Points at the catalog: the public feed (FeedView.vue) is still an empty stub. */
-  { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
-  { libelle: 'Comment ça marche' },
-  { libelle: 'Institutionnel' },
-  { libelle: 'Aide' },
-];
-
 const route = useRoute();
+const authStore = useAuthStore();
+
+/*
+ * The first entry depends on the role — a candidate browses the feed, since
+ * other candidates' sheets are reserved to recruiters.
+ *
+ * "Institutionnel" and "Aide" were dropped: they had no page, and the footer
+ * already covers that ground. They come back the day their view exists.
+ */
+const liensNav = computed<LienNav[]>(() => [
+  authStore.user?.role === 'seeker'
+    ? { libelle: 'Feeds', to: { name: 'feed' } }
+    : { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
+  /* A section of the landing page, not a view of its own. */
+  { libelle: 'Comment ça marche', to: { name: 'home', hash: '#comment-ca-marche' } },
+]);
 
 function estActif(lien: LienNav): boolean {
-  return lien.to !== undefined && route.name === lien.to.name;
-}
-
-const authStore = useAuthStore();
+  if (lien.to === undefined || route.name !== lien.to.name) {
+    return false;
+  }
 
 /* Neither the recruiter dashboard nor an admin home has a route yet, so both
    land on the screen they actually work from. */

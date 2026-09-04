@@ -52,6 +52,7 @@ export interface Profile {
   workMode: 'on_site' | 'hybrid' | 'remote' | null
   experienceYears: number | null
   certificationRate: number
+  bio: string | null
   role: Role
   status: UserStatus
   createdAt: string
@@ -73,6 +74,7 @@ export interface UpdateProfileInput {
     | null
   workMode?: 'on_site' | 'hybrid' | 'remote' | null
   experienceYears?: number | null
+  bio?: string | null
 }
 
 /** Favoris */

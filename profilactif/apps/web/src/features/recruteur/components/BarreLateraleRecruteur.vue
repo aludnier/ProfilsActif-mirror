@@ -5,14 +5,14 @@ import type { RouteLocationNamedRaw } from 'vue-router';
 type EntreeEspace = {
   libelle: string;
   to?: RouteLocationNamedRaw;
-  requis?: boolean;
 };
 
+/* Entries without a `to` have no view yet: inert text rather than a dead link. */
 const entrees: EntreeEspace[] = [
-  { libelle: 'Tableau de bord', to: { name: 'candidate-dashboard' } },
-  { libelle: 'Mon profil public', to: { name: 'candidate-public-profile' } },
-  { libelle: 'Ma vidéo de présentation', requis: true },
-  { libelle: 'Compétences & CV' },
+  { libelle: 'Tableau de bord', to: { name: 'recruiter-dashboard' } },
+  { libelle: 'Catalogue des profils', to: { name: 'recruiter-catalog' } },
+  { libelle: 'Mes favoris' },
+  { libelle: 'Mes contacts' },
   { libelle: "Paramètres d'accès" },
 ];
 
@@ -28,10 +28,10 @@ function estActive(entree: EntreeEspace): boolean {
     class="flex w-[280px] shrink-0 flex-col items-start gap-2 border-r border-surface-line bg-surface-page p-6"
   >
     <h2 class="pb-2 font-heading text-[11px] font-bold uppercase text-ink-muted">
-      Espace candidat
+      Espace recruteur
     </h2>
 
-    <nav aria-label="Espace candidat" class="w-full">
+    <nav aria-label="Espace recruteur" class="w-full">
       <ul class="flex flex-col gap-2">
         <li v-for="entree in entrees" :key="entree.libelle">
           <component
@@ -48,12 +48,6 @@ function estActive(entree: EntreeEspace): boolean {
             "
           >
             {{ entree.libelle }}
-            <span
-              v-if="entree.requis"
-              class="rounded-full bg-action px-1.5 py-0.5 text-[10px] font-bold uppercase text-on-action"
-            >
-              Requis
-            </span>
           </component>
         </li>
       </ul>
@@ -61,11 +55,12 @@ function estActive(entree: EntreeEspace): boolean {
 
     <span class="my-2 h-px w-full bg-surface-line" aria-hidden="true" />
 
+    <!-- Same wording as the catalogue's filter panel: one charter, one text. -->
     <div class="flex w-full flex-col items-start gap-3 rounded-control bg-surface-muted p-4">
-      <h3 class="font-heading text-[12px] uppercase text-brand">Charte éthique</h3>
+      <h3 class="font-heading text-[12px] uppercase text-brand">Charte de déontologie</h3>
       <p class="text-[12px] leading-[1.5] text-brand">
-        La vidéo ne doit pas excéder 2 minutes. Habillez-vous de manière professionnelle,
-        assurez-vous de l'éclairage et soignez la clarté de votre élocution.
+        La consultation des profils implique l'acceptation de notre charte anti-discrimination et de
+        déontologie du service public.
       </p>
     </div>
   </aside>
