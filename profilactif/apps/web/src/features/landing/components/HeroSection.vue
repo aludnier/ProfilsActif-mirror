@@ -41,7 +41,7 @@ import studioVideo from '@/assets/images/hero-studio.webp';
           :to="{ name: 'recruiter-catalog' }"
           class="rounded-control border-2 border-brand bg-transparent px-7 py-4 font-heading text-[16px] font-bold text-brand hover:bg-brand-50"
         >
-          Découvrir les profils
+          Les Profils
         </Button>
       </div>
     </div>

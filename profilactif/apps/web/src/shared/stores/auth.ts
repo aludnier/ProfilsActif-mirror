@@ -10,7 +10,20 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  async function initializeAuth() {
+  /*
+   * Mémorisée : les gardes du routeur l'attendent à chaque navigation, mais la
+   * session ne doit être restaurée qu'une fois. Sans cela, un rechargement de
+   * page ferait passer le garde avant la réponse de /auth/me et déconnecterait
+   * un utilisateur pourtant authentifié.
+   */
+  let restauration: Promise<void> | null = null
+
+  function initializeAuth(): Promise<void> {
+    restauration ??= restaurerSession()
+    return restauration
+  }
+
+  async function restaurerSession(): Promise<void> {
     const token = getAuthToken()
     if (token) {
       try {
@@ -56,6 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function logout() {
+    restauration = null
     clearAuthToken()
     user.value = null
     error.value = null

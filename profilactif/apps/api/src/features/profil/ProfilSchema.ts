@@ -38,6 +38,12 @@ export const updateProfilSchema = z.object({
     .max(150)
     .nullable()
     .optional(),
+
+  bio: z
+    .string()
+    .max(2000, 'La présentation ne peut pas dépasser 2000 caractères')
+    .nullable()
+    .optional(),
 })
 
 export type UpdateProfilInput = z.infer<typeof updateProfilSchema>
