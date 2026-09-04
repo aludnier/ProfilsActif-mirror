@@ -2,11 +2,8 @@ import axiosInstance from '@/shared/api-client'
 import type { Contact } from '@/shared/types/api'
 
 export class ContactService {
-  static async createContact(recruiterId: string, seekerId: string): Promise<Contact> {
-    const { data } = await axiosInstance.post<Contact>('/contacts', {
-      recruiterId,
-      seekerId,
-    })
+  static async createContact(recruiterId: string, seekerId: string, message: string): Promise<Contact> {
+    const { data } = await axiosInstance.post<Contact>('/contacts', { recruiterId, seekerId, message })
     return data
   }
 
@@ -25,9 +22,7 @@ export class ContactService {
   }
 
   static async getContactsByRecruiter(recruiterId: string): Promise<Contact[]> {
-    const { data } = await axiosInstance.get<Contact[]>(
-      `/contacts/recruiter/${recruiterId}`,
-    )
+    const { data } = await axiosInstance.get<Contact[]>(`/contacts/recruiter/${recruiterId}`)
     return data
   }
 

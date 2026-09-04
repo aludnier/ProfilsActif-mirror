@@ -2,8 +2,8 @@ import axiosInstance from '@/shared/api-client'
 import type { Favorite } from '@/shared/types/api'
 
 export class FavoriteService {
-  static async createFavorite(seekerId: string): Promise<Favorite> {
-    const { data } = await axiosInstance.post<Favorite>('/favorites', { seekerId })
+  static async createFavorite(recruiterId: string, seekerId: string): Promise<Favorite> {
+    const { data } = await axiosInstance.post<Favorite>('/favorites', { recruiterId, seekerId })
     return data
   }
 
