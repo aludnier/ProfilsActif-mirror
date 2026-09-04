@@ -47,6 +47,11 @@ const routes: RouteRecordRaw[] = [
     name: 'admin-questions',
     component: () => import('@/features/admin/views/GestionQuestionsView.vue'),
   },
+  {
+    path: '/certification',
+    name: 'certification',
+    component: () => import('@/features/certification/views/CertificationView.vue'),
+  },
 ];
 
 export const router = createRouter({
