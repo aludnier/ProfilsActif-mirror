@@ -103,3 +103,64 @@ export interface Interaction {
   toUserId: string
   createdAt: string
 }
+
+export type QuestionnaireStatus = 'draft' | 'published' | 'archived'
+
+export interface QuestionnaireCategory {
+  code: string
+  label: string
+  weight: number
+}
+
+export interface QuestionnaireOption {
+  id: string
+  label: string
+  points: number
+}
+
+export interface QuestionnaireQuestion {
+  id: string
+  category: string
+  weight?: number
+  type: 'single' | 'multiple'
+  prompt: string
+  options: QuestionnaireOption[]
+}
+
+export interface QuestionnaireContent {
+  config?: {
+    passThreshold?: number
+    minCategoryScore?: number
+    retakeDelayDays?: number
+    badgeBands?: { min: number; level: string }[]
+  }
+  categories?: QuestionnaireCategory[]
+  questions?: QuestionnaireQuestion[]
+}
+
+export interface Questionnaire {
+  id: string
+  questionnaireId: string
+  code: string
+  title: string
+  version: number
+  status: QuestionnaireStatus
+  content: QuestionnaireContent
+  createdBy: string | null
+  createdAt: string
+  publishedAt: string | null
+}
+
+export type QuestionnaireAttemptStatus = 'in_progress' | 'submitted' | 'abandoned'
+
+export interface QuestionnaireAttempt {
+  id: string
+  questionnaireVersionId: string
+  seekerId: string
+  status: QuestionnaireAttemptStatus
+  answers: Record<string, string[]>
+  score: number | null
+  startedAt: string
+  submittedAt: string | null
+  updatedAt: string
+}
