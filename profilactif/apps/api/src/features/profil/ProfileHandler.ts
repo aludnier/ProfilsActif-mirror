@@ -5,6 +5,10 @@ import { updateProfilSchema } from './ProfilSchema.js'
 
 const profileService = new ProfileService()
 
+export async function getProfilsHandler(c: Context) {
+  return c.json(await profileService.getProfils())
+}
+
 export async function getProfilHandler(c: Context) {
   const id = c.req.param('id')
 
