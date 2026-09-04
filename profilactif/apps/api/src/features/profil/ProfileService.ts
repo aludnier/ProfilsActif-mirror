@@ -4,6 +4,10 @@ import type { UpdateProfilInput } from './ProfilSchema.js'
 
 export class ProfileService {constructor(private readonly profilRepository = new ProfilRepository()) {}
 
+  async getProfils() {
+    return this.profilRepository.findAll()
+  }
+
   async getProfil(id: string) {
     const profil = await this.profilRepository.findById(id)
 
