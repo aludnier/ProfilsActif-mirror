@@ -38,9 +38,13 @@ function estActif(lien: LienNav): boolean {
     return false;
   }
 
-  /* An anchor is only current once you are on it, not on the whole page. */
-  return lien.to.hash === undefined || route.hash === lien.to.hash;
-}
+/* Neither the recruiter dashboard nor an admin home has a route yet, so both
+   land on the screen they actually work from. */
+const ROUTE_ESPACE: Record<Role, string> = {
+  seeker: 'candidate-dashboard',
+  recruiter: 'recruiter-dashboard',
+  admin: 'admin-questions',
+};
 
 /*
  * Everything the header shows about the logged-in user, or `null` when nobody

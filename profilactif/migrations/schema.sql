@@ -305,3 +305,11 @@ CREATE TABLE IF NOT EXISTS questionnaire_attempt (
   CONSTRAINT chk_questionnaire_attempt_score
     CHECK (score IS NULL OR (score >= 0 AND score <= 100))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Preferences de recherche du candidat, utilisees par les filtres recruteur.
+ALTER TABLE seeker
+  ADD COLUMN IF NOT EXISTS employment_type ENUM('full_time', 'part_time', 'freelance', 'internship') NULL AFTER target_sector,
+  ADD COLUMN IF NOT EXISTS work_mode ENUM('on_site', 'hybrid', 'remote') NULL AFTER employment_type,
+  ADD COLUMN IF NOT EXISTS experience_years DECIMAL(4,1) UNSIGNED NULL AFTER work_mode;
+  ADD COLUMN bio TEXT AFTER target_sector;
