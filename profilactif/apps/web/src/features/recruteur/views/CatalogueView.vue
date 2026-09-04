@@ -112,15 +112,15 @@ onMounted(chargerProfils)
       <p v-if="loading" class="text-ink-muted">Chargement des candidats...</p>
       <p v-else-if="error" class="text-red-700">{{ error }}</p>
       <p v-else-if="!profils.length" class="text-ink-muted">Aucun candidat ne correspond aux filtres.</p>
-      <GrilleCandidats v-else :profils="profils" />
+      <GrilleCandidats v-else :profils="profils" :premier-vue="premierProfil" />
 
       <div class="flex flex-wrap items-center justify-between gap-4 border-t border-surface-line pt-6">
         <p class="font-heading text-[14px] text-ink-muted">
-          Affichage de {{ profils.length }} sur {{ formaterNombre(filteredProfiles.length) }} profils
+          Affichage de {{ filteredProfiles.length - premierProfil > 20 ? 20 : (filteredProfiles.length - premierProfil)}} sur {{ formaterNombre(filteredProfiles.length) }} profils
         </p>
         <Paginator
           v-model:first="premierProfil"
-          :rows="6"
+          :rows="20"
           :total-records="filteredProfiles.length"
           template="PrevPageLink PageLinks NextPageLink"
         />
