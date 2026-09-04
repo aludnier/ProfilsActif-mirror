@@ -19,6 +19,9 @@ const phone = ref('')
 const age = ref<number | null>(null)
 const location = ref('')
 const targetSector = ref('')
+const employmentType = ref<UpdateProfileInput['employmentType']>(null)
+const workMode = ref<UpdateProfileInput['workMode']>(null)
+const experienceYears = ref<number | null>(null)
 
 const isChanged = computed(() => {
   if (!profile.value) return false
@@ -28,7 +31,10 @@ const isChanged = computed(() => {
     phone.value !== (profile.value.phone ?? '') ||
     age.value !== profile.value.age ||
     location.value !== (profile.value.location ?? '') ||
-    targetSector.value !== (profile.value.targetSector ?? '')
+    targetSector.value !== (profile.value.targetSector ?? '') ||
+    employmentType.value !== profile.value.employmentType ||
+    workMode.value !== profile.value.workMode ||
+    experienceYears.value !== profile.value.experienceYears
   )
 })
 
@@ -48,6 +54,9 @@ async function loadProfile() {
     age.value = profile.value.age
     location.value = profile.value.location ?? ''
     targetSector.value = profile.value.targetSector ?? ''
+    employmentType.value = profile.value.employmentType
+    workMode.value = profile.value.workMode
+    experienceYears.value = profile.value.experienceYears
   } catch (err: any) {
     error.value = err.message || 'Erreur lors du chargement du profil'
   } finally {
@@ -76,6 +85,9 @@ async function saveProfile() {
     if (targetSector.value !== (profile.value?.targetSector ?? '')) {
       updates.targetSector = targetSector.value || null
     }
+    if (employmentType.value !== profile.value?.employmentType) updates.employmentType = employmentType.value
+    if (workMode.value !== profile.value?.workMode) updates.workMode = workMode.value
+    if (experienceYears.value !== profile.value?.experienceYears) updates.experienceYears = experienceYears.value
 
     const updated = await ProfileService.updateProfile(authStore.user.id, updates)
     profile.value = updated
@@ -209,6 +221,32 @@ watch(
           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           :disabled="submitting"
         />
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div>
+          <label for="employmentType" class="mb-2 block text-sm font-medium text-gray-700">Type de contrat</label>
+          <select id="employmentType" v-model="employmentType" class="w-full rounded-lg border border-gray-300 px-4 py-2">
+            <option :value="null">Non renseigne</option>
+            <option value="full_time">Temps plein</option>
+            <option value="part_time">Temps partiel</option>
+            <option value="freelance">Freelance</option>
+            <option value="internship">Stage / alternance</option>
+          </select>
+        </div>
+        <div>
+          <label for="workMode" class="mb-2 block text-sm font-medium text-gray-700">Modalite</label>
+          <select id="workMode" v-model="workMode" class="w-full rounded-lg border border-gray-300 px-4 py-2">
+            <option :value="null">Non renseignee</option>
+            <option value="on_site">Presentiel</option>
+            <option value="hybrid">Hybride</option>
+            <option value="remote">Teletravail</option>
+          </select>
+        </div>
+        <div>
+          <label for="experienceYears" class="mb-2 block text-sm font-medium text-gray-700">Experience (annees)</label>
+          <input id="experienceYears" v-model.number="experienceYears" type="number" min="0" max="60" step="0.5" class="w-full rounded-lg border border-gray-300 px-4 py-2" />
+        </div>
       </div>
 
       <div class="flex gap-3 pt-4">

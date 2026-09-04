@@ -37,7 +37,7 @@ const authStore = useAuthStore();
    land on the screen they actually work from. */
 const ROUTE_ESPACE: Record<Role, string> = {
   seeker: 'candidate-dashboard',
-  recruiter: 'recruiter-catalog',
+  recruiter: 'recruiter-dashboard',
   admin: 'admin-questions',
 };
 

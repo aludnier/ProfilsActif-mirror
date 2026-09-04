@@ -6,6 +6,7 @@ export type ProfilResume = {
   intitule: string;
   ville: string;
   modalite: string;
+  typeContrat?: string;
   experience: string;
   competences: string[];
   dureeVideo: string;
@@ -46,7 +47,7 @@ defineProps<{ profil: ProfilResume }>();
         <h3 class="text-[16px]">{{ profil.nom }}</h3>
         <p class="font-heading text-[14px] font-medium">{{ profil.intitule }}</p>
         <p class="text-[13px] italic text-ink-muted">
-          {{ profil.ville }} • {{ profil.modalite }} • {{ profil.experience }}
+          {{ profil.ville }} • {{ profil.typeContrat ? profil.typeContrat + ' &bull; ' : '' }} {{ profil.modalite }} • {{ profil.experience }}
         </p>
       </div>
 

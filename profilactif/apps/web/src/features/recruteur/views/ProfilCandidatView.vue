@@ -25,6 +25,11 @@ const canContact = computed(() => auth.user?.role === 'recruiter' && !!auth.user
 async function load() {
   try {
     profile.value = await ProfileService.getProfile(candidateId)
+    if (auth.user?.id && auth.user.role === 'recruiter') {
+      const key = 'recruiter-viewed-' + auth.user.id
+      const viewed = JSON.parse(localStorage.getItem(key) || '[]') as string[]
+      if (!viewed.includes(candidateId)) localStorage.setItem(key, JSON.stringify([...viewed, candidateId]))
+    }
     videos.value = await VideoService.getVideosBySeeker(candidateId)
 
     if (auth.user?.id && auth.user.role === 'recruiter') {
@@ -154,22 +159,58 @@ onMounted(() => {
               {{ profile.firstName }} {{ profile.lastName }} est disponible pour echanger sur son parcours et ses competences.
             </p>
           </div>
+
+          <div v-if="videos.length > 1" class="rounded-card border border-surface-line bg-surface-page p-6">
+            <h2 class="font-heading text-[17px] font-bold text-brand">Videos de presentation</h2>
+            <div class="mt-5 space-y-5">
+              <div v-for="video in videos" :key="video.id" class="border-b border-surface-line pb-5 last:border-0 last:pb-0">
+                <h3 class="font-heading font-bold text-brand">{{ video.title || 'Presentation video' }}</h3>
+                <p v-if="video.description" class="mt-1 text-[14px] text-ink-muted">{{ video.description }}</p>
+                <video :src="video.url" controls preload="metadata" class="mt-3 aspect-video w-full rounded-control bg-black" />
+              </div>
+            </div>
+          </div>
         </section>
 
         <aside class="rounded-card border border-surface-line bg-surface-page p-6">
-          <h2 class="font-heading text-[12px] font-bold uppercase text-ink-muted">Informations</h2>
+          <h2 class="font-heading text-[12px] font-bold uppercase text-ink-muted">Informations du profil</h2>
           <dl class="mt-5 space-y-4 text-[14px]">
             <div>
-              <dt class="font-bold text-brand">Secteur</dt>
+              <dt class="font-bold text-brand">Secteur recherche</dt>
               <dd>{{ profile.targetSector || 'Non renseigne' }}</dd>
             </div>
             <div>
               <dt class="font-bold text-brand">Localisation</dt>
               <dd>{{ profile.location || 'Non renseignee' }}</dd>
             </div>
+            <div>
+              <dt class="font-bold text-brand">Type de contrat</dt>
+              <dd>{{ profile.employmentType || 'Non renseigne' }}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-brand">Modalite</dt>
+              <dd>{{ profile.workMode || 'Non renseignee' }}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-brand">Experience</dt>
+              <dd>{{ profile.experienceYears ?? 'Non renseignee' }}{{ profile.experienceYears !== null ? ' ans' : '' }}</dd>
+            </div>
             <div v-if="profile.age">
               <dt class="font-bold text-brand">Age</dt>
               <dd>{{ profile.age }} ans</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-brand">Certification</dt>
+              <dd>{{ profile.certificationRate }} %</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-brand">Coordonnees</dt>
+              <dd>{{ profile.mail }}</dd>
+              <dd v-if="profile.phone">{{ profile.phone }}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-brand">Profil actif depuis</dt>
+              <dd>{{ new Date(profile.createdAt).toLocaleDateString('fr-FR') }}</dd>
             </div>
           </dl>
         </aside>

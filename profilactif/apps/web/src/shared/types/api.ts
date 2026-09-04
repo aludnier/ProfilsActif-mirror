@@ -1,5 +1,5 @@
-
 export type Role = 'seeker' | 'recruiter' | 'admin'
+
 export type UserStatus = 'active' | 'suspended' | 'deleted'
 
 export interface PublicUser {
@@ -43,6 +43,15 @@ export interface Profile {
   age: number | null
   location: string | null
   targetSector: string | null
+  employmentType:
+    | 'full_time'
+    | 'part_time'
+    | 'freelance'
+    | 'internship'
+    | null
+  workMode: 'on_site' | 'hybrid' | 'remote' | null
+  experienceYears: number | null
+  certificationRate: number
   role: Role
   status: UserStatus
   createdAt: string
@@ -56,9 +65,18 @@ export interface UpdateProfileInput {
   age?: number | null
   location?: string
   targetSector?: string | null
+  employmentType?:
+    | 'full_time'
+    | 'part_time'
+    | 'freelance'
+    | 'internship'
+    | null
+  workMode?: 'on_site' | 'hybrid' | 'remote' | null
+  experienceYears?: number | null
 }
 
-/** Favori */
+/** Favoris */
+
 export interface Favorite {
   id: string
   recruiterId: string
@@ -85,7 +103,7 @@ export interface Video {
   id: string
   seekerId: string
   url: string
-  title?: string | null | null
+  title?: string | null
   description?: string | null
   createdAt: string
   updatedAt: string
@@ -104,7 +122,12 @@ export interface Interaction {
   createdAt: string
 }
 
-export type QuestionnaireStatus = 'draft' | 'published' | 'archived'
+/** Certification */
+
+export type QuestionnaireStatus =
+  | 'draft'
+  | 'published'
+  | 'archived'
 
 export interface QuestionnaireCategory {
   code: string
@@ -132,8 +155,12 @@ export interface QuestionnaireContent {
     passThreshold?: number
     minCategoryScore?: number
     retakeDelayDays?: number
-    badgeBands?: { min: number; level: string }[]
+    badgeBands?: {
+      min: number
+      level: string
+    }[]
   }
+
   categories?: QuestionnaireCategory[]
   questions?: QuestionnaireQuestion[]
 }
@@ -151,7 +178,10 @@ export interface Questionnaire {
   publishedAt: string | null
 }
 
-export type QuestionnaireAttemptStatus = 'in_progress' | 'submitted' | 'abandoned'
+export type QuestionnaireAttemptStatus =
+  | 'in_progress'
+  | 'submitted'
+  | 'abandoned'
 
 export interface QuestionnaireAttempt {
   id: string
