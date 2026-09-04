@@ -11,6 +11,6 @@ import Message from 'primevue/message';
       </p>
     </div>
 
-    <Message severity="info" :closable="false"> Cette page n’est pas encore construite. </Message>
+    <Message severity="info" :closable="false"> Bientôt disponible. </Message>
   </section>
 </template>
