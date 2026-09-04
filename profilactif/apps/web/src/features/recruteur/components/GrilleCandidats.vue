@@ -2,7 +2,7 @@
 import CarteProfil from '@/shared/ui/CarteProfil.vue';
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue';
 
-defineProps<{ profils: ProfilResume[] }>();
+defineProps<{ profils: ProfilResume[], premierVue : number}>();
 </script>
 
 <template>
@@ -11,7 +11,7 @@ defineProps<{ profils: ProfilResume[] }>();
     landing : même CarteProfil, contexte de mise en page différent.
   -->
   <ul class="grid list-none grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-8">
-    <li v-for="profil in profils.slice(0, 20)" :key="profil.nom" class="flex">
+    <li v-for="profil in profils.slice(premierVue).slice(0 , 20)" :key="profil.nom" class="flex">
         <CarteProfil :profil="profil" />
     </li>
   </ul>
