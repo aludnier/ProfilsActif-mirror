@@ -43,6 +43,7 @@ export interface Profile {
   age: number | null
   location: string | null
   targetSector: string | null
+  bio: string | null
   role: Role
   status: UserStatus
   createdAt: string
@@ -56,6 +57,7 @@ export interface UpdateProfileInput {
   age?: number | null
   location?: string
   targetSector?: string | null
+  bio?: string | null
 }
 
 /** Favori */
