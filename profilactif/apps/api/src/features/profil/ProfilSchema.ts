@@ -38,6 +38,16 @@ export const updateProfilSchema = z.object({
     .max(150)
     .nullable()
     .optional(),
+
+  bio: z
+    .string()
+    .max(2000, 'La présentation ne peut pas dépasser 2000 caractères')
+    .nullable()
+    .optional(),
+
+  employmentType: z.enum(['full_time', 'part_time', 'freelance', 'internship']).nullable().optional(),
+  workMode: z.enum(['on_site', 'hybrid', 'remote']).nullable().optional(),
+  experienceYears: z.number().min(0).max(60).nullable().optional(),
 })
 
 export type UpdateProfilInput = z.infer<typeof updateProfilSchema>
