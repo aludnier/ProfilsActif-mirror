@@ -31,7 +31,8 @@ export class ProfilRepository {
     const [rows] = await db.query<Profil[]>(`
       SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName,
         u.mail AS mail, u.phone AS phone, u.age AS age,
-        s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.work_mode AS workMode, s.experience_years AS experienceYears, s.certification_rate AS certificationRate,
+        s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
+        s.certification_rate AS certificationRate,
         u.role AS role, u.status AS status,
         s.created_at AS createdAt, s.updated_at AS updatedAt
       FROM seeker s INNER JOIN app_user u ON u.uuid = s.id
@@ -124,6 +125,8 @@ export class ProfilRepository {
     if (data.experienceYears !== undefined) {
       seekerFields.push('experience_years = ?')
       seekerValues.push(data.experienceYears)
+    }
+
     if (data.bio !== undefined) {
       seekerFields.push('bio = ?')
       seekerValues.push(data.bio)

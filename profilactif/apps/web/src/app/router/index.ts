@@ -15,8 +15,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
-    component: () =>
-      import('@/features/landing/views/LandingView.vue'),
+    component: () => import('@/features/landing/views/LandingView.vue'),
   },
   {
     path: '/profiles',
@@ -26,20 +25,17 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'login',
-    component: () =>
-      import('@/features/auth/views/ConnexionView.vue'),
+    component: () => import('@/features/auth/views/ConnexionView.vue'),
   },
   {
     path: '/logout',
     name: 'logout',
-    component: () =>
-      import('@/features/auth/views/LogoutView.vue'),
+    component: () => import('@/features/auth/views/LogoutView.vue'),
   },
   {
     path: '/signup',
     name: 'signup',
-    component: () =>
-      import('@/features/auth/views/InscriptionView.vue'),
+    component: () => import('@/features/auth/views/InscriptionView.vue'),
   },
   /*
    * Kept as a redirect rather than deleted: the landing section and the
@@ -49,19 +45,6 @@ const routes: RouteRecordRaw[] = [
     path: '/profiles/:id',
     name: 'candidate-profile',
     redirect: (to) => ({ name: 'recruiter-candidate-profile', params: to.params }),
-  },
-  {
-    path: '/recruiter/candidates/:id',
-    name: 'recruiter-candidate-profile',
-    component: () =>
-      import('@/features/recruteur/views/ProfilCandidatView.vue'),
-    props: true,
-  },
-  {
-    path: '/recruiter/dashboard',
-    name: 'recruiter-dashboard',
-    component: () =>
-      import('@/features/recruteur/views/TableauDeBordRecruteur.vue'),
   },
   {
     path: '/recruiter/catalog',
@@ -96,16 +79,20 @@ const routes: RouteRecordRaw[] = [
     meta: { roles: ['seeker'] },
   },
   {
-    path: '/admin/questions',
-    name: 'admin-questions',
-    component: () =>
-      import('@/features/admin/views/GestionQuestionsView.vue'),
-  },
-  {
     path: '/candidate/certification',
     name: 'candidate-certification',
-    component: () =>
-      import('@/features/certification/views/CertificationView.vue'),
+    component: () => import('@/features/certification/views/CertificationView.vue'),
+    meta: { roles: ['seeker'] },
+  },
+  /* Same screen: QuestionnaireView only re-exports CertificationView. */
+  {
+    path: '/certification',
+    name: 'certification-questionnaire',
+    redirect: { name: 'candidate-certification' },
+  },
+  {
+    path: '/admin/questions',
+    name: 'admin-questions',
     component: () => import('@/features/admin/views/GestionQuestionsView.vue'),
     meta: { roles: ['admin'] },
   },
@@ -115,15 +102,9 @@ const routes: RouteRecordRaw[] = [
     name: 'not-found',
     component: () => import('@/shared/ui/PageErreur.vue'),
   },
-  {
-    path: '/certification',
-    name: 'certification-questionnaire',
-    component: () =>
-      import('@/features/certification/views/QuestionnaireView.vue'),
-  },
-]
+];
 
-const router = createRouter({
+export const router = createRouter({
   history: createWebHistory(),
   routes,
   /* Without this, an anchor link only works from the page it points at. */
