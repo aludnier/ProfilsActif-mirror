@@ -11,7 +11,7 @@ type EntreeEspace = {
 const entrees: EntreeEspace[] = [
   { libelle: 'Tableau de bord', to: { name: 'candidate-dashboard' } },
   { libelle: 'Mon profil public', to: { name: 'candidate-public-profile' } },
-  { libelle: 'Ma vidéo de présentation', requis: true },
+  { libelle: 'Certification JEB', requis: true, to: { name: 'candidate-certification'} },
   { libelle: 'Compétences & CV' },
   { libelle: "Paramètres d'accès" },
 ];
