@@ -15,6 +15,7 @@ export interface Profil extends RowDataPacket {
   age: number | null
   location: string | null
   targetSector: string | null
+  bio: string | null
   role: 'seeker'
   status: 'active' | 'suspended' | 'deleted'
   createdAt: Date
@@ -26,7 +27,7 @@ export class ProfilRepository {
     const [rows] = await db.query<Profil[]>(`
       SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName,
         u.mail AS mail, u.phone AS phone, u.age AS age,
-        s.location AS location, s.target_sector AS targetSector,
+        s.location AS location, s.target_sector AS targetSector, s.bio AS bio,
         u.role AS role, u.status AS status,
         s.created_at AS createdAt, s.updated_at AS updatedAt
       FROM seeker s INNER JOIN app_user u ON u.uuid = s.id
@@ -49,6 +50,7 @@ export class ProfilRepository {
           u.age AS age,
           s.location AS location,
           s.target_sector AS targetSector,
+          s.bio AS bio,
           u.role AS role,
           u.status AS status,
           s.created_at AS createdAt,
@@ -103,6 +105,11 @@ export class ProfilRepository {
     if (data.targetSector !== undefined) {
       seekerFields.push('target_sector = ?')
       seekerValues.push(data.targetSector)
+    }
+
+    if (data.bio !== undefined) {
+      seekerFields.push('bio = ?')
+      seekerValues.push(data.bio)
     }
 
     if (userFields.length > 0) {
