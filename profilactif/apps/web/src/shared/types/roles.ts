@@ -1,25 +1,37 @@
 /*
- * Miroir front de apps/api/src/shared/roles.ts.
+ * Front-end mirror of apps/api/src/shared/roles.ts.
  *
- * Les deux applications sont des workspaces distincts sans paquet partagé :
- * cette liste est donc dupliquée à dessein, et doit rester alignée sur
- * l'ENUM `utilisateur.role` du schéma MySQL et sur la définition de l'API.
+ * The two apps are separate workspaces with no shared package: this list is
+ * therefore duplicated on purpose, and must stay aligned with the
+ * `app_user.role` ENUM in the MySQL schema and with the API's definition.
  */
 
-export const ROLES = ['demandeur', 'recruteur', 'admin'] as const;
+export const ROLES = ['seeker', 'recruiter', 'admin'] as const;
 export type Role = (typeof ROLES)[number];
 
 /*
- * Ce qu'un visiteur peut choisir lui-même à l'inscription. `admin` en est
- * volontairement absent : un compte administrateur se crée en base (seed) ou
- * par un autre admin, jamais via le formulaire public.
+ * What a visitor can choose for themselves at signup. `admin` is
+ * deliberately absent: an admin account is created in the database (seed) or
+ * by another admin, never through the public form.
  */
-export const ROLES_INSCRIPTION = ['demandeur', 'recruteur'] as const;
+export const ROLES_INSCRIPTION = ['seeker', 'recruiter'] as const;
 export type RoleInscription = (typeof ROLES_INSCRIPTION)[number];
 
-/** Libellés affichables, le code technique restant en base. */
+/** Displayable labels, the technical code stays in the database. */
 export const LIBELLES_ROLE: Record<Role, string> = {
-  demandeur: 'Candidat',
-  recruteur: 'Recruteur',
+  seeker: 'Candidat',
+  recruiter: 'Recruteur',
   admin: 'Administrateur',
+};
+
+/*
+ * Where each role lands: its own home screen. Used both by the header and by
+ * the router guard, which sends a user back here when they ask for a page
+ * reserved to another role. No admin home exists yet, so that role still points
+ * at the screen it actually works from.
+ */
+export const ROUTE_ESPACE: Record<Role, string> = {
+  seeker: 'candidate-dashboard',
+  recruiter: 'recruiter-dashboard',
+  admin: 'admin-questions',
 };

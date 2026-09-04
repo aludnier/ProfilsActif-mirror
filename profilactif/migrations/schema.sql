@@ -33,6 +33,7 @@ CREATE TABLE `app_user` (
   `status` enum('active','suspended','deleted') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `age` tinyint unsigned DEFAULT NULL,
   PRIMARY KEY (`uuid`),
   UNIQUE KEY `uq_app_user_mail` (`mail`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -44,7 +45,7 @@ CREATE TABLE `app_user` (
 
 LOCK TABLES `app_user` WRITE;
 /*!40000 ALTER TABLE `app_user` DISABLE KEYS */;
-INSERT INTO `app_user` VALUES ('7230192e-a71a-11f1-9986-1cce51bbf125','Jean','Dupont','jean.dupont@test.fr','0612345678','$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890','seeker','active','2026-09-03 00:05:45','2026-09-03 00:05:45');
+INSERT INTO `app_user` VALUES ('7230192e-a71a-11f1-9986-1cce51bbf125','Jean','Dupont','jean.dupont@test.fr','0612345678','$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890','seeker','active','2026-09-03 00:05:45','2026-09-03 00:05:45',NULL);
 /*!40000 ALTER TABLE `app_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -143,6 +144,10 @@ CREATE TABLE `seeker` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `location` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `target_sector` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `employment_type` enum('full_time','part_time','freelance','internship') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `work_mode` enum('on_site','hybrid','remote') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `experience_years` decimal(4,1) unsigned DEFAULT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
   `certification_rate` int NOT NULL DEFAULT '0',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -226,6 +231,7 @@ CREATE TABLE `video` (
   `seeker_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `url` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -253,4 +259,52 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-09-03 10:12:21
+-- Feature certification : questionnaire versionne et reprise des tentatives.
+CREATE TABLE IF NOT EXISTS questionnaire (
+  id CHAR(36) NOT NULL DEFAULT (UUID()),
+  code VARCHAR(100) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  created_by CHAR(36) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_questionnaire_code (code),
+  CONSTRAINT fk_questionnaire_creator
+    FOREIGN KEY (created_by) REFERENCES app_user(uuid) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS questionnaire_version (
+  id CHAR(36) NOT NULL DEFAULT (UUID()),
+  questionnaire_id CHAR(36) NOT NULL,
+  version INT UNSIGNED NOT NULL,
+  status ENUM('draft', 'published', 'archived') NOT NULL DEFAULT 'draft',
+  content JSON NOT NULL,
+  created_by CHAR(36) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  published_at DATETIME NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_questionnaire_version (questionnaire_id, version),
+  CONSTRAINT fk_questionnaire_version_questionnaire
+    FOREIGN KEY (questionnaire_id) REFERENCES questionnaire(id) ON DELETE CASCADE,
+  CONSTRAINT fk_questionnaire_version_creator
+    FOREIGN KEY (created_by) REFERENCES app_user(uuid) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS questionnaire_attempt (
+  id CHAR(36) NOT NULL DEFAULT (UUID()),
+  questionnaire_version_id CHAR(36) NOT NULL,
+  seeker_id CHAR(36) NOT NULL,
+  status ENUM('in_progress', 'submitted', 'abandoned') NOT NULL DEFAULT 'in_progress',
+  answers JSON NOT NULL,
+  score DECIMAL(5,2) NULL,
+  started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  submitted_at DATETIME NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_questionnaire_attempt_seeker (seeker_id, updated_at),
+  CONSTRAINT fk_questionnaire_attempt_version
+    FOREIGN KEY (questionnaire_version_id) REFERENCES questionnaire_version(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_questionnaire_attempt_seeker
+    FOREIGN KEY (seeker_id) REFERENCES seeker(id) ON DELETE CASCADE,
+  CONSTRAINT chk_questionnaire_attempt_score
+    CHECK (score IS NULL OR (score >= 0 AND score <= 100))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

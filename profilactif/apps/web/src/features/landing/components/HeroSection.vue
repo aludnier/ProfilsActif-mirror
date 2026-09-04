@@ -6,11 +6,6 @@ import studioVideo from '@/assets/images/hero-studio.webp';
 </script>
 
 <template>
-  <!--
-    La maquette n'existe qu'en 1440px. `flex-wrap` évite seulement le
-    débordement horizontal en dessous : ce n'est pas une mise en page mobile,
-    qui reste à cadrer avec le design.
-  -->
   <section class="flex flex-wrap items-center gap-12 bg-surface-muted px-gutter py-22">
     <div class="flex min-w-0 flex-1 basis-[480px] flex-col items-start gap-8">
       <div class="flex w-full flex-col items-start gap-3">
@@ -32,11 +27,6 @@ import studioVideo from '@/assets/images/hero-studio.webp';
       </p>
 
       <div class="flex items-start gap-4">
-        <!--
-          Action primaire : le fond vient de la palette `primary` de PrimeVue,
-          branchée sur la couleur d'action dans app/plugins/primevue.ts. Rien
-          n'est surchargé ici — c'est le token qui fait le rendu.
-        -->
         <Button
           as="router-link"
           :to="{ name: 'signup' }"
@@ -46,17 +36,12 @@ import studioVideo from '@/assets/images/hero-studio.webp';
           <img :src="flecheDroite" alt="" class="size-5" />
         </Button>
 
-        <!--
-          Action secondaire : contour bleu institutionnel, jamais en aplat.
-          Même destination que « Découvrir les profils » du header : deux
-          libellés identiques doivent mener au même endroit.
-        -->
         <Button
           as="router-link"
           :to="{ name: 'recruiter-catalog' }"
           class="rounded-control border-2 border-brand bg-transparent px-7 py-4 font-heading text-[16px] font-bold text-brand hover:bg-brand-50"
         >
-          Découvrir les profils
+          Les Profils
         </Button>
       </div>
     </div>

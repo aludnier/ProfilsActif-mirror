@@ -1,29 +1,34 @@
 <script setup lang="ts">
 /*
- * Chiffres figés issus de la maquette. Ils n'ont pas vocation à le rester :
- * dès que l'API expose ces agrégats (slice admin, tableau de bord global),
- * cette liste devient une prop du composant.
+ * Keywords rather than figures: the numbers here were invented, and a public
+ * service can't advertise results it hasn't measured. Each pillar states
+ * something the product actually does.
  */
-const statistiques = [
-  { valeur: '45 000 +', libelle: 'Profils vidéos validés' },
-  { valeur: '94 %', libelle: 'Taux de retour recruteurs' },
-  { valeur: '20 min', libelle: 'Gain de temps moyen au triage' },
+const piliers = [
+  {
+    motCle: 'Vidéo',
+    description: 'Deux minutes pour se présenter, au-delà du CV papier.',
+  },
+  {
+    motCle: 'Certification',
+    description: 'Des compétences évaluées par un questionnaire commun à tous.',
+  },
+  {
+    motCle: 'Déontologie',
+    description: 'Une charte anti-discrimination acceptée par chaque recruteur.',
+  },
 ];
 </script>
 
 <template>
   <section class="bg-brand px-gutter py-10">
-    <ul class="flex flex-wrap items-start justify-between gap-x-8 gap-y-6">
-      <li
-        v-for="statistique in statistiques"
-        :key="statistique.libelle"
-        class="flex flex-col items-center gap-1"
-      >
-        <p class="whitespace-nowrap font-heading text-[36px] font-bold text-on-brand">
-          {{ statistique.valeur }}
+    <ul class="grid gap-8 sm:grid-cols-3">
+      <li v-for="pilier in piliers" :key="pilier.motCle" class="flex flex-col gap-2">
+        <p class="font-heading text-[22px] font-bold uppercase tracking-[0.5px] text-on-brand">
+          {{ pilier.motCle }}
         </p>
-        <p class="font-heading text-[14px] uppercase text-ink-invert">
-          {{ statistique.libelle }}
+        <p class="text-[15px] leading-[1.6] text-ink-invert">
+          {{ pilier.description }}
         </p>
       </li>
     </ul>

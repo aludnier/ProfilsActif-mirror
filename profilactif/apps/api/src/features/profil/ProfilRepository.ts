@@ -1,5 +1,7 @@
 import type { RowDataPacket } from 'mysql2'
+
 import { db } from '../../infrastructure/db.client.js'
+
 import type { UpdateProfilInput } from './ProfilSchema.js'
 
 type SqlValue = string | number | boolean | null
@@ -10,8 +12,14 @@ export interface Profil extends RowDataPacket {
   lastName: string
   mail: string
   phone: string | null
+  age: number | null
   location: string | null
   targetSector: string | null
+  employmentType: string | null
+  bio: string | null
+  workMode: string | null
+  experienceYears: number | null
+  certificationRate: number
   role: 'seeker'
   status: 'active' | 'suspended' | 'deleted'
   createdAt: Date
@@ -19,27 +27,44 @@ export interface Profil extends RowDataPacket {
 }
 
 export class ProfilRepository {
-  async findById(
-    id: string,
-  ): Promise<Profil | null> {
+  async findAll(): Promise<Profil[]> {
+    const [rows] = await db.query<Profil[]>(`
+      SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName,
+        u.mail AS mail, u.phone AS phone, u.age AS age,
+        s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
+        s.certification_rate AS certificationRate,
+        u.role AS role, u.status AS status,
+        s.created_at AS createdAt, s.updated_at AS updatedAt
+      FROM seeker s INNER JOIN app_user u ON u.uuid = s.id
+      WHERE u.role = 'seeker' AND u.status = 'active'
+      ORDER BY s.created_at DESC
+    `)
+    return rows
+  }
+
+
+  async findById(id: string): Promise<Profil | null> {
     const [rows] = await db.query<Profil[]>(
       `
-      SELECT
-        s.id AS id,
-        u.first_name AS firstName,
-        u.last_name AS lastName,
-        u.mail AS mail,
-        u.phone AS phone,
-        s.location AS location,
-        s.target_sector AS targetSector,
-        u.role AS role,
-        u.status AS status,
-        s.created_at AS createdAt,
-        s.updated_at AS updatedAt
-      FROM seeker s
-      INNER JOIN app_user u
-        ON u.uuid = s.id
-      WHERE s.id = ?
+        SELECT
+          s.id AS id,
+          u.first_name AS firstName,
+          u.last_name AS lastName,
+          u.mail AS mail,
+          u.phone AS phone,
+          u.age AS age,
+          s.location AS location,
+          s.target_sector AS targetSector,
+          s.bio AS bio,
+          u.role AS role,
+          u.status AS status,
+          s.created_at AS createdAt,
+          s.updated_at AS updatedAt
+        FROM seeker s
+        INNER JOIN app_user u
+          ON u.uuid = s.id
+        WHERE s.id = ?
+          AND u.role = 'seeker'
       `,
       [id],
     )
@@ -72,6 +97,11 @@ export class ProfilRepository {
       userValues.push(data.phone)
     }
 
+    if (data.age !== undefined) {
+      userFields.push('age = ?')
+      userValues.push(data.age)
+    }
+
     if (data.location !== undefined) {
       seekerFields.push('location = ?')
       seekerValues.push(data.location)
@@ -82,15 +112,35 @@ export class ProfilRepository {
       seekerValues.push(data.targetSector)
     }
 
+    if (data.employmentType !== undefined) {
+      seekerFields.push('employment_type = ?')
+      seekerValues.push(data.employmentType)
+    }
+
+    if (data.workMode !== undefined) {
+      seekerFields.push('work_mode = ?')
+      seekerValues.push(data.workMode)
+    }
+
+    if (data.experienceYears !== undefined) {
+      seekerFields.push('experience_years = ?')
+      seekerValues.push(data.experienceYears)
+    }
+
+    if (data.bio !== undefined) {
+      seekerFields.push('bio = ?')
+      seekerValues.push(data.bio)
+    }
+
     if (userFields.length > 0) {
       userValues.push(id)
 
       await db.execute(
         `
-        UPDATE app_user
-        SET ${userFields.join(', ')}
-        WHERE uuid = ?
-          AND role = 'seeker'
+          UPDATE app_user
+          SET ${userFields.join(', ')}
+          WHERE uuid = ?
+            AND role = 'seeker'
         `,
         userValues,
       )
@@ -101,9 +151,9 @@ export class ProfilRepository {
 
       await db.execute(
         `
-        UPDATE seeker
-        SET ${seekerFields.join(', ')}
-        WHERE id = ?
+          UPDATE seeker
+          SET ${seekerFields.join(', ')}
+          WHERE id = ?
         `,
         seekerValues,
       )
