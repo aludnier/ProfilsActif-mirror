@@ -27,11 +27,11 @@ export const LIBELLES_ROLE: Record<Role, string> = {
 /*
  * Where each role lands: its own home screen. Used both by the header and by
  * the router guard, which sends a user back here when they ask for a page
- * reserved to another role. Neither the recruiter dashboard nor an admin home
- * has a route yet, so both point at the screen they actually work from.
+ * reserved to another role. No admin home exists yet, so that role still points
+ * at the screen it actually works from.
  */
 export const ROUTE_ESPACE: Record<Role, string> = {
   seeker: 'candidate-dashboard',
-  recruiter: 'recruiter-catalog',
+  recruiter: 'recruiter-dashboard',
   admin: 'admin-questions',
 };

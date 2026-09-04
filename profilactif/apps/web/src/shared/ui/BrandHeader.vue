@@ -19,21 +19,27 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 /*
- * Labels without a `to` have no view yet: inert text rather than a dead link.
  * The first entry depends on the role — a candidate browses the feed, since
  * other candidates' sheets are reserved to recruiters.
+ *
+ * "Institutionnel" and "Aide" were dropped: they had no page, and the footer
+ * already covers that ground. They come back the day their view exists.
  */
 const liensNav = computed<LienNav[]>(() => [
   authStore.user?.role === 'seeker'
     ? { libelle: 'Feeds', to: { name: 'feed' } }
     : { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
-  { libelle: 'Comment ça marche' },
-  { libelle: 'Institutionnel' },
-  { libelle: 'Aide' },
+  /* A section of the landing page, not a view of its own. */
+  { libelle: 'Comment ça marche', to: { name: 'home', hash: '#comment-ca-marche' } },
 ]);
 
 function estActif(lien: LienNav): boolean {
-  return lien.to !== undefined && route.name === lien.to.name;
+  if (lien.to === undefined || route.name !== lien.to.name) {
+    return false;
+  }
+
+  /* An anchor is only current once you are on it, not on the whole page. */
+  return lien.to.hash === undefined || route.hash === lien.to.hash;
 }
 
 /*

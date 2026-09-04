@@ -53,6 +53,12 @@ const routes: RouteRecordRaw[] = [
     meta: { roles: ['recruiter', 'admin'] },
   },
   {
+    path: '/recruiter/dashboard',
+    name: 'recruiter-dashboard',
+    component: () => import('@/features/recruteur/views/TableauDeBordView.vue'),
+    meta: { roles: ['recruiter', 'admin'] },
+  },
+  {
     path: '/recruiter/candidates/:id',
     name: 'recruiter-candidate-profile',
     component: () => import('@/features/recruteur/views/ProfilCandidatView.vue'),
@@ -89,6 +95,14 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+  /* Without this, an anchor link only works from the page it points at. */
+  scrollBehavior(to, _from, position) {
+    if (to.hash !== '') {
+      return { el: to.hash, behavior: 'smooth' };
+    }
+
+    return position ?? { top: 0 };
+  },
 });
 
 router.beforeEach(async (to) => {
