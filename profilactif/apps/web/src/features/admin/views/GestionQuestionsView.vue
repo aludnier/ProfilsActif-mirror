@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import CertificationService from '@/services/CertificationService';
 import { ref } from 'vue';
 
 const questionTemplateYesNo = ["Oui", "Non"]
@@ -57,6 +58,7 @@ const questionaryResponses = ref<string[][]>([questionTemplateYesNo, questionTem
 const questionType = ref("personalized")
 
 
+
 function addanswer() {
     if (tempResponse.value == "") {
         return
@@ -65,27 +67,44 @@ function addanswer() {
     tempResponse.value = ""
 }
 
-function addQuestion() {
+async function addQuestion() {
+    let responsesToSend:string[] = [];
+
     if (tempQuestion.value != "") {
         switch (questionType.value){
             case "personalized":
                 if (responses.value.length < 2) {
                     return
                 }
-                questionaryResponses.value.push(responses.value)
+                responsesToSend = responses.value
                 break
             case "YesNo":
-                questionaryResponses.value.push(questionTemplateYesNo)
+                responsesToSend = questionTemplateYesNo
                 break
             case "Scale":
-                questionaryResponses.value.push(questionTemplateScale)
+                responsesToSend = questionTemplateScale
                 break
         }
-        questionary.value.push(tempQuestion.value)
     }
+
+    try {
+      CertificationService.createQuestion(
+        tempQuestion.value,
+        responsesToSend,
+        1,
+        'single'
+      )
+
+      questionary.value.push(tempQuestion.value)
+      questionaryResponses.value.push(responsesToSend)
+    } catch (err) {
+      console.log(err)
+    }
+    
     tempQuestion.value = ""
     tempResponse.value = ""
     responses.value = []
+
 }
 
 function removeAnswer(index: number) {

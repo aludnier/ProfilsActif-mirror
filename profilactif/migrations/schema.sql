@@ -342,6 +342,8 @@ CREATE TABLE IF NOT EXISTS certification (
   id CHAR(36) NOT NULL DEFAULT (UUID()),
   question VARCHAR(200) NOT NULL,
   responses JSON NOT NULL,
+  question_weight INT NOT NULL,
+  type enum('single', 'multiple') NOT NULL DEFAULT 'single',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
