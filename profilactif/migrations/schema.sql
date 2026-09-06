@@ -78,8 +78,12 @@ VALUES
 ('76d71e1f-4089-4eb4-8105-dd0aa6368e1a','Sacha','Garnier','sacha.garnier@test.fr','0611000028','$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890','seeker','active','2026-09-04 00:00:00','2026-09-04 00:00:00',NULL),
 ('0f66411d-08da-44e4-a243-f88af04c0072','Émilie','Faure','emilie.faure@test.fr','0611000029','$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890','seeker','active','2026-09-04 00:00:00','2026-09-04 00:00:00',NULL),
 ('14133474-948a-44ec-a008-acc009e27a5e','Baptiste','Rousseau','baptiste.rousseau@test.fr','0611000030','$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890','seeker','active','2026-09-04 00:00:00','2026-09-04 00:00:00',NULL);/*!40000 ALTER TABLE `app_user` ENABLE KEYS */;
-UNLOCK TABLES;
 
+INSERT INTO app_user 
+(uuid, first_name, last_name, mail, phone, password_hash, role, status) 
+VALUES 
+(UUID(), 'Admin', 'User', 'admin@example.com', NULL, '$2a$10$slYQmyNdGzin7olVN3p5be7DlH.PKZbv5H8KnzzVgXXbVxpva.pFm', 'admin', 'active');
+UNLOCK TABLES;
 --
 -- Table structure for table `contact`
 --
@@ -332,6 +336,13 @@ CREATE TABLE IF NOT EXISTS questionnaire (
   UNIQUE KEY uq_questionnaire_code (code),
   CONSTRAINT fk_questionnaire_creator
     FOREIGN KEY (created_by) REFERENCES app_user(uuid) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS certification (
+  id CHAR(36) NOT NULL DEFAULT (UUID()),
+  question VARCHAR(200) NOT NULL,
+  responses JSON NOT NULL,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS questionnaire_version (

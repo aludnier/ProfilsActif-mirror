@@ -28,6 +28,12 @@ export interface QuestionnaireAttempt extends RowDataPacket {
   updatedAt: Date
 }
 
+export interface QuestionAttemp extends RowDataPacket {
+  id:string
+  question:string
+  responses:string[]
+}
+
 function parseJson<T>(value: T | string): T {
   return typeof value === 'string' ? JSON.parse(value) as T : value
 }
@@ -157,5 +163,43 @@ export class CertificationRepository {
       values,
     )
     return this.getAttempt(id, seekerId)
+  }
+
+  async CreateQuestion(question: string, response: string[]): Promise<QuestionAttemp> {
+    const id = randomUUID();
+
+    await db.execute(
+      'INSERT INTO certification (id, question, responses) VALUES (?, ?, ?)',
+      [id, question, JSON.stringify(response)]
+    );
+
+    return {
+      id,
+      question,
+      responses: response,
+    } as QuestionAttemp;
+}
+  async GetQuestion(id: string): Promise<QuestionAttemp[] | null> {
+    const [rows] = await db.execute(
+      'SELECT id, question, responses FROM certification',
+      [id]
+    );
+
+    const row = (rows as any[])[0];
+    const questions : QuestionAttemp[] = [];
+
+    if (!row) return null;
+    for (var q in rows) {
+      questions.push(
+        {
+          id: row.id,
+          question: row.question,
+          responses: typeof row.responses === 'string' ? JSON.parse(row.responses) : row.responses,
+        } as QuestionAttemp
+      )
+    }
+
+
+    return questions;
   }
 }
