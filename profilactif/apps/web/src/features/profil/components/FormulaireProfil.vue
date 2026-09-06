@@ -14,6 +14,9 @@ export type InfosProfil = {
   age: number | null;
   location: string;
   targetSector: string;
+  employmentType: 'full_time' | 'part_time' | 'freelance' | 'internship' | null;
+  workMode: 'on_site' | 'hybrid' | 'remote' | null;
+  experienceYears: number | null;
   bio: string;
 };
 
@@ -118,6 +121,48 @@ const initiales = computed(() =>
           placeholder="Transition écologique"
           :disabled="desactive"
           class="w-full"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="type-contrat" class="font-heading text-[15px] font-semibold text-brand">
+          Type de contrat
+        </label>
+        <select id="type-contrat" v-model="infos.employmentType" :disabled="desactive" class="w-full rounded-control border border-surface-line bg-surface-page px-3 py-2.5">
+          <option :value="null">Non renseigné</option>
+          <option value="full_time">Temps plein</option>
+          <option value="part_time">Temps partiel</option>
+          <option value="freelance">Freelance</option>
+          <option value="internship">Stage / alternance</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="mode-travail" class="font-heading text-[15px] font-semibold text-brand">
+          Modalité de travail
+        </label>
+        <select id="mode-travail" v-model="infos.workMode" :disabled="desactive" class="w-full rounded-control border border-surface-line bg-surface-page px-3 py-2.5">
+          <option :value="null">Non renseignée</option>
+          <option value="on_site">Présentiel</option>
+          <option value="hybrid">Hybride</option>
+          <option value="remote">Télétravail</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="experience" class="font-heading text-[15px] font-semibold text-brand">
+          Années d'expérience
+        </label>
+        <InputNumber
+          v-model="infos.experienceYears"
+          input-id="experience"
+          :min="0"
+          :max="60"
+          :min-fraction-digits="0"
+          :max-fraction-digits="1"
+          :use-grouping="false"
+          :disabled="desactive"
+          fluid
         />
       </div>
     </div>

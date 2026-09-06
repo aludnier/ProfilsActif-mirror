@@ -370,3 +370,18 @@ CREATE TABLE IF NOT EXISTS questionnaire_attempt (
   CONSTRAINT chk_questionnaire_attempt_score
     CHECK (score IS NULL OR (score >= 0 AND score <= 100))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE video
+  ADD COLUMN status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+  ADD COLUMN moderated_by CHAR(36) NULL,
+  ADD COLUMN moderated_at DATETIME NULL,
+  ADD COLUMN moderation_reason VARCHAR(500) NULL;
+
+-- Compte local de developpement.
+INSERT INTO app_user
+  (uuid, first_name, last_name, mail, phone, password_hash, role, status)
+VALUES
+  (UUID(), 'superAdmin', 'ProfilsActifs', 'superAdmin@profilsactifs.local', NULL,
+   '$2a$10$RiQm6qc0gNmlrdMkjJ8q4.40U8ev52QXKTbC0e.ScmHVHPbtWixxu',
+   'admin', 'active')
+ON DUPLICATE KEY UPDATE role = 'admin', status = 'active';

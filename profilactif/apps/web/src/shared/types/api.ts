@@ -107,6 +107,10 @@ export interface Video {
   url: string
   title?: string | null
   description?: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  moderatedBy?: string | null
+  moderatedAt?: string | null
+  moderationReason?: string | null
   createdAt: string
   updatedAt: string
 }

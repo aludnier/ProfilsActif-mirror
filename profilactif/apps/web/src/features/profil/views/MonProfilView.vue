@@ -28,6 +28,9 @@ const infos = ref<InfosProfil>({
   age: null,
   location: '',
   targetSector: '',
+  employmentType: null,
+  workMode: null,
+  experienceYears: null,
   bio: '',
 });
 /* Not persisted yet: no route attaches a skill to a seeker (see EditeurCompetences). */
@@ -72,6 +75,9 @@ const modifie = computed(() => {
     infos.value.age !== source.age ||
     infos.value.location !== (source.location ?? '') ||
     infos.value.targetSector !== (source.targetSector ?? '') ||
+    infos.value.employmentType !== source.employmentType ||
+    infos.value.workMode !== source.workMode ||
+    infos.value.experienceYears !== source.experienceYears ||
     infos.value.bio !== (source.bio ?? '')
   );
 });
@@ -108,6 +114,9 @@ function appliquer(source: Profile): void {
     age: source.age,
     location: source.location ?? '',
     targetSector: source.targetSector ?? '',
+    employmentType: source.employmentType,
+    workMode: source.workMode,
+    experienceYears: source.experienceYears,
     bio: source.bio ?? '',
   };
 }
@@ -133,6 +142,15 @@ function differences(source: Profile): UpdateProfileInput {
   }
   if (infos.value.targetSector !== (source.targetSector ?? '')) {
     modifications.targetSector = infos.value.targetSector || null;
+  }
+  if (infos.value.employmentType !== source.employmentType) {
+    modifications.employmentType = infos.value.employmentType;
+  }
+  if (infos.value.workMode !== source.workMode) {
+    modifications.workMode = infos.value.workMode;
+  }
+  if (infos.value.experienceYears !== source.experienceYears) {
+    modifications.experienceYears = infos.value.experienceYears;
   }
   if (infos.value.bio !== (source.bio ?? '')) {
     modifications.bio = infos.value.bio || null;
