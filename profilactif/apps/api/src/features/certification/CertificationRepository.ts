@@ -181,8 +181,7 @@ export class CertificationRepository {
 }
   async GetQuestion(id: string): Promise<QuestionAttemp[] | null> {
     const [rows] = await db.execute(
-      'SELECT id, question, responses FROM certification',
-      [id]
+      'SELECT id, question, responses FROM certification'
     );
 
     const row = (rows as any[])[0];
@@ -198,8 +197,6 @@ export class CertificationRepository {
         } as QuestionAttemp
       )
     }
-
-
     return questions;
   }
 }
