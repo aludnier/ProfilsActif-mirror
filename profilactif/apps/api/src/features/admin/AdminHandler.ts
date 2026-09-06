@@ -1,18 +1,17 @@
 import type { Context } from 'hono'
 import {ValidationInvalide} from '../../shared/errors.js'
+import type { AuthVariables } from '../../infrastructure/auth.middleware.js'
+import { NonTrouve } from '../../shared/errors.js'
+import { VideoRepository } from '../video/VideoRepository.js'
+import { moderateVideoSchema } from '../video/VideoSchema.js'
 import {AdminService} from './AdminService.js'
-import {listUsersSchema, updateUserRoleSchema, updateUserStatusSchema} from './AdminSchema.js'
+import {listUsersSchema, updateUserProfileSchema, updateUserRoleSchema, updateUserStatusSchema} from './AdminSchema.js'
 
 const adminService = new AdminService()
 
 function getCurrentAdminId(c: Context): string | undefined {
-  const payload = c.get('jwtPayload')
-
-  if (!payload || typeof payload.sub !== 'string') {
-    return undefined
-  }
-
-  return payload.sub
+  const payload = c.get('user') as AuthVariables['user'] | undefined
+  return payload?.id
 }
 
 export async function getUsersHandler(c: Context) {
@@ -45,6 +44,16 @@ export async function getUserByIdHandler(c: Context) {
   const user = await adminService.getUserById(id)
 
   return c.json(user)
+}
+
+
+export async function updateUserProfileHandler(c: Context) {
+  const id = c.req.param('id')
+  const result = updateUserProfileSchema.safeParse(await c.req.json())
+  if (!id || !result.success) {
+    throw new ValidationInvalide('Données utilisateur invalides', 'UTILISATEUR_DONNEES_INVALIDES')
+  }
+  return c.json(await adminService.updateUserProfile(id, result.data))
 }
 
 export async function updateUserStatusHandler(
@@ -129,4 +138,23 @@ export async function deleteUserHandler(
   )
 
   return c.json(user)
+}
+
+const videoRepository = new VideoRepository()
+
+export async function getPendingVideosHandler(c: Context) {
+  return c.json(await videoRepository.findPending())
+}
+
+export async function updateVideoStatusHandler(c: Context) {
+  const id = c.req.param('id')
+  const adminId = (c.get('user') as AuthVariables['user']).id
+  const result = moderateVideoSchema.safeParse(await c.req.json())
+  if (!id || !result.success) {
+    throw new ValidationInvalide('Données de modération vidéo invalides', 'MODERATION_VIDEO_INVALIDE')
+  }
+
+  const video = await videoRepository.updateStatus(id, result.data.status, adminId, result.data.reason ?? null)
+  if (!video) throw new NonTrouve('Vidéo introuvable', 'VIDEO_NON_TROUVEE')
+  return c.json(video)
 }

@@ -23,3 +23,10 @@ export type UpdateUserStatusInput = z.infer<
 export type UpdateUserRoleInput = z.infer<
   typeof updateUserRoleSchema
 >
+export const updateUserProfileSchema = z.object({
+  firstName: z.string().trim().min(1).max(100).optional(),
+  lastName: z.string().trim().min(1).max(100).optional(),
+  phone: z.string().trim().max(30).nullable().optional(),
+  mail: z.string().trim().email().max(255).optional(),
+})
+export type UpdateUserProfileInput = z.infer<typeof updateUserProfileSchema>
