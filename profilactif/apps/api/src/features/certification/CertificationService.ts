@@ -1,6 +1,6 @@
 import { NonTrouve } from '../../shared/errors.js'
 import { CertificationRepository } from './CertificationRepository.js'
-import type { CreateAttemptInput, CreateQuestionnaireVersionInput, UpdateAttemptInput } from './CertificationSchema.js'
+import type { CreateAttemptInput, CreateQuestionnaireVersionInput, UpdateAttemptInput, createQuestionInput } from './CertificationSchema.js'
 
 export class CertificationService {
   constructor(private readonly repository = new CertificationRepository()) {}
@@ -47,5 +47,9 @@ export class CertificationService {
       if (!value) throw new NonTrouve('Tentative introuvable', 'TENTATIVE_NON_TROUVEE')
       return value
     })
+  }
+
+  async createQuestion(data: createQuestionInput) {
+    return this.repository.CreateQuestion(data.question, data.responses, data.weight, data.type)
   }
 }

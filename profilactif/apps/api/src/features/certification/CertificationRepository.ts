@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import type { RowDataPacket } from 'mysql2'
 import { db } from '../../infrastructure/db.client.js'
 import type { CreateAttemptInput, CreateQuestionnaireVersionInput, UpdateAttemptInput } from './CertificationSchema.js'
+import { string } from 'zod/v4'
+import { get } from 'node:http'
 
 export interface QuestionnaireVersion extends RowDataPacket {
   id: string
@@ -32,6 +34,8 @@ export interface QuestionAttemp extends RowDataPacket {
   id:string
   question:string
   responses:string[]
+  weight:number
+  type: 'single' | 'multiple'
 }
 
 function parseJson<T>(value: T | string): T {
@@ -165,21 +169,30 @@ export class CertificationRepository {
     return this.getAttempt(id, seekerId)
   }
 
-  async CreateQuestion(question: string, response: string[]): Promise<QuestionAttemp> {
+  async GetQuestion(id: string): Promise<QuestionAttemp | null> {
+    const [rows] = await db.query<QuestionAttemp[]>(
+      `SELECT id, question, responses, question_weight, type FROM certification
+        WHERE id = ?`,
+        [id]
+    )
+
+    const row = rows[0]
+    return row ? {...row, responses: parseJson(row.responses)} : null
+  }
+
+
+  async CreateQuestion(question: string, response: string[], weight: number, type: string): Promise<QuestionAttemp> {
     const id = randomUUID();
 
     await db.execute(
-      'INSERT INTO certification (id, question, responses) VALUES (?, ?, ?)',
-      [id, question, JSON.stringify(response)]
+      'INSERT INTO certification (id, question, responses, question_weight, type) VALUES (?, ?, ?, ?, ?)',
+      [id, question, JSON.stringify(response), weight, type]
     );
 
-    return {
-      id,
-      question,
-      responses: response,
-    } as QuestionAttemp;
-}
-  async GetQuestion(id: string): Promise<QuestionAttemp[] | null> {
+    return (await this.GetQuestion(id)) as QuestionAttemp
+  }
+
+/*   async GetQuestion(id: string): Promise<QuestionAttemp[] | null> {
     const [rows] = await db.execute(
       'SELECT id, question, responses FROM certification'
     );
@@ -198,5 +211,5 @@ export class CertificationRepository {
       )
     }
     return questions;
-  }
+  } */
 }
