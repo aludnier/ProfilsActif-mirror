@@ -14,6 +14,7 @@ import studioVideo from '@/assets/images/hero-studio.webp';
         >
           Dispositif porté par l'État
         </p> -->
+
         <h1 class="text-[48px] leading-[56px]">
           Recrutez autrement. Découvrez les talents en vidéo.
         </h1>
