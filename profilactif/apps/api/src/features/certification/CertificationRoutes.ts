@@ -35,12 +35,3 @@ certificationRoutes.patch('/attempts/:id', requireAuth, requireRole('seeker'), a
   if (!result.success) throw new ValidationInvalide('Tentative invalide', 'TENTATIVE_INVALIDE')
   return c.json(await service.updateAttempt(c.req.param('id'), c.get('user').id, result.data))
 })
-
-certificationRoutes.post('/questions' /*, requireAuth, requireRole('admin')*/, async(c) => {
-  const result = await createQuestionSchema.safeParse(await c.req.json())
-
-  if (!result.success){
-    throw new ValidationInvalide('Tentative invalide ', 'TENTATIVE_INVALIDE')
-  }
-  return c.json(await service.createQuestion(result.data))
-})

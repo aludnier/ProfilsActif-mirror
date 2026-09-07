@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { number } from 'zod/v4'
 
 export const createQuestionnaireSchema = z.object({
   code: z.string().trim().min(1).max(100),

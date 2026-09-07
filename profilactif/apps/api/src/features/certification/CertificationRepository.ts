@@ -191,25 +191,4 @@ export class CertificationRepository {
 
     return (await this.GetQuestion(id)) as QuestionAttemp
   }
-
-/*   async GetQuestion(id: string): Promise<QuestionAttemp[] | null> {
-    const [rows] = await db.execute(
-      'SELECT id, question, responses FROM certification'
-    );
-
-    const row = (rows as any[])[0];
-    const questions : QuestionAttemp[] = [];
-
-    if (!row) return null;
-    for (var q in rows) {
-      questions.push(
-        {
-          id: row.id,
-          question: row.question,
-          responses: typeof row.responses === 'string' ? JSON.parse(row.responses) : row.responses,
-        } as QuestionAttemp
-      )
-    }
-    return questions;
-  } */
 }
