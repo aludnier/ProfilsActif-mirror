@@ -15,7 +15,7 @@ defineEmits<{ retirerFiltre: [filtre: string] }>();
       <div class="flex flex-col items-start gap-1">
         <h1 class="text-[28px]">Annuaire des profils vidéos</h1>
         <p class="text-[15px] text-ink-muted">
-          Accès éthique et souverain aux compétences du territoire national
+          Des profils présentés par la vidéo, sans photo de CV ni tri automatisé
         </p>
       </div>
 
