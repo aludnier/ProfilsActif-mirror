@@ -13,5 +13,4 @@ import TestimonialSection from '@/features/landing/components/TestimonialSection
   <HowItWorks />
   <FeaturedSection />
   <TestimonialSection />
-  <TrustLogos />
 </template>

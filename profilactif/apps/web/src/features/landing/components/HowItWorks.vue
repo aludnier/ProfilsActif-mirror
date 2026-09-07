@@ -13,7 +13,7 @@ const etapes = [
   {
     titre: 'Accès direct recruteurs',
     description:
-      "Votre profil rejoint l'annuaire souverain. Les recruteurs vous contactent directement pour un entretien approfondi sans discrimination de CV.",
+      "Votre profil rejoint l'annuaire. Les recruteurs vous contactent directement pour un entretien approfondi sans discrimination de CV.",
   },
 ];
 </script>
