@@ -1,5 +1,5 @@
-<template>
-  <div class="frame">
+<template >
+  <div class="frame" v-on:load="checkDraft">
   <div class="question-form">
     <label for="code">Code du questionnaire</label>
     <input id="code" v-model="questionnaireCode"><br>
@@ -15,21 +15,19 @@
     </select><br>
 
     <div class="double-input">
-      <span class="double-input-block">
+      <span class=" mx-8 w-3/4">
         <label for="question">Question</label>
         <input id="question" v-model="tempQuestion">
       </span>
     
-      <span class="double-input-block">
+      <span class="w-1/5">
         <label for="weight">Poids</label>
         <input type="number" v-model="tempWeight" min="1">
       </span>
     </div>
-    <br>
-
 
     <div v-if="questionType === 'personalized'">
-      <label for="Answer">Réponses</label><br>
+      <label for="Answer">Réponses</label>
       <input id="Answer" v-model="tempResponse" @keyup.enter="addanswer"/><br>
 
       <p>{{ tempQuestion }}</p>
@@ -44,7 +42,11 @@
     <button @click="addQuestion">Ajouter la question</button>
     </div>
     <div class="Questionnary-block">
-      <h2>{{ questionnaireTitle }}</h2>
+      <h2> {{ questionnaireTitle ? questionnaireTitle : 'Questionnaire-' + questionnaireCode }} </h2>
+      <div class="questionnaryButtons">
+        <button class="m-1" @click="publishQuestionnaire">Publier le questionnaire</button>
+        <button class="m-1" @click="saveQuestionnaire">Sauver le brouillon</button>
+      </div>
       <div v-for="(question, index) in createdQuestions" :key="index" class="question-block">
         <button type="button" class="question-remove" @click="removeQuestion(index)">✕</button>
           <p class="question-title">{{ question.prompt }}</p>
@@ -54,7 +56,7 @@
               :key="indexReponse"
               class="Answer-tag"
             >
-              {{ response }}
+              {{ response.label }}
             </span>
           </div>
       </div>
@@ -64,8 +66,8 @@
 
 <script setup lang="ts">
 import CertificationService from '@/services/CertificationService'
-import type { QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
-import { ref } from 'vue'
+import type { Questionnaire, QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
+import { onMounted, ref } from 'vue'
 
 const questionTemplateYesNo = ["Oui", "Non"]
 const questionTemplateScale = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
@@ -82,6 +84,11 @@ const createdQuestions = ref<QuestionnaireQuestion[]>([])
 const questionnaireCode = ref("")
 const questionnaireTitle = ref("")
 
+onMounted(() => {
+  checkDraft()
+})
+
+
 function mapType(type: string): 'single' | 'multiple' {
   if (type === 'personalized' && multipleChoice.value) {
     return 'multiple'
@@ -89,12 +96,22 @@ function mapType(type: string): 'single' | 'multiple' {
   return 'single'
 }
 
-function resetQuestion() {
-  createdQuestions.value = []
-  questionnaireCode.value = ""
-  questionnaireTitle.value = ""
-  tempWeight.value = 0
+async function checkDraft(){
+  console.log("check for draft")
+  const draft = await CertificationService.getDraft();
 
+  if (draft == undefined) {
+    return
+  }
+  createdQuestions.value =  draft.content.questions as QuestionnaireQuestion[]
+  questionnaireCode.value = draft.code
+  questionnaireTitle.value = draft.title
+}
+
+function resetQuestion() {
+  responses.value = []
+  tempQuestion.value = ""
+  tempWeight.value = 1
 }
 
 function addQuestion() {
@@ -119,12 +136,12 @@ function addQuestion() {
     id: crypto.randomUUID(),
     category: 'general',
     weight: tempWeight.value,
-    type: mapType(questionType.value),
+    type: /* mapType(questionType.value) */ 'multiple',
     prompt: tempQuestion.value,
     options: responsesToSend.map((label, i) => ({
       id: `opt-${i}`,
       label,
-      points: 0, // add something to edit point
+      points: 1, // add something to edit point
     })),
   })
 
@@ -165,23 +182,24 @@ function normalizeContent(): QuestionnaireContent {
 }
 
 async function publishQuestionnaire() {
-  if (!questionnaireCode.value || !questionnaireTitle.value) {
-    console.error('Code et titre requis')
+  if (!questionnaireCode.value) {
+    console.error('Code requis')
     return
   }
   if (createdQuestions.value.length === 0) {
     console.error('Aucune question à publier')
     return
   }
-
   try {
     const content = normalizeContent()
     const questionnaire = await CertificationService.createQuestionnaire(
       questionnaireCode.value,
-      questionnaireTitle.value,
+      questionnaireTitle.value ? questionnaireTitle.value : 'Questionnaire-' + questionnaireCode.value,
       content,
     )
-    await CertificationService.publishQuestionnaire(questionnaire.questionnaireId)
+    console.log('Questionnaire créé :', questionnaire)
+
+    await CertificationService.publishQuestionnaire(questionnaire.id)
     console.log('Questionnaire publié :', questionnaire)
 
     resetQuestion()
@@ -189,6 +207,36 @@ async function publishQuestionnaire() {
     console.error(err)
   }
 }
+
+async function saveQuestionnaire() {
+  if (!questionnaireCode.value) {
+    console.error('Code requis')
+    return
+  }
+  if (createdQuestions.value.length === 0) {
+    console.error('Aucune question à publier')
+    return
+  }
+  try {
+    const content = normalizeContent()
+    const questionnaire = await CertificationService.createQuestionnaire(
+      questionnaireCode.value,
+      questionnaireTitle.value ? questionnaireTitle.value : 'Questionnaire-' + questionnaireCode.value,
+      content,
+    )
+    console.log('Questionnaire créé :', questionnaire)
+    console.log('Questionnaire créé :', questionnaire)
+    await CertificationService.publishQuestionnaireDraft(questionnaire.id)
+    console.log('Questionnaire publié :', questionnaire)
+
+    resetQuestion()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+
+
 </script>
 
 <style>
@@ -377,11 +425,13 @@ div[v-for] > p,
 }
 
 .double-input-block {
-  width: 40%;
+  /* width: 40%; */
   margin: 5%;
 }
 
 .Questionnary-block {
+  position: relative;
+  border: double ;
   min-width: 600px;
   width: 60%;
   padding: 32px;
@@ -396,4 +446,11 @@ div[v-for] > p,
   font-size: 16px;
   margin: 0 0 8px;
 }
+
+.questionnaryButtons {
+  position: absolute;
+  top: 0px;
+  right: 5px;
+  /* border: solid red; */
+} 
 </style>

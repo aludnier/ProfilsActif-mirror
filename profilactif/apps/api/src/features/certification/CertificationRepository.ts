@@ -4,6 +4,7 @@ import { db } from '../../infrastructure/db.client.js'
 import type { CreateAttemptInput, CreateQuestionnaireVersionInput, UpdateAttemptInput } from './CertificationSchema.js'
 import { string } from 'zod/v4'
 import { get } from 'node:http'
+import { console } from 'node:inspector'
 
 export interface QuestionnaireVersion extends RowDataPacket {
   id: string
@@ -31,10 +32,10 @@ export interface QuestionnaireAttempt extends RowDataPacket {
 }
 
 export interface QuestionAttemp extends RowDataPacket {
-  id:string
-  question:string
-  responses:string[]
-  weight:number
+  id: string
+  question: string
+  responses: string[]
+  weight: number
   type: 'single' | 'multiple'
 }
 
@@ -62,6 +63,18 @@ export class CertificationRepository {
     const [rows] = await db.query<QuestionnaireVersion[]>(
       `${versionSelect} WHERE v.id = ?`, [id],
     )
+    const row = rows[0]
+    return row ? { ...row, content: parseJson(row.content) } : null
+  }
+
+  async getDraft(): Promise<QuestionnaireVersion | null> {
+    const [rows] = await db.query<QuestionnaireVersion[]>(
+      `${versionSelect} WHERE v.status = 'draft' ORDER BY v.published_at DESC LIMIT 1`,
+    )
+    console.log("test : " + rows)
+    if (rows.length <= 0) {
+      return null
+    }
     const row = rows[0]
     return row ? { ...row, content: parseJson(row.content) } : null
   }
@@ -109,6 +122,7 @@ export class CertificationRepository {
     const version = await this.getVersion(id)
     if (!version) return null
     const connection = await db.getConnection()
+    console.log("")
     try {
       await connection.beginTransaction()
       await connection.execute(
@@ -117,6 +131,31 @@ export class CertificationRepository {
       )
       await connection.execute(
         "UPDATE questionnaire_version SET status = 'published', published_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [id],
+      )
+      await connection.commit()
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
+    return this.getVersion(id)
+  }
+
+  async saveDraft(id: string): Promise<QuestionnaireVersion | null> {
+    const version = await this.getVersion(id)
+    if (!version) return null
+    const connection = await db.getConnection()
+    console.log("")
+    try {
+      await connection.beginTransaction()
+      await connection.execute(
+        "UPDATE questionnaire_version SET status = 'archived' WHERE questionnaire_id = ? AND status = 'draft'",
+        [version.questionnaireId],
+      )
+      await connection.execute(
+        "UPDATE questionnaire_version SET status = 'draft', published_at = CURRENT_TIMESTAMP WHERE id = ?",
         [id],
       )
       await connection.commit()
@@ -211,11 +250,11 @@ export class CertificationRepository {
     const [rows] = await db.query<QuestionAttemp[]>(
       `SELECT id, question, responses, question_weight, type FROM certification
         WHERE id = ?`,
-        [id]
+      [id]
     )
 
     const row = rows[0]
-    return row ? {...row, responses: parseJson(row.responses)} : null
+    return row ? { ...row, responses: parseJson(row.responses) } : null
   }
 
 
