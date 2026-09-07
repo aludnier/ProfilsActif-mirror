@@ -4,7 +4,20 @@ SET FOREIGN_KEY_CHECKS = 0;
 DELETE FROM questionnaire_attempt;
 DELETE FROM questionnaire_version;
 DELETE FROM questionnaire;
+DELETE FROM app_user WHERE mail = 'candidat@test.fr';
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+INSERT INTO app_user (uuid, first_name, last_name, mail, phone, password_hash, role, status)
+VALUES (
+  '20000000-0000-4000-8000-000000000001',
+  'Camille', 'Test', 'candidat@test.fr', NULL,
+  '$2a$10$F7JeiV0h0766Ctqg2lSN8ux.5d7U.HQuvXueaK4zfN3t4mQxyZ3tG',
+  'seeker', 'active'
+);
+
+INSERT INTO seeker (id, location, target_sector)
+VALUES ('20000000-0000-4000-8000-000000000001', 'Paris', 'Développement web');
 
 INSERT INTO questionnaire (id, code, title, created_by) VALUES
   ('10000000-0000-4000-8000-000000000001',
