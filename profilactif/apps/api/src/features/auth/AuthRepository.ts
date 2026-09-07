@@ -1,9 +1,3 @@
-/**
- * Seul fichier du slice qui écrit du SQL. Propriétaire de la table `app_user`.
- *
- * Les colonnes SQL sont en snake_case ; la requête les traduit en camelCase
- * pour le reste du slice.
- */
 
 import type { RowDataPacket } from 'mysql2'
 
@@ -51,10 +45,6 @@ export class AuthRepository {
     return rows[0] ?? null
   }
 
-  /**
-   * L'UUID est fourni par le service (généré côté Node) : la clé primaire
-   * n'est pas auto-incrémentée, on ne peut pas se reposer sur `insertId`.
-   */
   async create(data: {
     id: string
     firstName: string
