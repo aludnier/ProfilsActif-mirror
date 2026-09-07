@@ -1,6 +1,19 @@
-import { NonTrouve } from '../../shared/errors.js'
-import { CertificationRepository } from './CertificationRepository.js'
-import type { CreateAttemptInput, CreateQuestionnaireVersionInput, UpdateAttemptInput } from './CertificationSchema.js'
+import { Conflit, NonTrouve, ValidationInvalide } from '../../shared/errors.js'
+import { CertificationRepository, type QuestionnaireAttempt } from './CertificationRepository.js'
+import type {
+  CreateAttemptInput,
+  CreateQuestionnaireVersionInput,
+  UpdateAttemptInput,
+} from './CertificationSchema.js'
+import { parseQuestionnaire, QuestionnaireInvalide } from './domain/Questionnaire.js'
+import { computeScore, type ScoreResult } from './domain/Score.js'
+
+function versValidation(error: unknown, prefixe: string): never {
+  if (error instanceof QuestionnaireInvalide) {
+    throw new ValidationInvalide(`${prefixe} : ${error.message}`, 'QUESTIONNAIRE_INVALIDE')
+  }
+  throw error
+}
 
 export class CertificationService {
   constructor(private readonly repository = new CertificationRepository()) {}
@@ -20,6 +33,11 @@ export class CertificationService {
   }
 
   createQuestionnaire(data: CreateQuestionnaireVersionInput, userId: string) {
+    try {
+      parseQuestionnaire(data.content)
+    } catch (error) {
+      versValidation(error, 'Questionnaire invalide')
+    }
     return this.repository.createVersion(data, userId)
   }
 
@@ -42,10 +60,35 @@ export class CertificationService {
     })
   }
 
-  updateAttempt(id: string, seekerId: string, data: UpdateAttemptInput) {
-    return this.repository.updateAttempt(id, seekerId, data).then((value) => {
-      if (!value) throw new NonTrouve('Tentative introuvable', 'TENTATIVE_NON_TROUVEE')
-      return value
-    })
+  async updateAttempt(
+    id: string,
+    seekerId: string,
+    data: UpdateAttemptInput,
+  ): Promise<QuestionnaireAttempt & { result?: ScoreResult }> {
+    const attempt = await this.getAttempt(id, seekerId)
+    if (attempt.status === 'submitted') {
+      throw new Conflit('Cette tentative a déjà été soumise', 'TENTATIVE_DEJA_SOUMISE')
+    }
+
+    if (data.status !== 'submitted') {
+      const saved = await this.repository.updateAttempt(id, seekerId, data)
+      if (!saved) throw new NonTrouve('Tentative introuvable', 'TENTATIVE_NON_TROUVEE')
+      return saved
+    }
+
+    const version = await this.getVersion(attempt.questionnaireVersionId)
+
+    let questionnaire
+    try {
+      questionnaire = parseQuestionnaire(version.content)
+    } catch (error) {
+      versValidation(error, 'Questionnaire publié invalide')
+    }
+
+    const result = computeScore(questionnaire, data.answers)
+    const saved = await this.repository.submitAttempt(id, seekerId, data.answers, result.score)
+    if (!saved) throw new NonTrouve('Tentative introuvable', 'TENTATIVE_NON_TROUVEE')
+
+    return { ...saved, result }
   }
 }
