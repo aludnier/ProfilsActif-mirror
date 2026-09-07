@@ -8,6 +8,12 @@ export class CertificationService {
     return data
   }
 
+  static async getDraft(): Promise<Questionnaire> {
+    const { data } = await axiosInstance.get<Questionnaire>('/certifications/draft')
+    return data
+  }
+
+
   static async getById(id: string): Promise<Questionnaire> {
     const { data } = await axiosInstance.get<Questionnaire>(`/certifications/${id}`)
     return data
@@ -61,7 +67,7 @@ export class CertificationService {
     title:string,
     content: QuestionnaireContent
   ) {
-    const {data} = await axiosInstance.post<Questionnaire>('/', {
+    const {data} = await axiosInstance.post<Questionnaire>('/certifications', {
       code,
       title,
       content
@@ -73,6 +79,12 @@ export class CertificationService {
     const { data } = await axiosInstance.post<Questionnaire>(`/certifications/${id}/publish`)
     return data
   }
+  
+  static async publishQuestionnaireDraft(id: string): Promise<Questionnaire> {
+    const { data } = await axiosInstance.post<Questionnaire>(`/certifications/${id}/draft`)
+    return data
+  }
+
 }
 
 export default CertificationService
