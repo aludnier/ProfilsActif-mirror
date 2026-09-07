@@ -9,6 +9,10 @@ export interface Video extends RowDataPacket {
   url: string
   title: string | null
   description: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  moderatedBy: string | null
+  moderatedAt: Date | null
+  moderationReason: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -25,6 +29,10 @@ export class VideoRepository {
         url,
         title,
         description,
+        status,
+        moderated_by AS moderatedBy,
+        moderated_at AS moderatedAt,
+        moderation_reason AS moderationReason,
         created_at AS createdAt,
         updated_at AS updatedAt
       FROM video
@@ -36,7 +44,7 @@ export class VideoRepository {
     return rows[0] ?? null
   }
 
-  async findBySeekerId(seekerId: string): Promise<Video[]> {
+  async findBySeekerId(seekerId: string, includeUnpublished = false): Promise<Video[]> {
     const [rows] = await db.query<Video[]>(
       `
       SELECT
@@ -45,10 +53,15 @@ export class VideoRepository {
         url,
         title,
         description,
+        status,
+        moderated_by AS moderatedBy,
+        moderated_at AS moderatedAt,
+        moderation_reason AS moderationReason,
         created_at AS createdAt,
         updated_at AS updatedAt
       FROM video
       WHERE seeker_id = ?
+        ${includeUnpublished ? '' : "AND status = 'approved'"}
       ORDER BY created_at DESC
       `,
       [seekerId],
@@ -125,6 +138,21 @@ export class VideoRepository {
       `,
       values,
     )
+  }
+
+  async findPending(): Promise<Video[]> {
+    const [rows] = await db.query<Video[]>(
+      `SELECT v.id, v.seeker_id AS seekerId, v.url, v.title, v.description, v.status, v.moderated_by AS moderatedBy, v.moderated_at AS moderatedAt, v.moderation_reason AS moderationReason, v.created_at AS createdAt, v.updated_at AS updatedAt FROM video v INNER JOIN app_user u ON u.uuid = v.seeker_id WHERE v.status = 'pending' ORDER BY v.created_at ASC`,
+    )
+    return rows
+  }
+
+  async updateStatus(id: string, status: 'approved' | 'rejected', adminId: string, reason: string | null): Promise<Video | null> {
+    await db.execute(
+      `UPDATE video SET status = ?, moderated_by = ?, moderated_at = CURRENT_TIMESTAMP, moderation_reason = ? WHERE id = ?`,
+      [status, adminId, reason, id],
+    )
+    return this.findById(id)
   }
 
   async delete(id: string): Promise<void> {

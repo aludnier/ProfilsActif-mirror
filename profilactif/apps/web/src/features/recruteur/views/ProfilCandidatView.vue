@@ -7,6 +7,8 @@ import FavoriteService from '@/services/FavoriteService'
 import ContactService from '@/services/ContactService'
 import { useAuthStore } from '@/shared/stores/auth'
 import type { Favorite, Profile, Video } from '@/shared/types/api'
+import { extraireIdYouTube } from '@/shared/youtube'
+import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -21,6 +23,31 @@ const error = ref('')
 
 const candidateId = route.params.id as string
 const canContact = computed(() => auth.user?.role === 'recruiter' && !!auth.user?.id)
+
+const TYPE_CONTRAT: Record<string, string> = {
+  full_time: 'Temps plein',
+  part_time: 'Temps partiel',
+  freelance: 'Freelance',
+  internship: 'Stage / alternance',
+}
+
+const MODE_TRAVAIL: Record<string, string> = {
+  on_site: 'Présentiel',
+  hybrid: 'Hybride',
+  remote: 'Télétravail',
+}
+
+function libelleContrat(value: string | null): string {
+  return value === null ? 'Non renseigné' : TYPE_CONTRAT[value] ?? value
+}
+
+function libelleMode(value: string | null): string {
+  return value === null ? 'Non renseignée' : MODE_TRAVAIL[value] ?? value
+}
+
+function libelleExperience(value: number | null): string {
+  return value === null ? 'Non renseignée' : String(value).replace('.0', '') + ' ans'
+}
 
 async function load() {
   try {
@@ -150,7 +177,12 @@ onMounted(() => {
       <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
         <section class="space-y-6">
           <div v-if="videos.length" class="overflow-hidden rounded-card border border-surface-line bg-black">
-            <video :src="videos[0].url" controls preload="metadata" class="aspect-video w-full" />
+            <LecteurYouTube
+              v-if="extraireIdYouTube(videos[0].url)"
+              :id-you-tube="extraireIdYouTube(videos[0].url)!"
+              :titre="videos[0].title || 'Vidéo de présentation'"
+            />
+            <video v-else :src="videos[0].url" controls preload="metadata" class="aspect-video w-full" />
           </div>
 
           <div class="rounded-card border border-surface-line bg-surface-page p-6">
@@ -166,7 +198,13 @@ onMounted(() => {
               <div v-for="video in videos" :key="video.id" class="border-b border-surface-line pb-5 last:border-0 last:pb-0">
                 <h3 class="font-heading font-bold text-brand">{{ video.title || 'Presentation video' }}</h3>
                 <p v-if="video.description" class="mt-1 text-[14px] text-ink-muted">{{ video.description }}</p>
-                <video :src="video.url" controls preload="metadata" class="mt-3 aspect-video w-full rounded-control bg-black" />
+                <LecteurYouTube
+                  v-if="extraireIdYouTube(video.url)"
+                  :id-you-tube="extraireIdYouTube(video.url)!"
+                  :titre="video.title || 'Vidéo de présentation'"
+                  class="mt-3"
+                />
+                <video v-else :src="video.url" controls preload="metadata" class="mt-3 aspect-video w-full rounded-control bg-black" />
               </div>
             </div>
           </div>
@@ -185,15 +223,15 @@ onMounted(() => {
             </div>
             <div>
               <dt class="font-bold text-brand">Type de contrat</dt>
-              <dd>{{ profile.employmentType || 'Non renseigne' }}</dd>
+              <dd>{{ libelleContrat(profile.employmentType) }}</dd>
             </div>
             <div>
               <dt class="font-bold text-brand">Modalite</dt>
-              <dd>{{ profile.workMode || 'Non renseignee' }}</dd>
+              <dd>{{ libelleMode(profile.workMode) }}</dd>
             </div>
             <div>
               <dt class="font-bold text-brand">Experience</dt>
-              <dd>{{ profile.experienceYears ?? 'Non renseignee' }}{{ profile.experienceYears !== null ? ' ans' : '' }}</dd>
+              <dd>{{ libelleExperience(profile.experienceYears) }}</dd>
             </div>
             <div v-if="profile.age">
               <dt class="font-bold text-brand">Age</dt>

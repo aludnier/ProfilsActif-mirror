@@ -15,3 +15,8 @@ export const updateVideoSchema = z.object({
 
 export type CreateVideoInput = z.infer<typeof createVideoSchema>
 export type UpdateVideoInput = z.infer<typeof updateVideoSchema>
+export const moderateVideoSchema = z.object({
+  status: z.enum(['approved', 'rejected']),
+  reason: z.string().max(500).nullable().optional(),
+})
+export type ModerateVideoInput = z.infer<typeof moderateVideoSchema>

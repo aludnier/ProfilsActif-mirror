@@ -4,6 +4,7 @@ import type {
   ListUsersInput,
   UpdateUserRoleInput,
   UpdateUserStatusInput,
+  UpdateUserProfileInput,
 } from './AdminSchema.js'
 
 interface CountRow extends RowDataPacket {
@@ -147,6 +148,19 @@ export class AdminRepository {
     return rows[0] ?? null
   }
 
+
+  async updateUserProfile(id: string, data: UpdateUserProfileInput): Promise<void> {
+    const fields: string[] = []
+    const values: SqlValue[] = []
+    if (data.firstName !== undefined) { fields.push('first_name = ?'); values.push(data.firstName) }
+    if (data.lastName !== undefined) { fields.push('last_name = ?'); values.push(data.lastName) }
+    if (data.phone !== undefined) { fields.push('phone = ?'); values.push(data.phone) }
+    if (data.mail !== undefined) { fields.push('mail = ?'); values.push(data.mail) }
+    if (fields.length === 0) return
+    values.push(id)
+    await db.execute('UPDATE app_user SET ' + fields.join(', ') + ' WHERE uuid = ?', values)
+  }
+
   async updateUserStatus(
     id: string,
     data: UpdateUserStatusInput,
@@ -161,30 +175,26 @@ export class AdminRepository {
     )
   }
 
-  async updateUserRole(
-    id: string,
-    data: UpdateUserRoleInput,
-  ): Promise<void> {
-    await db.execute(
-      `
-      UPDATE app_user
-      SET role = ?
-      WHERE uuid = ?
-      `,
-      [data.role, id],
-    )
+  async updateUserRole(id: string, data: UpdateUserRoleInput): Promise<void> {
+    const connection = await db.getConnection()
+    try {
+      await connection.beginTransaction()
+      await connection.execute('UPDATE app_user SET role = ? WHERE uuid = ?', [data.role, id])
+      if (data.role === 'seeker') {
+        await connection.execute("INSERT INTO seeker (id, location) VALUES (?, 'Non renseigné') ON DUPLICATE KEY UPDATE id = id", [id])
+      }
+      if (data.role === 'recruiter') {
+        await connection.execute('INSERT INTO recruiter (id) VALUES (?) ON DUPLICATE KEY UPDATE id = id', [id])
+      }
+      await connection.commit()
+    } catch (err) {
+      await connection.rollback()
+      throw err
+    } finally {
+      connection.release()
+    }
   }
-
-  async deleteUser(
-    id: string,
-  ): Promise<void> {
-    await db.execute(
-      `
-      UPDATE app_user
-      SET status = 'deleted'
-      WHERE uuid = ?
-      `,
-      [id],
-    )
+  async deleteUser(id: string): Promise<void> {
+    await db.execute('DELETE FROM app_user WHERE uuid = ?', [id])
   }
 }

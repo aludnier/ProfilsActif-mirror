@@ -16,8 +16,8 @@ export class VideoService {constructor(private readonly videoRepository = new Vi
     return video
   }
 
-  async getVideosBySeeker(seekerId: string) {
-    return this.videoRepository.findBySeekerId(seekerId)
+  async getVideosBySeeker(seekerId: string, includeUnpublished = false) {
+    return this.videoRepository.findBySeekerId(seekerId, includeUnpublished)
   }
 
   async createVideo(data: CreateVideoInput) {
