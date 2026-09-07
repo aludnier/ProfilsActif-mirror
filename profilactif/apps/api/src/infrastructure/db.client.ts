@@ -31,6 +31,34 @@ export async function testDatabaseConnection(): Promise<void> {
   }
 }
 
+// Sonde pour /health : renvoie un booléen au lieu de lever, et ne logue rien —
+// l'endpoint peut être appelé plusieurs fois par minute.
+export async function pingDatabase(delaiMs = 2000): Promise<boolean> {
+  const obtention = db.getConnection()
+  let minuteur: ReturnType<typeof setTimeout> | undefined
+
+  const minuterie = new Promise<never>((_, rejeter) => {
+    minuteur = setTimeout(() => rejeter(new Error('Ping base de données : délai dépassé')), delaiMs)
+    minuteur.unref()
+  })
+
+  // Le plafond couvre le ping et pas seulement l'obtention : le pool rend
+  // instantanément une connexion dont la socket peut être morte.
+  const sonde = obtention.then((connection) => connection.ping())
+
+  try {
+    await Promise.race([sonde, minuterie])
+    return true
+  } catch {
+    return false
+  } finally {
+    clearTimeout(minuteur)
+    // Rendue ici seulement, donc une seule fois quel que soit le chemin — y
+    // compris quand la connexion arrive après le délai.
+    void obtention.then((connection) => connection.release()).catch(() => {})
+  }
+}
+
 // Utilisés par les slices écrits en style fonctionnel (auth). Les slices en
 // style classe (skill, video...) utilisent `db` directement, c'est équivalent.
 

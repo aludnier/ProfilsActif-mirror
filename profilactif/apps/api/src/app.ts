@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 
 import { gestionnaireErreurs } from './shared/errors.js'
+import { healthRoutes } from './infrastructure/HealthRoutes.js'
 import { authRoutes } from './features/auth/AuthRoutes.js'
 import { favoriteRoutes } from './features/favorite/FavoriteRoutes.js'
 import { skillRoutes } from './features/skill/SkillRoutes.js'
@@ -29,7 +30,7 @@ app.onError(gestionnaireErreurs)
 app.notFound((c) => c.json({ code: 'NON_TROUVE', message: 'Route inconnue' }, 404))
 
 // Sonde de disponibilité (compose, déploiement, test de fumée).
-app.get('/sante', (c) => c.json({ statut: 'ok' }))
+app.route('/health', healthRoutes)
 
 app.route('/auth', authRoutes)
 app.route('/skills', skillRoutes)
