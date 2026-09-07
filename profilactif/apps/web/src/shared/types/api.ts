@@ -196,3 +196,20 @@ export interface QuestionnaireAttempt {
   submittedAt: string | null
   updatedAt: string
 }
+
+export interface CategoryScore {
+  code: string
+  label: string
+  weight: number
+  score: number
+  questionCount: number
+}
+
+export interface ScoreResult {
+  score: number
+  passed: boolean
+  badgeLevel: string | null
+  categories: CategoryScore[]
+}
+
+export type AttemptUpdateResult = QuestionnaireAttempt & { result?: ScoreResult }
