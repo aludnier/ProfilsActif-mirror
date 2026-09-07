@@ -4,7 +4,6 @@ import HeroSection from '@/features/landing/components/HeroSection.vue';
 import HowItWorks from '@/features/landing/components/HowItWorks.vue';
 import StatsStrip from '@/features/landing/components/StatsStrip.vue';
 import TestimonialSection from '@/features/landing/components/TestimonialSection.vue';
-import TrustLogos from '@/features/landing/components/TrustLogos.vue';
 </script>
 
 <template>
@@ -13,5 +12,4 @@ import TrustLogos from '@/features/landing/components/TrustLogos.vue';
   <HowItWorks />
   <FeaturedSection />
   <TestimonialSection />
-  <TrustLogos />
 </template>

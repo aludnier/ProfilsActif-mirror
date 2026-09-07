@@ -60,7 +60,7 @@ function estActive(entree: EntreeEspace): boolean {
       <h3 class="font-heading text-[12px] uppercase text-brand">Charte de déontologie</h3>
       <p class="text-[12px] leading-[1.5] text-brand">
         La consultation des profils implique l'acceptation de notre charte anti-discrimination et de
-        déontologie du service public.
+        déontologie du service.
       </p>
     </div>
   </aside>

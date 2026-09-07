@@ -9,12 +9,6 @@ import studioVideo from '@/assets/images/hero-studio.webp';
   <section class="flex flex-wrap items-center gap-12 bg-surface-muted px-gutter py-22">
     <div class="flex min-w-0 flex-1 basis-[480px] flex-col items-start gap-8">
       <div class="flex w-full flex-col items-start gap-3">
-        <p
-          class="rounded-badge border border-brand bg-surface-page px-3 py-1.5 font-heading text-[12px] font-bold uppercase text-brand"
-        >
-          Dispositif porté par l'État
-        </p>
-
         <h1 class="text-[48px] leading-[56px]">
           Recrutez autrement. Découvrez les talents en vidéo.
         </h1>

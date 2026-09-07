@@ -15,7 +15,7 @@ import type { Profile, UpdateProfileInput } from '@/shared/types/api';
 const CRITERES_VIDEO = [
   'Qualité sonore (voix claire et audible)',
   'Cadrage correct (buste et visage centrés)',
-  'Contenu déontologique neutre (Loi Service Public)',
+  'Contenu neutre et non discriminatoire',
 ];
 
 const authStore = useAuthStore();

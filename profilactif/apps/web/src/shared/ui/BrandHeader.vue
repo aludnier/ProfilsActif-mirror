@@ -106,23 +106,9 @@ onBeforeUnmount(() => {
           aria-label="ProfilsActifs, retour à l'accueil"
           class="-mx-2 flex items-center gap-4 rounded-control px-2 py-1 hover:bg-surface-subtle"
         >
-          <div
-            class="flex h-[54px] min-w-[44px] flex-col items-center gap-0.5 bg-brand px-1 py-1.5 font-heading text-[8px] font-bold uppercase leading-none text-on-brand"
-          >
-            <span class="h-1 w-8 bg-on-brand" aria-hidden="true" />
-            <span class="mb-0.5 h-5 w-8 bg-on-brand" aria-hidden="true" />
-            <span>République</span>
-            <span>Française</span>
-          </div>
-
-          <span class="h-10 w-px bg-surface-line" aria-hidden="true" />
-
-          <div class="flex flex-col gap-0.5 font-heading">
-            <span class="text-[18px] font-bold tracking-[-0.5px] text-brand">ProfilsActifs</span>
-            <span class="text-[10px] font-medium uppercase tracking-[0.5px] text-ink-muted">
-              Service public numérique
-            </span>
-          </div>
+          <span class="font-heading text-[18px] font-bold tracking-[-0.5px] text-brand">
+            ProfilsActifs
+          </span>
         </router-link>
       </template>
 
@@ -216,6 +202,7 @@ onBeforeUnmount(() => {
       position="left"
       header="Menu"
       block-scroll
+      aria-label="Menu de navigation"
       class="w-[min(20rem,85vw)]"
     >
       <nav aria-label="Menu principal">

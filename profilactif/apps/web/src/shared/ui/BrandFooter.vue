@@ -54,8 +54,8 @@ const annee = new Date().getFullYear();
       <div class="flex w-[400px] max-w-full flex-col gap-4">
         <p class="font-heading text-[24px] font-bold text-on-brand">ProfilsActifs</p>
         <p class="text-[15px] leading-[1.6] text-ink-invert">
-          Une initiative de l'État pour moderniser l'accès à l'emploi. Le profil vidéo permet
-          d'humaniser le premier contact de recrutement de manière éthique, sécurisée et souveraine.
+          Le profil vidéo pour humaniser le premier contact entre candidats et recruteurs, sans
+          photo de CV ni tri automatisé.
         </p>
       </div>
 
@@ -78,10 +78,18 @@ const annee = new Date().getFullYear();
 
     <span class="h-px w-full bg-ink-invert/20" aria-hidden="true" />
 
+    <!-- Mention obligatoire, formulation exacte : ne pas reecrire ni abreger. -->
+    <p
+      role="note"
+      class="w-full rounded-control border border-ink-invert/30 px-4 py-3 font-heading text-[13px] font-bold text-on-brand"
+    >
+      Démonstrateur technique, ne constitue pas un service public en exploitation.
+    </p>
+
     <div
       class="flex w-full flex-wrap items-start justify-between gap-4 font-heading text-[12px] text-ink-invert"
     >
-      <p>© {{ annee }} ProfilsActifs. Un service public numérique développé sous licence libre.</p>
+      <p>© {{ annee }} ProfilsActifs.</p>
       <ul class="flex flex-wrap items-start gap-6">
         <li v-for="lien in liensLegaux" :key="lien.libelle">
           <router-link v-if="lien.to" :to="lien.to" class="hover:underline">
