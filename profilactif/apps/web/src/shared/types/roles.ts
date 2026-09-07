@@ -33,5 +33,5 @@ export const LIBELLES_ROLE: Record<Role, string> = {
 export const ROUTE_ESPACE: Record<Role, string> = {
   seeker: 'candidate-dashboard',
   recruiter: 'recruiter-dashboard',
-  admin: 'admin-questions',
+  admin: 'admin-dashboard',
 };

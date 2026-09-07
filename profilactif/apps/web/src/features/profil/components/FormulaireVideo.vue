@@ -56,7 +56,7 @@ function appliquer(nouvelle: Video | null): void {
   lien.value = nouvelle?.url ?? '';
   /* A row whose URL we can't read (legacy, or a non-YouTube link) has no
      preview to show, so the field opens instead of leaving an empty card. */
-  modeEdition.value = nouvelle === null || extraireIdYouTube(nouvelle.url) === null;
+  modeEdition.value = nouvelle === null || nouvelle.status === 'rejected' || extraireIdYouTube(nouvelle.url) === null;
   emit('video-presente', nouvelle !== null);
 }
 
@@ -119,7 +119,14 @@ async function supprimer(): Promise<void> {
 
     <p v-if="chargement" class="text-[14px] text-ink-muted">Chargement…</p>
 
-    <div v-else-if="idYouTube !== null" class="flex flex-col gap-3">
+    <Message v-if="video?.status === 'pending'" severity="warn" :closable="false">
+      Vidéo en attente de validation par un administrateur.
+    </Message>
+    <Message v-else-if="video?.status === 'rejected'" severity="error" :closable="false">
+      Vidéo refusée. Vous pouvez envoyer un nouveau lien.
+    </Message>
+
+    <div v-if="idYouTube !== null" class="flex flex-col gap-3">
       <LecteurYouTube :id-you-tube="idYouTube" titre="Ma vidéo de présentation" />
 
       <div class="flex items-center gap-3">

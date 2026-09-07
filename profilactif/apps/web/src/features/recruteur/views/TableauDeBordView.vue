@@ -8,29 +8,30 @@ import FavoriteService from '@/services/FavoriteService';
 import ContactService from '@/services/ContactService';
 import ProfileService from '@/services/ProfileService';
 import { useAuthStore } from '@/shared/stores/auth';
-import { formaterNombre } from '@/shared/formatage';
 import type { Profile } from '@/shared/types/api';
-
-/* How many favourites the dashboard previews; the full list is its own page. */
-const APERCU_FAVORIS = 4;
 
 const authStore = useAuthStore();
 
-const nombreProfils = ref(0);
-const nombreFavoris = ref(0);
-const nombreContacts = ref(0);
-const derniersFavoris = ref<Profile[]>([]);
+const profils = ref<Profile[]>([])
+const categorieActive = ref<'favoris' | 'consultes' | 'contactes'>('favoris');
 
 const chargement = ref(false);
 const erreur = ref('');
 
 const prenom = computed(() => authStore.user?.firstName ?? '');
 
-const compteurs = computed(() => [
-  { libelle: 'Profils disponibles', valeur: nombreProfils.value },
-  { libelle: 'Mes favoris', valeur: nombreFavoris.value },
-  { libelle: 'Mes contacts', valeur: nombreContacts.value },
-]);
+const profilsCategorie = computed(() => {
+  if (categorieActive.value === 'favoris') return profils.value.filter((profil) => favorisIds.value.has(profil.id))
+  if (categorieActive.value === 'contactes') return profils.value.filter((profil) => contactsIds.value.has(profil.id))
+  return profils.value.filter((profil) => profilsConsultes.value.has(profil.id))
+})
+
+const favorisIds = computed(() => new Set(favorisIdsSource.value))
+const contactsIds = computed(() => new Set(contactsIdsSource.value))
+const profilsConsultes = computed(() => new Set(profilsConsultesSource.value))
+const favorisIdsSource = ref<string[]>([])
+const contactsIdsSource = ref<string[]>([])
+const profilsConsultesSource = ref<string[]>([])
 
 watch(
   () => authStore.user?.id,
@@ -47,33 +48,17 @@ async function charger(recruiterId: string): Promise<void> {
   erreur.value = '';
 
   try {
-    const [profils, favoris, contacts] = await Promise.all([
+    const [profiles, favoris, contacts] = await Promise.all([
       ProfileService.getProfiles(),
       FavoriteService.getFavoritesByRecruiter(recruiterId),
       ContactService.getContactsByRecruiter(recruiterId),
     ]);
 
-    nombreProfils.value = profils.length;
-    nombreFavoris.value = favoris.length;
-    nombreContacts.value = contacts.length;
+    profils.value = profiles
+    favorisIdsSource.value = favoris.map((favori) => favori.seekerId)
+    contactsIdsSource.value = [...new Set(contacts.map((contact) => contact.seekerId))]
+    profilsConsultesSource.value = JSON.parse(localStorage.getItem('recruiter-viewed-' + recruiterId) || '[]');
 
-    /*
-     * A favourite only carries the candidate's id, so each preview costs one
-     * request. Acceptable because we fetch four at most — a route joining the
-     * two would be better the day the full list exists.
-     */
-    const recents = [...favoris]
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .slice(0, APERCU_FAVORIS);
-
-    const fiches = await Promise.allSettled(
-      recents.map((favori) => ProfileService.getProfile(favori.seekerId)),
-    );
-
-    /* A favourite pointing at a deleted account is skipped, not fatal. */
-    derniersFavoris.value = fiches
-      .filter((fiche) => fiche.status === 'fulfilled')
-      .map((fiche) => (fiche as PromiseFulfilledResult<Profile>).value);
   } catch (err: any) {
     erreur.value = err.message || 'Erreur lors du chargement du tableau de bord.';
   } finally {
@@ -108,57 +93,42 @@ async function charger(recruiterId: string): Promise<void> {
       <p v-if="chargement" class="text-[15px] text-ink-muted">Chargement…</p>
 
       <template v-else>
-        <div class="grid gap-6 sm:grid-cols-3">
-          <section
-            v-for="compteur in compteurs"
-            :key="compteur.libelle"
-            class="flex flex-col gap-2 rounded-card border border-surface-line bg-surface-page p-6"
-          >
-            <p class="font-heading text-[12px] uppercase tracking-[0.5px] text-ink-muted">
-              {{ compteur.libelle }}
-            </p>
-            <p class="font-heading text-[32px] font-bold leading-none text-brand">
-              {{ formaterNombre(compteur.valeur) }}
-            </p>
-          </section>
-        </div>
+        <nav class="grid gap-3 sm:grid-cols-3" aria-label="Categories des profils">
+          <button type="button" class="rounded-card border border-surface-line bg-surface-page p-4 text-left hover:bg-surface-subtle" :class="{ 'border-brand bg-brand-50': categorieActive === 'favoris' }" @click="categorieActive = 'favoris'">
+            <span class="block font-heading text-[12px] uppercase text-ink-muted">Profils favoris</span>
+            <strong class="mt-2 block text-[24px] text-brand">{{ favorisIdsSource.length }}</strong>
+          </button>
+          <button type="button" class="rounded-card border border-surface-line bg-surface-page p-4 text-left hover:bg-surface-subtle" :class="{ 'border-brand bg-brand-50': categorieActive === 'consultes' }" @click="categorieActive = 'consultes'">
+            <span class="block font-heading text-[12px] uppercase text-ink-muted">Profils consultes</span>
+            <strong class="mt-2 block text-[24px] text-brand">{{ profilsConsultesSource.length }}</strong>
+          </button>
+          <button type="button" class="rounded-card border border-surface-line bg-surface-page p-4 text-left hover:bg-surface-subtle" :class="{ 'border-brand bg-brand-50': categorieActive === 'contactes' }" @click="categorieActive = 'contactes'">
+            <span class="block font-heading text-[12px] uppercase text-ink-muted">Profils contactes</span>
+            <strong class="mt-2 block text-[24px] text-brand">{{ contactsIdsSource.length }}</strong>
+          </button>
+        </nav>
 
-        <section
-          class="flex flex-col gap-4 rounded-card border border-surface-line bg-surface-page p-6"
-        >
-          <h2 class="text-[18px]">Mes derniers favoris</h2>
-
-          <p v-if="derniersFavoris.length === 0" class="text-[15px] text-ink-muted">
-            Aucun favori pour l'instant. Parcourez le catalogue et mettez de côté les profils qui
-            vous intéressent.
-          </p>
-
+        <section class="flex flex-col gap-4 rounded-card border border-surface-line bg-surface-page p-6">
+          <h2 class="text-[18px]">
+            {{ categorieActive === 'favoris' ? 'Profils favoris' : categorieActive === 'consultes' ? 'Profils consultes' : 'Profils contactes' }}
+          </h2>
+          <p v-if="!profilsCategorie.length" class="text-[15px] text-ink-muted">Aucun profil dans cette categorie.</p>
           <ul v-else class="flex flex-col gap-3">
-            <li v-for="candidat in derniersFavoris" :key="candidat.id">
-              <router-link
-                :to="{ name: 'recruiter-candidate-profile', params: { id: candidat.id } }"
-                class="flex items-center gap-4 rounded-control border border-surface-line p-4 hover:bg-surface-subtle"
-              >
-                <span
-                  class="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted font-heading text-[14px] font-bold text-brand"
-                  aria-hidden="true"
-                >
+            <li v-for="candidat in profilsCategorie" :key="candidat.id">
+              <router-link :to="{ name: 'recruiter-candidate-profile', params: { id: candidat.id } }" class="flex items-center gap-4 rounded-control border border-surface-line p-4 hover:bg-surface-subtle">
+                <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted font-heading text-[14px] font-bold text-brand" aria-hidden="true">
                   {{ candidat.firstName.charAt(0) }}{{ candidat.lastName.charAt(0) }}
                 </span>
-
                 <span class="flex min-w-0 flex-col gap-0.5">
-                  <span class="font-heading text-[15px] font-semibold text-ink">
-                    {{ candidat.firstName }} {{ candidat.lastName }}
-                  </span>
-                  <span class="text-[14px] text-ink-muted">
-                    {{ candidat.targetSector ?? 'Secteur non renseigné' }} ·
-                    {{ candidat.location ?? 'Lieu non renseigné' }}
-                  </span>
+                  <span class="font-heading text-[15px] font-semibold text-ink">{{ candidat.firstName }} {{ candidat.lastName }}</span>
+                  <span class="text-[14px] text-ink-muted">{{ candidat.targetSector ?? 'Secteur non renseigne' }} - {{ candidat.location ?? 'Lieu non renseigne' }}</span>
                 </span>
               </router-link>
             </li>
           </ul>
         </section>
+
+
       </template>
     </main>
   </div>

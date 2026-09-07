@@ -1,7 +1,7 @@
 import {Interdit, NonTrouve, ValidationInvalide} from '../../shared/errors.js'
 import {AdminRepository} from './AdminRepository.js'
-import type {ListUsersInput, UpdateUserRoleInput, UpdateUserStatusInput} from './AdminSchema.js'
-
+import type {ListUsersInput, UpdateUserProfileInput, UpdateUserRoleInput, UpdateUserStatusInput} from './AdminSchema.js'
+0
 export class AdminService {constructor(private readonly adminRepository = new AdminRepository()) {}
 
   async getUsers(filters: ListUsersInput) {
@@ -20,6 +20,13 @@ export class AdminService {constructor(private readonly adminRepository = new Ad
     }
 
     return user
+  }
+
+
+  async updateUserProfile(id: string, data: UpdateUserProfileInput) {
+    await this.getUserById(id)
+    await this.adminRepository.updateUserProfile(id, data)
+    return this.getUserById(id)
   }
 
   async updateUserStatus(id: string, data: UpdateUserStatusInput, currentAdminId?: string) {
@@ -92,6 +99,6 @@ export class AdminService {constructor(private readonly adminRepository = new Ad
 
     await this.adminRepository.deleteUser(id)
 
-    return this.getUserById(id)
+    return { id, deleted: true }
   }
 }

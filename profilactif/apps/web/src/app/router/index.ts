@@ -91,6 +91,12 @@ const routes: RouteRecordRaw[] = [
     redirect: { name: 'candidate-certification' },
   },
   {
+    path: '/admin/dashboard',
+    name: 'admin-dashboard',
+    component: () => import('@/features/admin/views/AdminDashboardView.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
     path: '/admin/questions',
     name: 'admin-questions',
     component: () => import('@/features/admin/views/GestionQuestionsView.vue'),

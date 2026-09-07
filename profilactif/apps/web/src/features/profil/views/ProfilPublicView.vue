@@ -21,6 +21,7 @@ const authStore = useAuthStore();
 
 const profil = ref<Profile | null>(null);
 const idVideo = ref<string | null>(null);
+const profilVideoEnLigne = ref(false);
 const chargement = ref(false);
 const erreur = ref('');
 
@@ -44,6 +45,10 @@ const details = computed(() => {
   return [
     { libelle: 'Localisation', valeur: source.location },
     { libelle: 'Secteur ciblé', valeur: source.targetSector },
+    { libelle: 'Type de contrat', valeur: source.employmentType },
+    { libelle: 'Modalité de travail', valeur: source.workMode },
+    { libelle: "Années d'expérience", valeur: source.experienceYears === null ? null : String(source.experienceYears) + ' ans' },
+    { libelle: 'Certification', valeur: String(source.certificationRate) + ' %' },
     { libelle: 'Email', valeur: source.mail },
     { libelle: 'Téléphone', valeur: source.phone },
   ].filter((detail) => detail.valeur !== null && detail.valeur !== '');
@@ -68,6 +73,7 @@ async function charger(id: string): Promise<void> {
 
     const videos = await VideoService.getVideosBySeeker(id);
     idVideo.value = videos[0] === undefined ? null : extraireIdYouTube(videos[0].url);
+    profilVideoEnLigne.value = videos[0]?.status === 'approved';
   } catch (err: any) {
     erreur.value = err.message || 'Impossible de charger votre profil.';
   } finally {
@@ -121,7 +127,7 @@ async function charger(id: string): Promise<void> {
 
           <Tag
             v-if="idVideo !== null"
-            value="Vidéo en ligne"
+            :value="profilVideoEnLigne ? 'Vidéo en ligne' : 'Vidéo en attente de validation'"
             class="ml-auto rounded-badge bg-surface-muted px-3 py-1.5 font-heading text-[12px] font-medium text-brand"
           />
         </section>
