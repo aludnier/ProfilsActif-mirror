@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import type { RowDataPacket } from 'mysql2'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 import { db } from '../../infrastructure/db.client.js'
 import type { CreateAttemptInput, CreateQuestionnaireVersionInput, UpdateAttemptInput } from './CertificationSchema.js'
 import { string } from 'zod/v4'
@@ -147,6 +147,44 @@ export class CertificationRepository {
     )
     const row = rows[0]
     return row ? { ...row, answers: parseJson(row.answers) } : null
+  }
+
+  async submitAttempt(
+    id: string,
+    seekerId: string,
+    answers: Record<string, unknown>,
+    score: number,
+  ): Promise<QuestionnaireAttempt | null> {
+    const connection = await db.getConnection()
+    try {
+      await connection.beginTransaction()
+
+      const [res] = await connection.execute<ResultSetHeader>(
+        `UPDATE questionnaire_attempt
+           SET answers = ?, score = ?, status = 'submitted', submitted_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND seeker_id = ? AND status <> 'submitted'`,
+        [JSON.stringify(answers), score, id, seekerId],
+      )
+
+      if (res.affectedRows === 0) {
+        await connection.rollback()
+        return null
+      }
+
+      await connection.execute('UPDATE seeker SET certification_rate = ? WHERE id = ?', [
+        Math.round(score),
+        seekerId,
+      ])
+
+      await connection.commit()
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
+
+    return this.getAttempt(id, seekerId)
   }
 
   async updateAttempt(id: string, seekerId: string, data: UpdateAttemptInput): Promise<QuestionnaireAttempt | null> {

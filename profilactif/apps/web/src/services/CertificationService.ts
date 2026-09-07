@@ -1,5 +1,5 @@
 import axiosInstance from '@/shared/api-client'
-import type { Questionnaire, QuestionnaireAttempt, QuestionAttemp, QuestionnaireContent, } from '@/shared/types/api'
+import type { AttemptUpdateResult, Questionnaire, QuestionnaireAttempt, QuestionAttemp, QuestionnaireContent, } from '@/shared/types/api'
 
 export class CertificationService {
 
@@ -29,13 +29,12 @@ export class CertificationService {
     return data
   }
 
-  // Sauvegarde incrémentale des réponses. 
   static async updateAttempt(
     id: string,
     answers: Record<string, string[]>,
     status?: QuestionnaireAttempt['status'],
-  ): Promise<QuestionnaireAttempt> {
-    const { data } = await axiosInstance.patch<QuestionnaireAttempt>(
+  ): Promise<AttemptUpdateResult> {
+    const { data } = await axiosInstance.patch<AttemptUpdateResult>(
       `/certifications/attempts/${id}`,
       { answers, status },
     )
