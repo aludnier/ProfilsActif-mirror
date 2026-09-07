@@ -128,7 +128,6 @@ export interface Interaction {
   createdAt: string
 }
 
-/** Certification */
 
 export type QuestionnaireStatus =
   | 'draft'
@@ -217,3 +216,16 @@ export interface ScoreResult {
 }
 
 export type AttemptUpdateResult = QuestionnaireAttempt & { result?: ScoreResult }
+
+
+export interface AppNotification {
+  id: string
+  type: 'contact'
+  read: boolean
+  createdAt: string
+  message: string | null
+  recruiterId: string | null
+  recruiterName: string | null
+  recruiterMail: string | null
+  recruiterPhone: string | null
+}
