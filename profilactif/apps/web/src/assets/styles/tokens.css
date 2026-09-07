@@ -76,10 +76,10 @@
   --color-status-valid: #1e7a34;
 
   /* ---- Typographie ------------------------------------------------------
-   * Titres + UI en Marianne, texte courant en Spectral (cf. CLAUDE.md).
+   * Krylon pour les titres, Faber pour l'interface et le texte courant.
    */
-  --font-heading: 'Marianne', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-body: 'Spectral', Georgia, 'Times New Roman', serif;
+  --font-heading: 'Krylon', 'Faber Serif Reduced', Georgia, serif;
+  --font-body: 'Faber Serif Reduced', Georgia, 'Times New Roman', serif;
 
   /* ---- Rayons (échelle relevée dans la maquette) ------------------------ */
   --radius-badge: 4px;

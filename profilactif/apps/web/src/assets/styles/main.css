@@ -36,8 +36,7 @@
     font-family: var(--font-body);
   }
 
-  /* Titres en Marianne — règle de marque, y compris là où la maquette Figma
-   * utilise Inter. */
+  /* Titres en Krylon, texte courant et interface en Faber. */
   h1,
   h2,
   h3,
