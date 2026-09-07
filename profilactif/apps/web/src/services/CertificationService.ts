@@ -1,5 +1,5 @@
 import axiosInstance from '@/shared/api-client'
-import type { Questionnaire, QuestionnaireAttempt, QuestionAttemp } from '@/shared/types/api'
+import type { Questionnaire, QuestionnaireAttempt, QuestionAttemp, QuestionnaireContent, } from '@/shared/types/api'
 
 export class CertificationService {
 
@@ -54,6 +54,24 @@ export class CertificationService {
       weight,
       type,
     })
+    return data
+  }
+
+  static async createQuestionnaire(
+    code:string,
+    title:string,
+    content: QuestionnaireContent
+  ) {
+    const {data} = await axiosInstance.post<Questionnaire>('/', {
+      code,
+      title,
+      content
+    });
+    return data
+  }
+
+  static async publishQuestionnaire(id: string): Promise<Questionnaire> {
+    const { data } = await axiosInstance.post<Questionnaire>(`/certifications/${id}/publish`)
     return data
   }
 }
