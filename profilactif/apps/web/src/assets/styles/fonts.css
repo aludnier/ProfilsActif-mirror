@@ -1,40 +1,22 @@
-/*
- * Polices auto-hébergées — aucun appel à un CDN tiers (Google Fonts et
- * consorts), pour un service public : pas de fuite d'IP visiteur vers un
- * tiers, et le site reste fonctionnel sans réseau externe.
- *
- * Marianne n'existe qu'en 4 graisses ; correspondance avec la maquette Figma
- * (qui utilise Inter, remplacé par Marianne selon la règle de marque) :
- *   Inter Regular 400    -> Marianne 400
- *   Inter Medium 500     -> Marianne 500
- *   Inter Semi Bold 600  -> Marianne 500
- *   Inter Bold 700       -> Marianne 700
- *   Inter Extra Bold 800 -> Marianne 700
- */
-
-@import '@fontsource/spectral/400.css';
-@import '@fontsource/spectral/400-italic.css';
-@import '@fontsource/spectral/600.css';
-
 @font-face {
-  font-family: 'Marianne';
-  src: url('../fonts/marianne/Marianne-Regular.woff2') format('woff2');
+  font-family: 'Faber Serif Reduced';
+  src: url('../fonts/Faber/FaberSerifReduced55.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Marianne';
-  src: url('../fonts/marianne/Marianne-Medium.woff2') format('woff2');
+  font-family: 'Faber Serif Reduced';
+  src: url('../fonts/Faber/FaberSerifReduced65.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Marianne';
-  src: url('../fonts/marianne/Marianne-Bold.woff2') format('woff2');
+  font-family: 'Faber Serif Reduced';
+  src: url('../fonts/Faber/FaberSerifReduced75.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;

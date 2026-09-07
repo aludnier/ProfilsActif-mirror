@@ -119,13 +119,13 @@ function removeQuestion(index: number) {
   border-radius: 12px;
   border: 1px solid var(--navy);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-family: 'Marianne', 'Spectral', system-ui, sans-serif;
+  font-family: 'Faber Serif Reduced', Georgia, 'Times New Roman', serif;
   color: var(--text);
 }
 
 label {
   display: block;
-  font-family: 'Spectral';
+  font-family: 'Faber Serif Reduced', Georgia, 'Times New Roman', serif;
   font-size: 15px;
   font-weight: 600;
   color: var(--navy);
@@ -158,7 +158,7 @@ select:focus {
 }
 
 p {
-  font-family: 'Spectral';
+  font-family: 'Faber Serif Reduced', Georgia, 'Times New Roman', serif;
   color: var(--text);
   font-size: 15px;
   margin: 10px 0;
@@ -178,7 +178,7 @@ p {
   gap: 6px;
   background: var(--navy);
   color: #fff;
-  font-family: 'Spectral';
+  font-family: 'Faber Serif Reduced', Georgia, 'Times New Roman', serif;
   font-size: 13px;
   font-weight: 600;
   padding: 6px 10px 6px 14px;
@@ -224,7 +224,7 @@ button:hover {
 
 div[v-for] > p,
 .question-block p {
-  font-family: 'Marianne', sans-serif;
+  font-family: 'Faber Serif Reduced', Georgia, 'Times New Roman', serif;
   color: var(--navy);
   font-weight: 700;
   font-size: 16px;
@@ -269,7 +269,7 @@ div[v-for] > p,
 }
 
 .question-title {
-  font-family: 'Marianne', sans-serif;
+  font-family: 'Faber Serif Reduced', Georgia, 'Times New Roman', serif;
   color: var(--navy);
   font-weight: 700;
   font-size: 16px;
