@@ -6,7 +6,6 @@ import type { Role } from '@/shared/types/roles';
 
 declare module 'vue-router' {
   interface RouteMeta {
-    /* Roles allowed on this route. Absent means public. */
     roles?: readonly Role[];
   }
 }
@@ -37,10 +36,6 @@ const routes: RouteRecordRaw[] = [
     name: 'signup',
     component: () => import('@/features/auth/views/InscriptionView.vue'),
   },
-  /*
-   * Kept as a redirect rather than deleted: the landing section and the
-   * fixtures still build links with this name.
-   */
   {
     path: '/profiles/:id',
     name: 'candidate-profile',
@@ -71,7 +66,6 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/features/profil/views/MonProfilView.vue'),
     meta: { roles: ['seeker'] },
   },
-  /* No id in the path: the view always reads the logged-in candidate. */
   {
     path: '/candidate/profile',
     name: 'candidate-public-profile',
@@ -81,14 +75,20 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/candidate/certification',
     name: 'candidate-certification',
-    component: () => import('@/features/certification/views/CertificationView.vue'),
+    component: () => import('@/features/certification/views/QuestionnaireView.vue'),
     meta: { roles: ['seeker'] },
   },
-  /* Same screen: QuestionnaireView only re-exports CertificationView. */
+  {
+    path: '/candidate/certification/resultat/:attemptId',
+    name: 'candidate-certification-result',
+    component: () => import('@/features/certification/views/ResultatView.vue'),
+    props: true,
+    meta: { roles: ['seeker'] },
+  },
   {
     path: '/certification',
-    name: 'certification-questionnaire',
-    redirect: { name: 'candidate-certification' },
+    name: 'certification-preview',
+    component: () => import('@/features/certification/views/CertificationView.vue'),
   },
   {
     path: '/admin/questions',
@@ -96,7 +96,6 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/features/admin/views/GestionQuestionsView.vue'),
     meta: { roles: ['admin'] },
   },
-  /* Catch-all, kept last: anything unmatched above lands on the 404. */
   {
     path: '/:cheminInconnu(.*)',
     name: 'not-found',
@@ -107,7 +106,6 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  /* Without this, an anchor link only works from the page it points at. */
   scrollBehavior(to, _from, position) {
     if (to.hash !== '') {
       return { el: to.hash, behavior: 'smooth' };
@@ -123,9 +121,6 @@ router.beforeEach(async (to) => {
   if (roles === undefined) {
     return true;
   }
-
-  /* Awaited, otherwise a page reload runs the guard before /auth/me answers
-     and throws out a user who is in fact logged in. */
   const authStore = useAuthStore();
   await authStore.initializeAuth();
 
@@ -135,8 +130,6 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { suite: to.fullPath } };
   }
 
-  /* Wrong role: back to their own space rather than an error screen. A
-     candidate asking for another candidate's sheet lands on their dashboard. */
   if (!roles.includes(compte.role)) {
     return { name: ROUTE_ESPACE[compte.role] };
   }
