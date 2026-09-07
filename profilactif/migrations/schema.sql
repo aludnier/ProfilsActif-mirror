@@ -371,13 +371,34 @@ CREATE TABLE IF NOT EXISTS questionnaire_attempt (
     CHECK (score IS NULL OR (score >= 0 AND score <= 100))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS notification (
+  id CHAR(36) NOT NULL DEFAULT (UUID()),
+  seeker_id CHAR(36) NOT NULL,
+  type ENUM('contact') NOT NULL DEFAULT 'contact',
+  contact_id CHAR(36) NULL,
+  read_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_notification_seeker (seeker_id, read_at, created_at),
+  CONSTRAINT fk_notification_seeker
+    FOREIGN KEY (seeker_id) REFERENCES seeker(id) ON DELETE CASCADE,
+  CONSTRAINT fk_notification_contact
+    FOREIGN KEY (contact_id) REFERENCES contact(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TRIGGER IF EXISTS trg_contact_notify;
+CREATE TRIGGER trg_contact_notify
+  AFTER INSERT ON contact
+  FOR EACH ROW
+  INSERT INTO notification (seeker_id, type, contact_id)
+  VALUES (NEW.seeker_id, 'contact', NEW.id);
+
 ALTER TABLE video
   ADD COLUMN status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
   ADD COLUMN moderated_by CHAR(36) NULL,
   ADD COLUMN moderated_at DATETIME NULL,
   ADD COLUMN moderation_reason VARCHAR(500) NULL;
 
--- Compte local de developpement.
 INSERT INTO app_user
   (uuid, first_name, last_name, mail, phone, password_hash, role, status)
 VALUES
