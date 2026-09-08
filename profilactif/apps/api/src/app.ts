@@ -14,6 +14,7 @@ import { contactRoutes } from './features/contact/ContactRoutes.js'
 import { certificationRoutes } from './features/certification/CertificationRoutes.js'
 import { adminRoutes } from './features/admin/AdminRoutes.js'
 import { interactionRoutes } from './features/interaction/InteractionRoutes.js'
+import { swaggerSpec, swaggerUi } from './config/swagger.js'
 
 const app = new Hono()
 
@@ -32,6 +33,10 @@ app.notFound((c) => c.json({ code: 'NON_TROUVE', message: 'Route inconnue' }, 40
 
 // Sonde de disponibilité (compose, déploiement, test de fumée).
 app.route('/health', healthRoutes)
+
+// Swagger UI pour la doc API
+app.get('/api-docs', swaggerUi)
+app.get('/api-docs/openapi.json', (c) => c.json(swaggerSpec))
 
 app.route('/auth', authRoutes)
 app.route('/skills', skillRoutes)
