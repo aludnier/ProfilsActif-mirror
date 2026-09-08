@@ -1,5 +1,5 @@
 import axiosInstance from '@/shared/api-client'
-import type { PublicUser, Video } from '@/shared/types/api'
+import type { AdminStats, PublicUser, Video } from '@/shared/types/api'
 
 export interface AdminUserPage {
   data: PublicUser[]
@@ -32,6 +32,11 @@ export default class AdminService {
 
   static async deleteUser(id: string): Promise<void> {
     await axiosInstance.delete('/admin/users/' + id)
+  }
+
+  static async getStats(): Promise<AdminStats> {
+    const { data } = await axiosInstance.get<AdminStats>('/admin/stats')
+    return data
   }
 
   static async getPendingVideos(): Promise<Video[]> {

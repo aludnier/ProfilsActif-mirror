@@ -1,11 +1,13 @@
 import { Hono } from 'hono'
 import { requireAuth, requireRole, type AuthVariables } from '../../infrastructure/auth.middleware.js'
 
-import {deleteUserHandler, getUserByIdHandler, getUsersHandler, updateUserRoleHandler, updateUserStatusHandler, updateUserProfileHandler, getPendingVideosHandler, updateVideoStatusHandler} from './AdminHandler.js'
+import {deleteUserHandler, getUserByIdHandler, getUsersHandler, updateUserRoleHandler, updateUserStatusHandler, updateUserProfileHandler, getPendingVideosHandler, updateVideoStatusHandler, getStatsHandler} from './AdminHandler.js'
 
 export const adminRoutes = new Hono<{ Variables: AuthVariables }>()
 
 adminRoutes.use('*', requireAuth, requireRole('admin'))
+
+adminRoutes.get('/stats', getStatsHandler)
 
 adminRoutes.get('/users', getUsersHandler)
 

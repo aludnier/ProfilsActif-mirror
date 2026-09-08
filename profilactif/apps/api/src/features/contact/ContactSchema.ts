@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 export const createContactSchema = z.object({
-  recruiterId: z.string().uuid(),
   seekerId: z.string().uuid(),
   message: z.string().trim().min(1).max(5000),
 })

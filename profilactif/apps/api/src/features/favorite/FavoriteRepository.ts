@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { RowDataPacket } from 'mysql2'
 import { db } from '../../infrastructure/db.client.js'
-import type { CreateFavoriteInput } from './FavoriteSchema.js'
 
 export interface Favorite extends RowDataPacket {
   id: string
@@ -9,6 +8,8 @@ export interface Favorite extends RowDataPacket {
   seekerId: string
   createdAt: Date
 }
+
+export type NewFavorite = { recruiterId: string; seekerId: string }
 
 export class FavoriteRepository {
   async findById(id: string): Promise<Favorite | null> {
@@ -69,7 +70,7 @@ export class FavoriteRepository {
     return rows[0] ?? null
   }
 
-  async create(data: CreateFavoriteInput): Promise<Favorite> {
+  async create(data: NewFavorite): Promise<Favorite> {
     const id = randomUUID()
 
     await db.execute(
