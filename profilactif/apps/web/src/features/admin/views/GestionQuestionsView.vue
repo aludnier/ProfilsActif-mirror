@@ -147,7 +147,7 @@ select {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
- 
+
 
 input:focus,
 select:focus {

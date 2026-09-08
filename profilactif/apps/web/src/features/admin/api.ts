@@ -10,8 +10,8 @@ export interface AdminUserPage {
 }
 
 export default class AdminService {
-  static async getUsers(search = ''): Promise<AdminUserPage> {
-    const { data } = await axiosInstance.get<AdminUserPage>('/admin/users', { params: { search, limit: 100 } })
+  static async getUsers(search = '', page = 1, limit = 15): Promise<AdminUserPage> {
+    const { data } = await axiosInstance.get<AdminUserPage>('/admin/users', { params: { search, page, limit } })
     return data
   }
 
