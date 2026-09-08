@@ -32,6 +32,11 @@ certificationRoutes.post('/attempts', requireAuth, requireRole('seeker'), async 
   return c.json(await service.createAttempt(result.data, c.get('user').id), 201)
 })
 
+/* Doit précéder `/attempts/:id`, sinon « en-cours » serait pris pour un identifiant. */
+certificationRoutes.get('/attempts/en-cours', requireAuth, requireRole('seeker'), async (c) =>
+  c.json(await service.getCurrentAttempt(c.get('user').id)),
+)
+
 certificationRoutes.get('/attempts/:id', requireAuth, requireRole('seeker'), async (c) =>
   c.json(await service.getAttempt(c.req.param('id'), c.get('user').id)),
 )
