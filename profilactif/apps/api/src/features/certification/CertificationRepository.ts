@@ -151,8 +151,7 @@ export class CertificationRepository {
     try {
       await connection.beginTransaction()
       await connection.execute(
-        "UPDATE questionnaire_version SET status = 'archived' WHERE questionnaire_id = ? AND status = 'draft'",
-        [version.questionnaireId],
+        "UPDATE questionnaire_version SET status = 'archived' WHERE  status = 'draft'",
       )
       await connection.execute(
         "UPDATE questionnaire_version SET status = 'draft', published_at = CURRENT_TIMESTAMP WHERE id = ?",
