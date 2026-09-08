@@ -152,6 +152,8 @@ export interface QuestionnaireQuestion {
   category: string
   weight?: number
   type: 'single' | 'multiple'
+  /** 'graded' : chaque option rapporte ses points. Absent = 'exact' (tout ou rien). */
+  scoring?: 'exact' | 'graded'
   prompt: string
   options: QuestionnaireOption[]
 }

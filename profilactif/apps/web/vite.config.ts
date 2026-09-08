@@ -9,6 +9,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      /* Donnée de référence partagée avec l'API (qui la lit sur disque) : elle vit
+         dans migrations/, à côté de schema.sql, pas dans les sources du front. */
+      '@data': fileURLToPath(new URL('../../migrations', import.meta.url)),
     },
   },
 });

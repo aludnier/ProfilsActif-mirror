@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
 import { useAuthStore } from '@/shared/stores/auth';
 import { ROUTE_ESPACE } from '@/shared/types/roles';
@@ -35,6 +35,22 @@ const routes: RouteRecordRaw[] = [
     path: '/signup',
     name: 'signup',
     component: () => import('@/features/auth/views/InscriptionView.vue'),
+  },
+  /*
+   * Anciennes adresses du fil vertical. Des liens ont circulé : elles doivent
+   * mener à la grille, jamais à une page d'erreur.
+   */
+  {
+    path: '/feed',
+    redirect: { name: 'feed' },
+  },
+  {
+    path: '/feeds',
+    redirect: { name: 'feed' },
+  },
+  {
+    path: '/fil',
+    redirect: { name: 'feed' },
   },
   {
     path: '/profiles/:id',
@@ -113,6 +129,11 @@ const routes: RouteRecordRaw[] = [
     name: 'admin-questions',
     component: () => import('@/features/admin/views/GestionQuestionsView.vue'),
     meta: { roles: ['admin'] },
+  },
+  /* Raccourci : l'adresse courte circule, elle doit mener à l'éditeur. */
+  {
+    path: '/questions',
+    redirect: { name: 'admin-questions' },
   },
   {
     path: '/:cheminInconnu(.*)',

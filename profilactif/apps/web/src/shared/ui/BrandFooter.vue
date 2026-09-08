@@ -37,7 +37,7 @@ const colonnes: ColonnePied[] = [
  * reflect the level actually verified. The mockup claims "fully compliant",
  * but no audit has been carried out — so the default level is shown instead.
  * Move it to "partially compliant" then "fully compliant" only once an audit
- * justifies it, never before.
+ * justifies it, never before
  */
 const liensLegaux: LienPied[] = [
   { libelle: 'Mentions légales' },
@@ -89,8 +89,7 @@ const annee = new Date().getFullYear();
     <div
       class="flex w-full flex-wrap items-start justify-between gap-4 font-heading text-[12px] text-ink-invert"
     >
-      <!-- <p>© {{ annee }} ProfilsActifs. Un service public numérique développé sous licence libre.</p> -->
-      <p>© {{ annee }} ProfilsActifs. Démonstrateur technique, ne constitue pas un service public en exploitation.  .</p>
+      <p>© {{ annee }} ProfilsActifs. Démonstrateur technique, ne constitue pas un service public en exploitation.</p>
       <ul class="flex flex-wrap items-start gap-6">
         <li v-for="lien in liensLegaux" :key="lien.libelle">
           <router-link v-if="lien.to" :to="lien.to" class="hover:underline">
