@@ -37,7 +37,7 @@ const colonnes: ColonnePied[] = [
  * reflect the level actually verified. The mockup claims "fully compliant",
  * but no audit has been carried out — so the default level is shown instead.
  * Move it to "partially compliant" then "fully compliant" only once an audit
- * justifies it, never before.
+ * justifies it, never before
  */
 const liensLegaux: LienPied[] = [
   { libelle: 'Mentions légales' },
