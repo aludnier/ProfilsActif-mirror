@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import CertificationService from '@/services/CertificationService'
-import type { Questionnaire, QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
+import type { QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
 import { onMounted, ref } from 'vue'
 
 const questionTemplateYesNo = ["Oui", "Non"]
@@ -80,7 +80,6 @@ const tempWeight = ref<number>(1)
 const tempAnswerPoints = ref<number>(1)
 const responses = ref<{ label: string; points: number }[]>([])
 const questionType = ref<'personalized' | 'YesNo' | 'Scale'>("personalized")
-const multipleChoice = ref<boolean>(false)
 
 const createdQuestions = ref<QuestionnaireQuestion[]>([])
 
@@ -151,7 +150,7 @@ function addQuestion() {
     id: crypto.randomUUID(),
     category: 'general',
     weight: tempWeight.value,
-    type: mapType(mappedrespond),
+    type: mapType(mappedrespond, questionType.value),
     prompt: tempQuestion.value,
     options: mappedrespond,
   })
