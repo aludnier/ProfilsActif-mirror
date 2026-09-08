@@ -197,6 +197,76 @@ describe('computeScore', () => {
   })
 })
 
+function contenuGradue() {
+  return {
+    config: { passThreshold: 50, minCategoryScore: 0 },
+    categories: [{ code: 'SOFT', label: 'Savoir-être', weight: 100 }],
+    questions: [
+      {
+        id: 'ECHELLE',
+        category: 'SOFT',
+        type: 'single',
+        scoring: 'graded',
+        prompt: 'Note de 1 à 10',
+        options: [
+          { id: '1', label: '1', points: 1 },
+          { id: '5', label: '5', points: 5 },
+          { id: '10', label: '10', points: 10 },
+        ],
+      },
+      {
+        id: 'QCM',
+        category: 'SOFT',
+        type: 'single',
+        scoring: 'graded',
+        prompt: 'Que faites-vous ?',
+        options: [
+          { id: 'a', label: 'La meilleure', points: 10 },
+          { id: 'b', label: 'Acceptable', points: 6 },
+          { id: 'c', label: 'Mauvaise', points: 0 },
+        ],
+      },
+    ],
+  }
+}
+
+describe('computeScore — mode gradué', () => {
+  it("accepte une question 'single' avec plusieurs options positives", () => {
+    expect(() => parseQuestionnaire(contenuGradue())).not.toThrow()
+  })
+
+  it('une réponse intermédiaire vaut son ratio de points, pas 0', () => {
+    const q = parseQuestionnaire(contenuGradue())
+    const r = computeScore(q, { ECHELLE: ['5'], QCM: ['b'] })
+    /* (5/10 + 6/10) / 2 = 55 % */
+    expect(r.score).toBe(55)
+    expect(r.passed).toBe(true)
+  })
+
+  it('les meilleures réponses donnent 100', () => {
+    const q = parseQuestionnaire(contenuGradue())
+    expect(computeScore(q, { ECHELLE: ['10'], QCM: ['a'] }).score).toBe(100)
+  })
+
+  it("tout cocher sur une question 'single' ne donne pas plus que la meilleure option", () => {
+    const q = parseQuestionnaire(contenuGradue())
+    const r = computeScore(q, { ECHELLE: ['1', '5', '10'], QCM: ['a', 'b', 'c'] })
+    expect(r.score).toBe(100)
+  })
+
+  it('sous le seuil de 50 : le questionnaire est en échec', () => {
+    const q = parseQuestionnaire(contenuGradue())
+    const r = computeScore(q, { ECHELLE: ['1'], QCM: ['c'] })
+    expect(r.score).toBe(5)
+    expect(r.passed).toBe(false)
+  })
+
+  it("le mode par défaut reste 'exact' quand le champ est absent", () => {
+    const q = parseQuestionnaire(contenuValide())
+    expect(q.questions.every((question) => question.scoring === 'exact')).toBe(true)
+  })
+})
+
 describe('normalizeAnswers', () => {
   it('accepte une string simple ou un tableau, ignore le reste', () => {
     expect(normalizeAnswers({ a: 'x', b: ['y', 'z'], c: 3, d: null })).toEqual({
