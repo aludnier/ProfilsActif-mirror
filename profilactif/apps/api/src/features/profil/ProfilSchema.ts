@@ -20,7 +20,7 @@ export const updateProfilSchema = z.object({
     .optional(),
 
   age: z
-    .number()
+    .coerce.number()
     .int('L’âge doit être un nombre entier')
     .min(0, 'L’âge ne peut pas être négatif')
     .max(120, 'L’âge ne peut pas dépasser 120 ans')
@@ -47,7 +47,13 @@ export const updateProfilSchema = z.object({
 
   employmentType: z.enum(['full_time', 'part_time', 'freelance', 'internship']).nullable().optional(),
   workMode: z.enum(['on_site', 'hybrid', 'remote']).nullable().optional(),
-  experienceYears: z.number().min(0).max(60).nullable().optional(),
+  experienceYears: z.coerce.number().min(0).max(60).nullable().optional(),
 })
 
 export type UpdateProfilInput = z.infer<typeof updateProfilSchema>
+
+export const updateCompetencesSchema = z.object({
+  competences: z.array(z.string().trim().min(1).max(150)).max(5),
+})
+
+export type UpdateCompetencesInput = z.infer<typeof updateCompetencesSchema>

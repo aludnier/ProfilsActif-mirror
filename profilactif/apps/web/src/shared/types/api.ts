@@ -53,6 +53,7 @@ export interface Profile {
   experienceYears: number | null
   certificationRate: number
   bio: string | null
+  competences?: string[]
   role: Role
   status: UserStatus
   createdAt: string

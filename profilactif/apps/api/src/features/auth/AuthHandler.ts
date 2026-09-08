@@ -7,7 +7,6 @@ import { AuthService } from './AuthService.js'
 
 const authService = new AuthService()
 
-// Corps JSON illisible → 400 plutôt qu'une 500 non gérée.
 async function readJson(c: Context): Promise<unknown> {
   try {
     return await c.req.json()
@@ -38,4 +37,10 @@ export async function meHandler(c: Context<{ Variables: AuthVariables }>) {
   const { id } = c.get('user')
 
   return c.json(await authService.me(id))
+}
+
+export async function deleteMeHandler(c: Context<{ Variables: AuthVariables }>) {
+  const { id } = c.get('user')
+  await authService.deleteAccount(id)
+  return c.body(null, 204)
 }

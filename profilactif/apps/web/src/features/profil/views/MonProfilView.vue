@@ -3,11 +3,13 @@ import Button from 'primevue/button';
 import Message from 'primevue/message';
 import ProgressBar from 'primevue/progressbar';
 import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 import BarreLateraleCandidat from '@/features/profil/components/BarreLateraleCandidat.vue';
 import FormulaireProfil from '@/features/profil/components/FormulaireProfil.vue';
 import type { InfosProfil } from '@/features/profil/components/FormulaireProfil.vue';
 import FormulaireVideo from '@/features/profil/components/FormulaireVideo.vue';
+import AuthService from '@/services/AuthService';
 import ProfileService from '@/services/ProfileService';
 import { useAuthStore } from '@/shared/stores/auth';
 import type { Profile, UpdateProfileInput } from '@/shared/types/api';
@@ -19,6 +21,7 @@ const CRITERES_VIDEO = [
 ];
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const profil = ref<Profile | null>(null);
 const infos = ref<InfosProfil>({
@@ -33,14 +36,17 @@ const infos = ref<InfosProfil>({
   experienceYears: null,
   bio: '',
 });
-/* Not persisted yet: no route attaches a skill to a seeker (see EditeurCompetences). */
+/* Compétences chargées et enregistrées avec le profil candidat. */
 const competences = ref<string[]>([]);
+const competencesInitiales = ref<string[]>([]);
 const aUneVideo = ref(false);
 
 const chargement = ref(false);
 const enregistrement = ref(false);
 const erreur = ref('');
 const succes = ref('');
+const suppressionEnCours = ref(false);
+const confirmationSuppressionOuverte = ref(false);
 
 /*
  * The mockup freezes the completion at 75%. Here it is counted: the seven saved
@@ -62,6 +68,10 @@ const completion = computed(() => {
   return Math.round((remplis.filter(Boolean).length / remplis.length) * 100);
 });
 
+const competencesModifiees = computed(() =>
+  JSON.stringify([...competences.value].sort()) !== JSON.stringify([...competencesInitiales.value].sort()),
+);
+
 const modifie = computed(() => {
   const source = profil.value;
   if (source === null) {
@@ -78,7 +88,8 @@ const modifie = computed(() => {
     infos.value.employmentType !== source.employmentType ||
     infos.value.workMode !== source.workMode ||
     infos.value.experienceYears !== source.experienceYears ||
-    infos.value.bio !== (source.bio ?? '')
+    infos.value.bio !== (source.bio ?? '') ||
+    competencesModifiees.value
   );
 });
 
@@ -97,7 +108,9 @@ async function charger(id: string): Promise<void> {
   erreur.value = '';
 
   try {
-    appliquer(await ProfileService.getProfile(id));
+    appliquer(await ProfileService.getProfile(id))
+    competences.value = await ProfileService.getCompetences(id)
+    competencesInitiales.value = [...competences.value];
   } catch (err: any) {
     erreur.value = err.message || 'Erreur lors du chargement du profil.';
   } finally {
@@ -111,12 +124,12 @@ function appliquer(source: Profile): void {
     firstName: source.firstName,
     lastName: source.lastName,
     phone: source.phone ?? '',
-    age: source.age,
+    age: source.age === null ? null : Number(source.age),
     location: source.location ?? '',
     targetSector: source.targetSector ?? '',
     employmentType: source.employmentType,
     workMode: source.workMode,
-    experienceYears: source.experienceYears,
+    experienceYears: source.experienceYears === null ? null : Number(source.experienceYears),
     bio: source.bio ?? '',
   };
 }
@@ -171,13 +184,41 @@ async function enregistrer(): Promise<void> {
 
   try {
     const misAJour = await ProfileService.updateProfile(source.id, differences(source));
+    const competencesSauvegardees = await ProfileService.updateCompetences(source.id, competences.value);
     appliquer(misAJour);
+    competences.value = competencesSauvegardees;
+    competencesInitiales.value = [...competencesSauvegardees];
     authStore.updateUser({ firstName: misAJour.firstName, lastName: misAJour.lastName });
     succes.value = 'Profil enregistré.';
   } catch (err: any) {
     erreur.value = err.message || 'Erreur lors de la sauvegarde.';
   } finally {
     enregistrement.value = false;
+  }
+}
+
+function ouvrirConfirmationSuppression(): void {
+  confirmationSuppressionOuverte.value = true
+}
+
+function fermerConfirmationSuppression(): void {
+  if (!suppressionEnCours.value) {
+    confirmationSuppressionOuverte.value = false
+  }
+}
+
+async function confirmerSuppressionCompte(): Promise<void> {
+  suppressionEnCours.value = true
+  erreur.value = ''
+  try {
+    await AuthService.deleteMe()
+    authStore.logout()
+    await router.push({ name: 'home' })
+  } catch (err: any) {
+    erreur.value = err.message || 'Impossible de supprimer votre compte.'
+    confirmationSuppressionOuverte.value = false
+  } finally {
+    suppressionEnCours.value = false
   }
 }
 </script>
@@ -273,7 +314,63 @@ async function enregistrer(): Promise<void> {
           class="rounded-control px-8 py-3 font-heading text-[14px] font-bold tracking-[0.75px]"
           @click="enregistrer"
         />
+
+        <Button
+          label="Supprimer définitivement mon compte"
+          severity="danger"
+          outlined
+          :disabled="suppressionEnCours || enregistrement"
+          class="rounded-control px-6 py-3 text-[14px] font-bold"
+          @click="ouvrirConfirmationSuppression"
+        />
       </footer>
     </main>
   </div>
+  <Teleport to="body">
+    <div
+      v-if="confirmationSuppressionOuverte"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-brand/40 p-4"
+      role="presentation"
+      @keydown.esc="fermerConfirmationSuppression"
+    >
+      <section
+        class="w-full max-w-lg rounded-card border border-surface-line bg-surface-page p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirmation-suppression-titre"
+      >
+        <div class="flex flex-col gap-3">
+          <p class="font-heading text-[12px] font-bold uppercase tracking-[0.5px] text-status-error">
+            Suppression du compte
+          </p>
+          <h2 id="confirmation-suppression-titre" class="text-[22px] text-brand">
+            Supprimer définitivement votre compte ?
+          </h2>
+          <p class="text-[15px] leading-[1.6] text-ink-muted">
+            Votre profil, votre vidéo, vos certifications et toutes les données associées seront supprimés.
+            Cette action est irréversible.
+          </p>
+        </div>
+
+        <div class="mt-6 flex flex-wrap justify-end gap-3">
+          <Button
+            label="Annuler"
+            severity="secondary"
+            text
+            :disabled="suppressionEnCours"
+            class="rounded-control px-5 py-2.5"
+            @click="fermerConfirmationSuppression"
+          />
+          <Button
+            label="Supprimer mon compte"
+            severity="danger"
+            :loading="suppressionEnCours"
+            class="rounded-control px-5 py-2.5 font-bold"
+            @click="confirmerSuppressionCompte"
+          />
+        </div>
+      </section>
+    </div>
+  </Teleport>
+
 </template>

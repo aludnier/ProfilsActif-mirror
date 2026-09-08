@@ -5,6 +5,9 @@ import RadioButton from 'primevue/radiobutton'
 const niveau = defineModel<string>('niveau', { required: true })
 const types = defineModel<string[]>('types', { required: true })
 const modalites = defineModel<string[]>('modalites', { required: true })
+const secteur = defineModel<string>('secteur', { required: true })
+const localisation = defineModel<string>('localisation', { required: true })
+const competence = defineModel<string>('competence', { required: true })
 
 const niveaux = [
   { value: 'all', label: 'Tous niveaux' },
@@ -31,6 +34,25 @@ const modesTravail = [
       <h2 class="font-heading text-[12px] uppercase tracking-[0.5px] text-ink-muted">Filtres avances</h2>
       <span class="h-px w-full bg-surface-line" aria-hidden="true" />
     </div>
+
+
+    <fieldset class="flex w-full flex-col gap-3">
+      <legend class="mb-1 font-heading text-[14px] font-bold text-brand">Recherche ciblée</legend>
+      <label for="filtre-competence" class="font-heading text-[13px] text-ink-muted">Compétence</label>
+      <input id="filtre-competence" v-model="competence" type="search" class="w-full rounded-control border border-surface-line px-3 py-2 text-[14px]" placeholder="Ex. React, gestion...">
+      <label for="filtre-secteur" class="font-heading text-[13px] text-ink-muted">Secteur</label>
+      <input id="filtre-secteur" v-model="secteur" type="search" class="w-full rounded-control border border-surface-line px-3 py-2 text-[14px]" placeholder="Ex. Numérique">
+      <label for="filtre-localisation" class="font-heading text-[13px] text-ink-muted">Localisation</label>
+      <input id="filtre-localisation" v-model="localisation" type="search" class="w-full rounded-control border border-surface-line px-3 py-2 text-[14px]" placeholder="Ex. Paris">
+    </fieldset>
+
+    <fieldset class="flex w-full flex-col gap-3">
+      <legend class="mb-1 font-heading text-[14px] font-bold text-brand">Statut de certification</legend>
+      <select disabled class="w-full rounded-control border border-surface-line bg-surface-muted px-3 py-2 text-[14px] text-ink-muted" aria-label="Filtre de certification à venir">
+        <option>Filtre à venir</option>
+      </select>
+      <p class="text-[12px] text-ink-muted">Disponible lorsque le statut métier sera défini.</p>
+    </fieldset>
 
     <fieldset class="flex w-full flex-col items-start gap-3">
       <legend class="mb-3 font-heading text-[14px] font-bold text-brand">Niveau d'experience</legend>

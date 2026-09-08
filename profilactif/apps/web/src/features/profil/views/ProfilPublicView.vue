@@ -22,6 +22,7 @@ const authStore = useAuthStore();
 const profil = ref<Profile | null>(null);
 const idVideo = ref<string | null>(null);
 const profilVideoEnLigne = ref(false);
+const competences = ref<string[]>([]);
 const chargement = ref(false);
 const erreur = ref('');
 
@@ -70,6 +71,7 @@ async function charger(id: string): Promise<void> {
 
   try {
     profil.value = await ProfileService.getProfile(id);
+    competences.value = await ProfileService.getCompetences(id);
 
     const videos = await VideoService.getVideosBySeeker(id);
     idVideo.value = videos[0] === undefined ? null : extraireIdYouTube(videos[0].url);
@@ -140,6 +142,22 @@ async function charger(id: string): Promise<void> {
             >
               <h2 class="text-[18px]">À propos de mon parcours</h2>
               <p class="whitespace-pre-line text-[15px] leading-[1.7]">{{ profil.bio }}</p>
+            </section>
+
+            <section
+              v-if="competences.length"
+              class="flex flex-col gap-4 rounded-card border border-surface-line bg-surface-page p-6"
+            >
+              <h2 class="text-[18px]">Compétences clés</h2>
+              <ul class="flex flex-wrap gap-2">
+                <li
+                  v-for="competence in competences"
+                  :key="competence"
+                  class="rounded-badge bg-surface-muted px-3 py-1.5 font-heading text-[12px] font-medium text-brand"
+                >
+                  {{ competence }}
+                </li>
+              </ul>
             </section>
 
             <section

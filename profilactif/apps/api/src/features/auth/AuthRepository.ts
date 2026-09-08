@@ -91,4 +91,8 @@ export class AuthRepository {
       connection.release()
     }
   }
+  async deleteById(id: string): Promise<void> {
+    await db.execute('DELETE FROM app_user WHERE uuid = ?', [id])
+  }
+
 }

@@ -74,8 +74,7 @@ function limiter(valeur: string[]): void {
       {{ avertissement }}
     </p>
     <p v-else class="font-heading text-[13px] text-ink-muted">
-      {{ competences.length }} / {{ MAX_COMPETENCES }} — non enregistré pour l'instant, la route
-      d'association manque côté API.
+      {{ competences.length }} / {{ MAX_COMPETENCES }} — enregistré avec votre profil.
     </p>
   </div>
 </template>
