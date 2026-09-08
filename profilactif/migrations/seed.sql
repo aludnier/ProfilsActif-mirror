@@ -69,9 +69,9 @@ VALUES (
       "minCategoryScore": 50,
       "retakeDelayDays": 14,
       "badgeBands": [
-        { "min": 90, "level": "or" },
-        { "min": 80, "level": "argent" },
-        { "min": 70, "level": "bronze" }
+        { "min": 90, "level": "senior" },
+        { "min": 80, "level": "intermédiaire" },
+        { "min": 70, "level": "débutant" }
       ]
     },
     "categories": [

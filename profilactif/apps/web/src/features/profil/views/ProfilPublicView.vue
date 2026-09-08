@@ -122,7 +122,6 @@ async function charger(id: string): Promise<void> {
             <BadgeCertification
               v-if="estCertifie(profil.certificationRate)"
               :level="niveauBadge(profil.certificationRate)"
-              :score="profil.certificationRate"
             />
           </div>
 

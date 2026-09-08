@@ -1,7 +1,7 @@
 /**
  * Barème d'affichage du badge de certification, aligné sur le `content` du
  * questionnaire semé (migrations/seed.sql) : seuil de réussite à 70, bandes
- * or / argent / bronze.
+ * débutant / intermédiaire / senior.
  *
  * L'API renvoie `certificationRate` (0–100) sur le profil ; on en dérive le
  * badge ici plutôt que d'appeler le questionnaire.
@@ -10,9 +10,9 @@
 export const SEUIL_CERTIFICATION = 70
 
 const BANDES: { min: number; niveau: string }[] = [
-  { min: 90, niveau: 'or' },
-  { min: 80, niveau: 'argent' },
-  { min: 70, niveau: 'bronze' },
+  { min: 90, niveau: 'senior' },
+  { min: 80, niveau: 'intermédiaire' },
+  { min: 70, niveau: 'débutant' },
 ]
 
 /** `true` dès que le seuil de validation est atteint. */

@@ -240,7 +240,6 @@ onMounted(() => {
           <BadgeCertification
             v-if="estCertifie(profile.certificationRate)"
             :level="niveauBadge(profile.certificationRate)"
-            :score="profile.certificationRate"
           />
         </div>
 

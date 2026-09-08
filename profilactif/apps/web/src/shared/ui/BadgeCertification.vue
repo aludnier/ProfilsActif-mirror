@@ -2,16 +2,18 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-  /** Niveau renvoyé par l'API : 'or' | 'argent' | 'bronze' | autre. `null` = non certifié. */
   level: string | null
-  /** Score associé, affiché si fourni. */
-  score?: number | null
 }>()
 
 const STYLES: Record<string, { libelle: string; classe: string }> = {
-  or: { libelle: 'Certifié or', classe: 'bg-amber-100 text-amber-800 ring-amber-300' },
-  argent: { libelle: 'Certifié argent', classe: 'bg-slate-100 text-slate-700 ring-slate-300' },
-  bronze: { libelle: 'Certifié bronze', classe: 'bg-orange-100 text-orange-800 ring-orange-300' },
+  senior: { libelle: 'Certifié senior', classe: 'bg-amber-100 text-amber-800 ring-amber-300' },
+  or: { libelle: 'Certifié senior', classe: 'bg-amber-100 text-amber-800 ring-amber-300' },
+  intermédiaire: { libelle: 'Certifié intermédiaire', classe: 'bg-slate-100 text-slate-700 ring-slate-300' },
+  intermediaire: { libelle: 'Certifié intermédiaire', classe: 'bg-slate-100 text-slate-700 ring-slate-300' },
+  argent: { libelle: 'Certifié intermédiaire', classe: 'bg-slate-100 text-slate-700 ring-slate-300' },
+  débutant: { libelle: 'Certifié débutant', classe: 'bg-orange-100 text-orange-800 ring-orange-300' },
+  debutant: { libelle: 'Certifié débutant', classe: 'bg-orange-100 text-orange-800 ring-orange-300' },
+  bronze: { libelle: 'Certifié débutant', classe: 'bg-orange-100 text-orange-800 ring-orange-300' },
 }
 
 const style = computed(() => {
@@ -37,6 +39,5 @@ const style = computed(() => {
       />
     </svg>
     {{ style.libelle }}
-    <template v-if="score !== undefined && score !== null"> · {{ score }} %</template>
   </span>
 </template>
