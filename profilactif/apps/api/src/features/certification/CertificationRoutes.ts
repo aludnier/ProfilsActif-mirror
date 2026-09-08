@@ -133,6 +133,7 @@ certificationRoutes.post('/attempts', requireAuth, requireRole('seeker'), async 
 certificationRoutes.get('/attempts/en-cours', requireAuth, requireRole('seeker'), async (c) =>
   c.json(await service.getCurrentAttempt(c.get('user').id)),
 )
+
 /**
  * @openapi
  * /certifications/attempts/{id}:
