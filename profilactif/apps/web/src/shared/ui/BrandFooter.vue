@@ -55,7 +55,7 @@ const COLONNES_ESPACE: Record<Role, ColonnePied> = {
     liens: [
       { libelle: 'Tableau de bord', to: { name: 'candidate-dashboard' } },
       { libelle: 'Mon profil public', to: { name: 'candidate-public-profile' } },
-      { libelle: 'Ma certification', to: { name: 'candidate-certification' } },
+      { libelle: 'Mes certifications', to: { name: 'candidate-certification' } },
       { libelle: 'Mes interactions', to: { name: 'candidate-interactions' } },
     ],
   },
