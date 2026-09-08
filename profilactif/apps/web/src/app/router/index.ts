@@ -125,6 +125,12 @@ const routes: RouteRecordRaw[] = [
     meta: { roles: ['admin'] },
   },
   {
+    path: '/admin/videos',
+    name: 'admin-videos',
+    component: () => import('@/features/admin/views/ModerationView.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
     path: '/admin/questions',
     name: 'admin-questions',
     component: () => import('@/features/admin/views/GestionQuestionsView.vue'),

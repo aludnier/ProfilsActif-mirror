@@ -13,9 +13,9 @@
 export const SEUIL_CERTIFICATION = 50
 
 const BANDES: { min: number; niveau: string }[] = [
-  { min: 85, niveau: 'senior' },
+  { min: 85, niveau: 'avancée' },
   { min: 70, niveau: 'intermédiaire' },
-  { min: 50, niveau: 'débutant' },
+  { min: 50, niveau: 'initiale' },
 ]
 
 /** `true` dès que le seuil de validation est atteint. */

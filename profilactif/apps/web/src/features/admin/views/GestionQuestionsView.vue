@@ -137,9 +137,9 @@ const CONFIG_DEFAUT: Config = {
    * sinon le trou revient entre le seuil de réussite et la première bande.
    */
   badgeBands: [
-    { min: 85, level: 'senior' },
+    { min: 85, level: 'avancée' },
     { min: 70, level: 'intermédiaire' },
-    { min: 50, level: 'débutant' },
+    { min: 50, level: 'initiale' },
   ],
 }
 

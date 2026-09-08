@@ -7,23 +7,46 @@ const props = defineProps<{
 }>();
 
 /*
- * Les niveaux viennent de `badgeBands` côté API : les libellés actuels sont
- * senior / intermédiaire / débutant, les alias or / argent / bronze restent
- * pour les tentatives passées sous une ancienne version du questionnaire.
+ * Les niveaux viennent de `badgeBands` côté API. Ils décrivent un score au
+ * test, jamais une ancienneté : le vocabulaire évite donc junior / confirmé /
+ * senior, déjà pris par le filtre d'expérience du catalogue recruteur
+ * (`CatalogueView.vue`), où « senior » veut dire 7 ans et plus. Un profil de
+ * 3 ans annoncé « certifié senior » se lisait comme une contradiction.
+ *
+ * Les anciens noms restent reconnus : des tentatives ont été passées sous une
+ * version antérieure du questionnaire, et leur badge se recalcule à
+ * l'affichage.
  *
  * Couleurs prises dans les tokens, jamais dans la palette Tailwind par défaut.
- * Contrastes mesurés : senior 8,06:1, intermédiaire 5,57:1, débutant 5,69:1,
+ * Contrastes mesurés : avancée 8,06:1, intermédiaire 5,57:1, initiale 5,69:1,
  * non certifié 15:1.
  */
+const AVANCEE = {
+  libelle: 'Certification avancée',
+  classe: 'bg-status-verified text-on-status-verified',
+};
+const INTERMEDIAIRE = {
+  libelle: 'Certification intermédiaire',
+  classe: 'bg-brand-50 text-brand',
+};
+const INITIALE = {
+  libelle: 'Certification initiale',
+  classe: 'bg-action-100 text-action-700',
+};
+
 const STYLES: Record<string, { libelle: string; classe: string }> = {
-  senior: { libelle: 'Certifié senior', classe: 'bg-status-verified text-on-status-verified' },
-  or: { libelle: 'Certifié senior', classe: 'bg-status-verified text-on-status-verified' },
-  intermédiaire: { libelle: 'Certifié intermédiaire', classe: 'bg-brand-50 text-brand' },
-  intermediaire: { libelle: 'Certifié intermédiaire', classe: 'bg-brand-50 text-brand' },
-  argent: { libelle: 'Certifié intermédiaire', classe: 'bg-brand-50 text-brand' },
-  débutant: { libelle: 'Certifié débutant', classe: 'bg-action-100 text-action-700' },
-  debutant: { libelle: 'Certifié débutant', classe: 'bg-action-100 text-action-700' },
-  bronze: { libelle: 'Certifié débutant', classe: 'bg-action-100 text-action-700' },
+  avancée: AVANCEE,
+  avancee: AVANCEE,
+  senior: AVANCEE,
+  or: AVANCEE,
+  intermédiaire: INTERMEDIAIRE,
+  intermediaire: INTERMEDIAIRE,
+  argent: INTERMEDIAIRE,
+  initiale: INITIALE,
+  initial: INITIALE,
+  débutant: INITIALE,
+  debutant: INITIALE,
+  bronze: INITIALE,
 };
 
 const style = computed(() => {
@@ -31,7 +54,7 @@ const style = computed(() => {
   if (connu) return connu;
 
   return {
-    libelle: props.level ? `Certifié ${props.level}` : 'Non certifié',
+    libelle: props.level ? `Certification ${props.level}` : 'Non certifié',
     classe: 'bg-surface-muted text-ink',
   };
 });

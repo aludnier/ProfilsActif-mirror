@@ -7,9 +7,9 @@
       "minCategoryScore": 0,
       "retakeDelayDays": 0,
       "badgeBands": [
-        { "min": 85, "level": "senior" },
+        { "min": 85, "level": "avancée" },
         { "min": 70, "level": "intermédiaire" },
-        { "min": 50, "level": "débutant" }
+        { "min": 50, "level": "initiale" }
       ]
     },
     "categories": [
