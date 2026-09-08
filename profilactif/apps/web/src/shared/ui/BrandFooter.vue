@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { RouteLocationNamedRaw } from 'vue-router';
+
+import { useAuthStore } from '@/shared/stores/auth';
+import type { Role } from '@/shared/types/roles';
 
 type LienPied = {
   libelle: string;
@@ -11,7 +15,13 @@ type ColonnePied = {
   liens: LienPied[];
 };
 
-const colonnes: ColonnePied[] = [
+/*
+ * Les deux colonnes du pied de page public : elles s'adressent à quelqu'un qui
+ * n'a pas encore de compte, d'où les libellés d'entrée dans le service.
+ * Les entrées sans `to` n'ont pas encore de vue : du texte inerte plutôt qu'un
+ * lien mort, comme dans les barres latérales.
+ */
+const COLONNES_PUBLIQUES: ColonnePied[] = [
   {
     titre: 'Candidats',
     liens: [
@@ -23,14 +33,56 @@ const colonnes: ColonnePied[] = [
   {
     titre: 'Recruteurs',
     liens: [
-      // Same reason as "Espace Recruteur" in the header: accessing the
-      // database requires a recruiter account, so this goes through login.
+      /* Accéder à la base exige un compte recruteur : on passe par la
+         connexion, comme « Espace Recruteur » dans l'en-tête. */
       { libelle: 'Accéder à la base', to: { name: 'login' } },
       { libelle: "Charte d'éthique" },
       { libelle: 'Partenariats publics' },
     ],
   },
 ];
+
+/*
+ * Une fois connecté, le pied de page devient un raccourci vers son propre
+ * espace : mêmes titres et mêmes libellés que la navigation de cet espace
+ * (BarreLateraleCandidat, BarreLateraleRecruteur, NavAdmin), pour qu'un lien
+ * du pied de page et une entrée du menu désignent la même chose. Seules les
+ * entrées qui ont une vue sont reprises.
+ */
+const COLONNES_ESPACE: Record<Role, ColonnePied> = {
+  seeker: {
+    titre: 'Espace candidat',
+    liens: [
+      { libelle: 'Tableau de bord', to: { name: 'candidate-dashboard' } },
+      { libelle: 'Mon profil public', to: { name: 'candidate-public-profile' } },
+      { libelle: 'Ma certification', to: { name: 'candidate-certification' } },
+      { libelle: 'Mes interactions', to: { name: 'candidate-interactions' } },
+    ],
+  },
+  recruiter: {
+    titre: 'Espace recruteur',
+    liens: [
+      { libelle: 'Tableau de bord', to: { name: 'recruiter-dashboard' } },
+      { libelle: 'Catalogue des profils', to: { name: 'recruiter-catalog' } },
+    ],
+  },
+  admin: {
+    titre: 'Administration',
+    liens: [
+      { libelle: 'Tableau de bord', to: { name: 'admin-stats' } },
+      { libelle: 'Utilisateurs & modération', to: { name: 'admin-dashboard' } },
+      { libelle: 'Questionnaire', to: { name: 'admin-questions' } },
+    ],
+  },
+};
+
+const authStore = useAuthStore();
+
+const colonnes = computed<ColonnePied[]>(() => {
+  const compte = authStore.user;
+
+  return compte === null ? COLONNES_PUBLIQUES : [COLONNES_ESPACE[compte.role]];
+});
 
 /*
  * The accessibility notice is a legally-binding RGAA declaration: it must
@@ -59,8 +111,21 @@ const annee = new Date().getFullYear();
         </p>
       </div>
 
-      <nav aria-label="Liens de bas de page" class="flex flex-wrap items-start gap-16">
-        <div v-for="colonne in colonnes" :key="colonne.titre" class="flex flex-col gap-3">
+      <!--
+        Seule (utilisateur connecté), la colonne est trop près du bord droit :
+        le retrait la ramène vers la gauche sans changer la disposition, que
+        deux colonnes gardent telle quelle.
+      -->
+      <nav
+        aria-label="Liens de bas de page"
+        class="flex flex-wrap items-start gap-16"
+        :class="{ 'md:pr-10': colonnes.length === 1 }"
+      >
+        <div
+          v-for="colonne in colonnes"
+          :key="colonne.titre"
+          class="flex w-[220px] max-w-full flex-col gap-3"
+        >
           <h2 class="font-heading text-[12px] font-bold uppercase tracking-[1px] text-on-brand">
             {{ colonne.titre }}
           </h2>
@@ -89,7 +154,10 @@ const annee = new Date().getFullYear();
     <div
       class="flex w-full flex-wrap items-start justify-between gap-4 font-heading text-[12px] text-ink-invert"
     >
-      <p>© {{ annee }} ProfilsActifs. Démonstrateur technique, ne constitue pas un service public en exploitation.</p>
+      <p>
+        © {{ annee }} ProfilsActifs. Démonstrateur technique, ne constitue pas un service public en
+        exploitation.
+      </p>
       <ul class="flex flex-wrap items-start gap-6">
         <li v-for="lien in liensLegaux" :key="lien.libelle">
           <router-link v-if="lien.to" :to="lien.to" class="hover:underline">
