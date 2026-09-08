@@ -13,6 +13,7 @@ import { videoRoutes } from './features/video/VideoRoutes.js'
 import { contactRoutes } from './features/contact/ContactRoutes.js'
 import { certificationRoutes } from './features/certification/CertificationRoutes.js'
 import { adminRoutes } from './features/admin/AdminRoutes.js'
+import { interactionRoutes } from './features/interaction/InteractionRoutes.js'
 
 const app = new Hono()
 
@@ -41,5 +42,6 @@ app.route('/videos', videoRoutes)
 app.route('/contacts', contactRoutes)
 app.route('/certifications', certificationRoutes)
 app.route('/admin', adminRoutes)
+app.route('/interactions', interactionRoutes)
 
 export default app
