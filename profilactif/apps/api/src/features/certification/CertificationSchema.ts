@@ -17,6 +17,17 @@ export const updateAttemptSchema = z.object({
   score: z.number().min(0).max(100).nullable().optional(),
 })
 
+export const questionTypeEnum = z.enum(['single', 'multiple'])
+
+export const createQuestionSchema = z.object({
+  question: z.string().trim().min(1).max(300),
+  responses: z.array(z.string()).min(2),
+  type: questionTypeEnum,
+  weight: z.number().min(0)
+})
+
 export type CreateQuestionnaireVersionInput = z.infer<typeof createQuestionnaireSchema>
 export type CreateAttemptInput = z.infer<typeof createAttemptSchema>
 export type UpdateAttemptInput = z.infer<typeof updateAttemptSchema>
+export type QuestionTypeInput = z.infer<typeof questionTypeEnum>
+export type createQuestionInput = z.infer<typeof createQuestionSchema>

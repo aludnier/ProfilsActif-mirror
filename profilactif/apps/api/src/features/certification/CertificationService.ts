@@ -27,7 +27,19 @@ export class CertificationService {
 
   getVersion(id: string) {
     return this.repository.getVersion(id).then((value) => {
-      if (!value) throw new NonTrouve('Questionnaire introuvable', 'QUESTIONNAIRE_NON_TROUVE')
+      if (!value) {
+        console.log("invalid return get")
+        throw new NonTrouve('Questionnaire introuvable', 'QUESTIONNAIRE_NON_TROUVE')
+      }
+      return value
+    })
+  }
+
+  getDraft() {
+    return this.repository.getDraft().then((value) => {
+      if (!value) {
+        return null
+      }
       return value
     })
   }
@@ -43,10 +55,22 @@ export class CertificationService {
 
   publishQuestionnaire(id: string) {
     return this.repository.publishVersion(id).then((value) => {
-      if (!value) throw new NonTrouve('Questionnaire introuvable', 'QUESTIONNAIRE_NON_TROUVE')
+      if (!value) {
+        throw new NonTrouve('Questionnaire introuvable', 'QUESTIONNAIRE_NON_TROUVE')
+      }
       return value
     })
   }
+
+  publishQuestionnaireDraft(id: string) {
+    return this.repository.saveDraft(id).then((value) => {
+      if (!value) {
+        throw null
+      }
+      return value
+    })
+  }
+
 
   async createAttempt(data: CreateAttemptInput, seekerId: string) {
     await this.getVersion(data.questionnaireVersionId)
@@ -91,4 +115,5 @@ export class CertificationService {
 
     return { ...saved, result }
   }
+
 }

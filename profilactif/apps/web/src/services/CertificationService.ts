@@ -1,5 +1,5 @@
 import axiosInstance from '@/shared/api-client'
-import type { AttemptUpdateResult, Questionnaire, QuestionnaireAttempt } from '@/shared/types/api'
+import type { AttemptUpdateResult, Questionnaire, QuestionnaireAttempt, QuestionAttemp, QuestionnaireContent, } from '@/shared/types/api'
 
 export class CertificationService {
 
@@ -7,6 +7,12 @@ export class CertificationService {
     const { data } = await axiosInstance.get<Questionnaire>('/certifications')
     return data
   }
+
+  static async getDraft(): Promise<Questionnaire> {
+    const { data } = await axiosInstance.get<Questionnaire>('/certifications/draft')
+    return data
+  }
+
 
   static async getById(id: string): Promise<Questionnaire> {
     const { data } = await axiosInstance.get<Questionnaire>(`/certifications/${id}`)
@@ -40,6 +46,45 @@ export class CertificationService {
     )
     return data
   }
+  
+  static async createQuestion(
+    question: string,
+    responses: string[],
+    weight: number,
+    type: 'single' | 'multiple',
+  ): Promise<QuestionAttemp> {
+    const { data } = await axiosInstance.post<QuestionAttemp>('/certifications/questions', {
+      question,
+      responses,
+      weight,
+      type,
+    })
+    return data
+  }
+
+  static async createQuestionnaire(
+    code:string,
+    title:string,
+    content: QuestionnaireContent
+  ) {
+    const {data} = await axiosInstance.post<Questionnaire>('/certifications', {
+      code,
+      title,
+      content
+    });
+    return data
+  }
+
+  static async publishQuestionnaire(id: string): Promise<Questionnaire> {
+    const { data } = await axiosInstance.post<Questionnaire>(`/certifications/${id}/publish`)
+    return data
+  }
+  
+  static async publishQuestionnaireDraft(id: string): Promise<Questionnaire> {
+    const { data } = await axiosInstance.post<Questionnaire>(`/certifications/${id}/draft`)
+    return data
+  }
+
 }
 
 export default CertificationService

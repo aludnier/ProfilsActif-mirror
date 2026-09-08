@@ -2,13 +2,15 @@ import { Hono } from 'hono'
 import { requireAuth, requireRole, type AuthVariables } from '../../infrastructure/auth.middleware.js'
 import { ValidationInvalide } from '../../shared/errors.js'
 import { CertificationService } from './CertificationService.js'
-import { createAttemptSchema, createQuestionnaireSchema, updateAttemptSchema } from './CertificationSchema.js'
+import { createAttemptSchema, createQuestionnaireSchema, updateAttemptSchema, createQuestionInput, createQuestionSchema } from './CertificationSchema.js'
 
 const service = new CertificationService()
 export const certificationRoutes = new Hono<{ Variables: AuthVariables }>()
 
 certificationRoutes.get('/', async (c) => c.json(await service.getPublished()))
+certificationRoutes.get('/draft', async (c) => c.json(await service.getDraft()))
 certificationRoutes.get('/:id', async (c) => c.json(await service.getVersion(c.req.param('id'))))
+
 
 certificationRoutes.post('/', requireAuth, requireRole('admin'), async (c) => {
   const result = createQuestionnaireSchema.safeParse(await c.req.json())
@@ -18,6 +20,10 @@ certificationRoutes.post('/', requireAuth, requireRole('admin'), async (c) => {
 
 certificationRoutes.post('/:id/publish', requireAuth, requireRole('admin'), async (c) =>
   c.json(await service.publishQuestionnaire(c.req.param('id'))),
+)
+
+certificationRoutes.post('/:id/draft', requireAuth, requireRole('admin'), async (c) =>
+  c.json(await service.publishQuestionnaireDraft(c.req.param('id'))),
 )
 
 certificationRoutes.post('/attempts', requireAuth, requireRole('seeker'), async (c) => {

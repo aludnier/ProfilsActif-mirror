@@ -156,6 +156,14 @@ export interface QuestionnaireQuestion {
   options: QuestionnaireOption[]
 }
 
+export interface QuestionAttemp {
+  id:string
+  question:string
+  responses:string[]
+  weight:number
+  type: 'single' | 'multiple'
+}
+
 export interface QuestionnaireContent {
   config?: {
     passThreshold?: number

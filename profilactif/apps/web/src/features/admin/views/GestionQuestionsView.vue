@@ -1,9 +1,12 @@
-<template>
+<template >
+  <div class="frame" v-on:load="checkDraft">
   <div class="question-form">
-    <span>
-      <label for="question">Question</label><br>
-      <input id="question" v-model="tempQuestion"><br>
-    </span>
+    <label for="code">Code du questionnaire</label>
+    <input id="code" v-model="questionnaireCode"><br>
+
+    <label for="title">Titre du questionnaire</label>
+    <input id="title" v-model="questionnaireTitle"><br>
+
     <label for="Questiontype">Type de question</label>
     <select id="Questiontype" v-model="questionType">
         <option value="personalized">Persionaliser</option>
@@ -11,14 +14,27 @@
         <option value="Scale">Echelle de 1 à 10</option>
     </select><br>
 
+    <div class="double-input">
+      <span class=" mx-8 w-3/4">
+        <label for="question">Question</label>
+        <input id="question" v-model="tempQuestion">
+      </span>
+    
+      <span class="w-1/5">
+        <label for="weight">Poids</label>
+        <input type="number" v-model="tempWeight" min="1">
+      </span>
+    </div>
+
     <div v-if="questionType === 'personalized'">
-      <label for="Answer">Réponses</label><br>
+      <label for="Answer">Réponses</label>
       <input id="Answer" v-model="tempResponse" @keyup.enter="addanswer"/><br>
 
       <p>{{ tempQuestion }}</p>
       <div class="Answer-list">
         <span v-for="(response, index) in responses" :key="index" class="Answer-tag">
-          {{ response }}
+          {{ response.label }}
+           <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
           <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
         </span>
       </div>
@@ -27,77 +43,211 @@
     <button @click="addQuestion">Ajouter la question</button>
     </div>
     <div class="Questionnary-block">
-      <div v-for="(question, index) in questionary" :key="index" class="question-block">
+      <h2> {{ questionnaireTitle ? questionnaireTitle : 'Questionnaire-' + questionnaireCode }} </h2>
+      <div class="questionnaryButtons">
+        <button class="m-1" @click="publishQuestionnaire">Publier le questionnaire</button>
+        <button class="m-1" @click="saveQuestionnaire">Sauver le brouillon</button>
+      </div>
+      <div v-for="(question, index) in createdQuestions" :key="index" class="question-block">
         <button type="button" class="question-remove" @click="removeQuestion(index)">✕</button>
-          <p class="question-title">{{ question }}</p>
+          <p class="question-title">{{ question.prompt }} - {{ question.type }}</p>
           <div class="Answer-list">
             <span
-              v-for="(response, indexReponse) in questionaryResponses[index]"
+              v-for="(response, indexReponse) in question.options"
               :key="indexReponse"
               class="Answer-tag"
             >
-              {{ response }}
+              {{ response.label }}
+              <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
             </span>
           </div>
       </div>
     </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import CertificationService from '@/services/CertificationService'
+import type { Questionnaire, QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
+import { onMounted, ref } from 'vue'
 
 const questionTemplateYesNo = ["Oui", "Non"]
 const questionTemplateScale = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 
 const tempQuestion = ref("")
 const tempResponse = ref("")
-const responses = ref<string[]>([])
-const questionary = ref<string[]>(["Qui", "Quoi"])
-const questionaryResponses = ref<string[][]>([questionTemplateYesNo, questionTemplateYesNo])
-const questionType = ref("personalized")
+const tempWeight = ref<number>(1)
+const tempAnswerPoints = ref<number>(1)
+const responses = ref<{ label: string; points: number }[]>([])
+const questionType = ref<'personalized' | 'YesNo' | 'Scale'>("personalized")
+const multipleChoice = ref<boolean>(false)
+
+const createdQuestions = ref<QuestionnaireQuestion[]>([])
+
+const questionnaireCode = ref("")
+const questionnaireTitle = ref("")
+
+onMounted(() => {
+  checkDraft()
+})
 
 
-function addanswer() {
-    if (tempResponse.value == "") {
-        return
+function mapType(responses: { id: string; label: string; points: number }[], type: string): 'single' | 'multiple' {
+  if (type === "YesNo") {
+    return 'single'
+  }
+
+  let nbvalid = 0
+  for (let r = 0; r < responses.length; r++) {
+    if (responses.at(r)?.points ?? 0 > 0) {
+      nbvalid++
     }
-    responses.value.push(tempResponse.value)
-    tempResponse.value = ""
+  }
+  return nbvalid > 1 ? 'multiple' : 'single'
+}
+
+async function checkDraft(){
+  console.log("check for draft")
+  const draft = await CertificationService.getDraft();
+
+  if (draft == undefined) {
+    return
+  }
+  createdQuestions.value =  draft.content.questions as QuestionnaireQuestion[]
+  questionnaireCode.value = draft.code
+  questionnaireTitle.value = draft.title
+}
+
+function resetQuestion() {
+  responses.value = []
+  tempQuestion.value = ""
+  tempWeight.value = 1
 }
 
 function addQuestion() {
-    if (tempQuestion.value != "") {
-        switch (questionType.value){
-            case "personalized":
-                if (responses.value.length < 2) {
-                    return
-                }
-                questionaryResponses.value.push(responses.value)
-                break
-            case "YesNo":
-                questionaryResponses.value.push(questionTemplateYesNo)
-                break
-            case "Scale":
-                questionaryResponses.value.push(questionTemplateScale)
-                break
-        }
-        questionary.value.push(tempQuestion.value)
-    }
-    tempQuestion.value = ""
-    tempResponse.value = ""
-    responses.value = []
+  let responsesToSend: { label: string; points: number }[] = []
+
+  if (tempQuestion.value == "") return
+
+  switch (questionType.value) {
+    case "personalized":
+      if (responses.value.length < 2) return
+      responsesToSend = responses.value
+      break
+    case "YesNo":
+      responsesToSend = questionTemplateYesNo.map(label => ({ label, points: label == "Oui" ? 1 : 0 }))
+      break
+    case "Scale":
+      responsesToSend = questionTemplateScale.map(label => ({ label, points: Number(label) }))
+      break
+  }
+  const mappedrespond = responsesToSend.map((r, i) => ({
+      id: `opt-${i}`,
+      label: r.label,
+      points: r.points,
+    }), questionType.value)
+
+  createdQuestions.value.push({
+    id: crypto.randomUUID(),
+    category: 'general',
+    weight: tempWeight.value,
+    type: mapType(mappedrespond),
+    prompt: tempQuestion.value,
+    options: mappedrespond,
+  })
+
+  resetQuestion()
+}
+function removeQuestion(index: number) {
+  createdQuestions.value.splice(index, 1)
 }
 
+function addanswer() {
+  if (tempResponse.value == "") return
+  responses.value.push({ label: tempResponse.value, points: tempAnswerPoints.value })
+  tempResponse.value = ""
+  tempAnswerPoints.value = 1
+}
 function removeAnswer(index: number) {
   responses.value.splice(index, 1)
 }
 
-function removeQuestion(index: number) {
-  questionary.value.splice(index, 1)
-  questionaryResponses.value.splice(index, 1)
+function normalizeContent(): QuestionnaireContent {
+  return {
+    config: {
+      passThreshold: 70,
+      minCategoryScore: 50,
+      retakeDelayDays: 30,
+      badgeBands: [
+        { min: 90, level: 'expert' },
+        { min: 70, level: 'confirmé' },
+        { min: 50, level: 'débutant' },
+      ],
+    },
+    categories: [
+      { code: 'general', label: 'Général', weight: 1 },
+    ],
+    questions: createdQuestions.value,
+  }
 }
-</script>
 
+async function publishQuestionnaire() {
+  if (!questionnaireCode.value) {
+    console.error('Code requis')
+    return
+  }
+  if (createdQuestions.value.length === 0) {
+    console.error('Aucune question à publier')
+    return
+  }
+  try {
+    const content = normalizeContent()
+    const questionnaire = await CertificationService.createQuestionnaire(
+      questionnaireCode.value,
+      questionnaireTitle.value ? questionnaireTitle.value : 'Questionnaire-' + questionnaireCode.value,
+      content,
+    )
+    console.log('Questionnaire créé :', questionnaire)
+
+    await CertificationService.publishQuestionnaire(questionnaire.id)
+    console.log('Questionnaire publié :', questionnaire)
+
+    resetQuestion()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function saveQuestionnaire() {
+  if (!questionnaireCode.value) {
+    console.error('Code requis')
+    return
+  }
+  if (createdQuestions.value.length === 0) {
+    console.error('Aucune question à publier')
+    return
+  }
+  try {
+    const content = normalizeContent()
+    const questionnaire = await CertificationService.createQuestionnaire(
+      questionnaireCode.value,
+      questionnaireTitle.value ? questionnaireTitle.value : 'Questionnaire-' + questionnaireCode.value,
+      content,
+    )
+    console.log('Questionnaire créé :', questionnaire)
+    console.log('Questionnaire créé :', questionnaire)
+    await CertificationService.publishQuestionnaireDraft(questionnaire.id)
+    console.log('Questionnaire publié :', questionnaire)
+
+    resetQuestion()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+
+
+</script>
 
 <style>
 :root {
@@ -163,6 +313,26 @@ p {
   font-size: 15px;
   margin: 10px 0;
 }
+
+.frame {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.question-form {
+  min-width: 400px;
+  width: 40%;
+  text-align: center;
+  padding: 32px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--navy);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  font-family: 'Marianne', 'Spectral', system-ui, sans-serif;
+  color: var(--text);
+}
+
 
 .Answer-list {
   display: flex;
@@ -232,7 +402,7 @@ div[v-for] > p,
 
 .question-block {
   position: relative;
-  max-width: 1000px;
+  width: 100%;
   margin-top: 60px;
   margin: 15px;
   margin-right: 20%;
@@ -240,6 +410,14 @@ div[v-for] > p,
   background: #fff;
   border: 1px solid var(--navy);
   border-radius: 10px;
+}
+
+.points-edit {
+  width: 48px;
+  padding: 2px 4px;
+  margin: 0;
+  font-size: 12px;
+  border-radius: 4px;
 }
 
 .question-remove {
@@ -260,9 +438,20 @@ div[v-for] > p,
   transition: background 0.15s;
 }
 
+.double-input {
+  display: flex;
+}
+
+.double-input-block {
+  /* width: 40%; */
+  margin: 5%;
+}
+
 .Questionnary-block {
-  max-width: 100%;
-  display : grid;
+  position: relative;
+  border: double ;
+  min-width: 600px;
+  width: 60%;
   padding: 32px;
   background: #fff;
   border-radius: 12px;
@@ -275,4 +464,11 @@ div[v-for] > p,
   font-size: 16px;
   margin: 0 0 8px;
 }
+
+.questionnaryButtons {
+  position: absolute;
+  top: 0px;
+  right: 5px;
+  /* border: solid red; */
+} 
 </style>
