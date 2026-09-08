@@ -91,6 +91,8 @@ export interface Contact {
   id: string
   recruiterId: string
   seekerId: string
+  /** Le texte envoyé par le recruteur. L'API le renvoie depuis le début. */
+  message: string | null
   status: string
   createdAt: string
   updatedAt: string
