@@ -1,4 +1,4 @@
-import swaggerJsdoc from 'swagger-jsdoc'
+import swaggerJSDoc from 'swagger-jsdoc'
 import { swaggerUI } from '@hono/swagger-ui'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -27,7 +27,7 @@ const options = {
   ],
 }
 
-export const swaggerSpec = swaggerJsdoc(options)
+export const swaggerSpec = swaggerJSDoc(options)
 
 export const swaggerUi = swaggerUI({
   url: '/api-docs/openapi.json',
