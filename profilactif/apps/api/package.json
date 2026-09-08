@@ -1,5 +1,6 @@
 {
   "name": "@profilactif/api",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,7 +28,6 @@
     "@types/node": "^22.10.7",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.9"
+    "vitest": "^3.2.7"
   }
 }
-
