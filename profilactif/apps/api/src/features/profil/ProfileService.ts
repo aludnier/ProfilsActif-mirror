@@ -1,6 +1,6 @@
 import { NonTrouve } from '../../shared/errors.js'
 import { ProfilRepository } from './ProfilRepository.js'
-import type { UpdateProfilInput } from './ProfilSchema.js'
+import type { UpdateCompetencesInput, UpdateProfilInput } from './ProfilSchema.js'
 
 export class ProfileService {constructor(private readonly profilRepository = new ProfilRepository()) {}
 
@@ -38,4 +38,16 @@ export class ProfileService {constructor(private readonly profilRepository = new
 
     return this.profilRepository.findById(id)
   }
+  async getCompetences(id: string) {
+    await this.getProfil(id)
+    return this.profilRepository.findCompetences(id)
+  }
+
+  async updateCompetences(id: string, data: UpdateCompetencesInput) {
+    await this.getProfil(id)
+    await this.profilRepository.replaceCompetences(id, data)
+    return this.profilRepository.findCompetences(id)
+  }
+
+
 }
