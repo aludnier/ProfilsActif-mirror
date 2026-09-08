@@ -95,6 +95,12 @@ const routes: RouteRecordRaw[] = [
     meta: { roles: ['seeker'] },
   },
   {
+    path: '/candidate/interactions',
+    name: 'candidate-interactions',
+    component: () => import('@/features/interaction/views/MesInteractionsView.vue'),
+    meta: { roles: ['seeker'] },
+  },
+  {
     path: '/candidate/certification/resultat/:attemptId',
     name: 'candidate-certification-result',
     component: () => import('@/features/certification/views/ResultatView.vue'),
@@ -105,6 +111,12 @@ const routes: RouteRecordRaw[] = [
     path: '/certification',
     name: 'certification-preview',
     component: () => import('@/features/certification/views/CertificationView.vue'),
+  },
+  {
+    path: '/admin/stats',
+    name: 'admin-stats',
+    component: () => import('@/features/admin/views/StatistiquesView.vue'),
+    meta: { roles: ['admin'] },
   },
   {
     path: '/admin/dashboard',

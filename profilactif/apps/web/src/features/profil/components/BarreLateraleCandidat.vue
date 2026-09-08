@@ -12,6 +12,7 @@ const entrees: EntreeEspace[] = [
   { libelle: 'Tableau de bord', to: { name: 'candidate-dashboard' } },
   { libelle: 'Mon profil public', to: { name: 'candidate-public-profile' } },
   { libelle: 'Ma certification', to: { name: 'candidate-certification' } },
+  { libelle: 'Mes interactions', to: { name: 'candidate-interactions' } },
   { libelle: 'Ma vidéo de présentation', requis: true },
   { libelle: 'Compétences & CV' },
   { libelle: "Paramètres d'accès" },

@@ -53,6 +53,7 @@ export interface Profile {
   experienceYears: number | null
   certificationRate: number
   bio: string | null
+  competences?: string[]
   role: Role
   status: UserStatus
   createdAt: string
@@ -128,7 +129,6 @@ export interface Interaction {
   createdAt: string
 }
 
-/** Certification */
 
 export type QuestionnaireStatus =
   | 'draft'
@@ -227,3 +227,29 @@ export interface ScoreResult {
 }
 
 export type AttemptUpdateResult = QuestionnaireAttempt & { result?: ScoreResult }
+
+
+export interface AppNotification {
+  id: string
+  type: 'contact'
+  read: boolean
+  createdAt: string
+  message: string | null
+  recruiterId: string | null
+  recruiterName: string | null
+  recruiterMail: string | null
+  recruiterPhone: string | null
+}
+
+export interface AdminStats {
+  activeSeekers: number
+  activeRecruiters: number
+  suspendedUsers: number
+  certifiedSeekers: number
+  avgCertificationRate: number
+  submittedAttempts: number
+  totalContacts: number
+  totalFavorites: number
+  pendingVideos: number
+  approvedVideos: number
+}

@@ -6,8 +6,14 @@ import VideoService from '@/services/VideoService'
 import FavoriteService from '@/services/FavoriteService'
 import ContactService from '@/services/ContactService'
 import { useAuthStore } from '@/shared/stores/auth'
+import Button from 'primevue/button'
+import EditeurCompetences from '@/features/profil/components/EditeurCompetences.vue'
+import FormulaireProfil from '@/features/profil/components/FormulaireProfil.vue'
+import type { InfosProfil } from '@/features/profil/components/FormulaireProfil.vue'
 import type { Favorite, Profile, Video } from '@/shared/types/api'
 import { extraireIdYouTube } from '@/shared/youtube'
+import { estCertifie, niveauBadge } from '@/shared/certification'
+import BadgeCertification from '@/shared/ui/BadgeCertification.vue'
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue'
 
 const route = useRoute()
@@ -23,6 +29,25 @@ const error = ref('')
 
 const candidateId = route.params.id as string
 const canContact = computed(() => auth.user?.role === 'recruiter' && !!auth.user?.id)
+const isAdmin = computed(() => auth.user?.role === 'admin')
+const editMode = ref(false)
+const editSaving = ref(false)
+const editSuccess = ref('')
+const editInfos = ref<InfosProfil>({
+  firstName: '',
+  lastName: '',
+  phone: '',
+  age: null,
+  location: '',
+  targetSector: '',
+  employmentType: null,
+  workMode: null,
+  experienceYears: null,
+  bio: '',
+})
+const editCompetences = ref<string[]>([])
+const competenceEditMode = ref(false)
+const competenceSaving = ref(false)
 
 const TYPE_CONTRAT: Record<string, string> = {
   full_time: 'Temps plein',
@@ -49,9 +74,88 @@ function libelleExperience(value: number | null): string {
   return value === null ? 'Non renseignée' : String(value).replace('.0', '') + ' ans'
 }
 
+function appliquerEdition(source: Profile): void {
+  editInfos.value = {
+    firstName: source.firstName,
+    lastName: source.lastName,
+    phone: source.phone ?? '',
+    age: source.age === null ? null : Number(source.age),
+    location: source.location ?? '',
+    targetSector: source.targetSector ?? '',
+    employmentType: source.employmentType,
+    workMode: source.workMode,
+    experienceYears: source.experienceYears === null ? null : Number(source.experienceYears),
+    bio: source.bio ?? '',
+  }
+}
+
+
+function ouvrirEditionCompetences(): void {
+  competenceEditMode.value = true
+  editSuccess.value = ''
+}
+
+function fermerEditionCompetences(): void {
+  if (!competenceSaving.value) {
+    competenceEditMode.value = false
+  }
+}
+
+async function enregistrerCompetences(): Promise<void> {
+  competenceSaving.value = true
+  error.value = ''
+  editSuccess.value = ''
+  try {
+    editCompetences.value = await ProfileService.updateCompetences(candidateId, editCompetences.value)
+    competenceEditMode.value = false
+    editSuccess.value = 'Compétences mises à jour.'
+  } catch (err: any) {
+    error.value = err.message || 'Impossible de modifier les compétences.'
+  } finally {
+    competenceSaving.value = false
+  }
+}
+
+function ouvrirEdition(): void {
+  if (!profile.value) return
+  appliquerEdition(profile.value)
+  editSuccess.value = ''
+  editMode.value = true
+}
+
+async function enregistrerEdition(): Promise<void> {
+  if (!profile.value) return
+  editSaving.value = true
+  error.value = ''
+  editSuccess.value = ''
+  try {
+    profile.value = await ProfileService.updateProfile(profile.value.id, {
+      firstName: editInfos.value.firstName,
+      lastName: editInfos.value.lastName,
+      phone: editInfos.value.phone || null,
+      age: editInfos.value.age,
+      location: editInfos.value.location,
+      targetSector: editInfos.value.targetSector || null,
+      employmentType: editInfos.value.employmentType,
+      workMode: editInfos.value.workMode,
+      experienceYears: editInfos.value.experienceYears,
+      bio: editInfos.value.bio || null,
+    })
+    editCompetences.value = await ProfileService.updateCompetences(profile.value.id, editCompetences.value)
+    editMode.value = false
+    editSuccess.value = 'Profil candidat mis à jour.'
+  } catch (err: any) {
+    error.value = err.message || 'Impossible de modifier ce profil.'
+  } finally {
+    editSaving.value = false
+  }
+}
+
 async function load() {
   try {
     profile.value = await ProfileService.getProfile(candidateId)
+    appliquerEdition(profile.value)
+    editCompetences.value = await ProfileService.getCompetences(candidateId)
     if (auth.user?.id && auth.user.role === 'recruiter') {
       const key = 'recruiter-viewed-' + auth.user.id
       const viewed = JSON.parse(localStorage.getItem(key) || '[]') as string[]
@@ -127,15 +231,36 @@ onMounted(() => {
 
     <div v-else-if="profile" class="mx-auto max-w-6xl space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-5 rounded-card border border-surface-line bg-surface-page p-6">
-        <div>
+        <div class="space-y-1.5">
           <h1 class="text-[26px] text-brand">{{ profile.firstName }} {{ profile.lastName }}</h1>
           <p class="font-heading text-[15px] font-bold">{{ profile.targetSector || 'Candidat disponible' }}</p>
           <p class="text-[13px] italic text-ink-muted">
             {{ profile.location || 'Localisation non renseignee' }} - Profil candidat
           </p>
+          <BadgeCertification
+            v-if="estCertifie(profile.certificationRate)"
+            :level="niveauBadge(profile.certificationRate)"
+          />
         </div>
 
-        <div v-if="canContact" class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3">
+          <Button
+            v-if="isAdmin"
+            label="Modifier le profil"
+            severity="secondary"
+            outlined
+            class="rounded-control px-5 py-3 font-heading text-[13px] font-bold"
+            @click="ouvrirEdition"
+          />
+          <Button
+            v-if="canContact"
+            label="Modifier les compétences"
+            severity="secondary"
+            outlined
+            class="rounded-control px-5 py-3 font-heading text-[13px] font-bold"
+            @click="ouvrirEditionCompetences"
+          />
+          <template v-if="canContact">
           <button
             type="button"
             class="rounded-control bg-brand-50 px-5 py-3 font-heading text-[13px] font-bold text-brand"
@@ -151,8 +276,86 @@ onMounted(() => {
           >
             Contacter
           </button>
+          </template>
         </div>
       </header>
+
+      <section v-if="canContact && competenceEditMode" class="rounded-card border border-brand/30 bg-surface-page p-6">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-[19px] text-brand">Modifier les compétences</h2>
+            <p class="text-[14px] text-ink-muted">Ajoutez ou retirez les mots-clés visibles sur ce profil.</p>
+          </div>
+          <Button
+            label="Fermer"
+            severity="secondary"
+            text
+            class="rounded-control"
+            :disabled="competenceSaving"
+            @click="fermerEditionCompetences"
+          />
+        </div>
+        <form class="flex flex-col gap-5" @submit.prevent="enregistrerCompetences">
+          <EditeurCompetences v-model="editCompetences" />
+          <div class="flex justify-end gap-3">
+            <Button
+              label="Annuler"
+              severity="secondary"
+              outlined
+              class="rounded-control"
+              :disabled="competenceSaving"
+              @click="fermerEditionCompetences"
+            />
+            <Button
+              type="submit"
+              label="Enregistrer les compétences"
+              class="rounded-control"
+              :loading="competenceSaving"
+            />
+          </div>
+        </form>
+      </section>
+
+      <section v-if="isAdmin && editMode" class="rounded-card border border-brand/30 bg-surface-page p-6">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-[19px] text-brand">Modifier le profil candidat</h2>
+            <p class="text-[14px] text-ink-muted">Les modifications sont enregistrées directement dans le compte.</p>
+          </div>
+          <Button
+            label="Fermer"
+            severity="secondary"
+            text
+            class="rounded-control"
+            :disabled="editSaving"
+            @click="editMode = false"
+          />
+        </div>
+
+        <form class="flex flex-col gap-5" @submit.prevent="enregistrerEdition">
+          <FormulaireProfil v-model:infos="editInfos" v-model:competences="editCompetences" :desactive="editSaving" />
+          <div class="flex justify-end gap-3">
+            <Button
+              label="Annuler"
+              severity="secondary"
+              outlined
+              class="rounded-control"
+              :disabled="editSaving"
+              @click="editMode = false"
+            />
+            <Button
+              type="submit"
+              label="Enregistrer les modifications"
+              class="rounded-control"
+              :loading="editSaving"
+            />
+          </div>
+        </form>
+      </section>
+
+      <p v-if="editSuccess" class="rounded-control bg-green-50 px-4 py-3 text-[14px] text-green-800">
+        {{ editSuccess }}
+      </p>
 
       <div v-if="showContact" class="rounded-card border border-surface-line bg-surface-page p-6">
         <label for="contact-message" class="font-heading text-[14px] font-bold text-brand">
@@ -185,10 +388,23 @@ onMounted(() => {
             <video v-else :src="videos[0].url" controls preload="metadata" class="aspect-video w-full" />
           </div>
 
+          <div v-if="editCompetences.length" class="rounded-card border border-surface-line bg-surface-page p-6">
+            <h2 class="font-heading text-[17px] font-bold text-brand">Compétences clés</h2>
+            <ul class="mt-4 flex flex-wrap gap-2">
+              <li
+                v-for="competence in editCompetences"
+                :key="competence"
+                class="rounded-badge bg-surface-muted px-3 py-1.5 font-heading text-[12px] font-medium text-brand"
+              >
+                {{ competence }}
+              </li>
+            </ul>
+          </div>
+
           <div class="rounded-card border border-surface-line bg-surface-page p-6">
             <h2 class="font-heading text-[17px] font-bold text-brand">A propos de mon parcours</h2>
-            <p class="mt-4 text-[15px] leading-7 text-ink-muted">
-              {{ profile.firstName }} {{ profile.lastName }} est disponible pour echanger sur son parcours et ses competences.
+            <p class="mt-5 space-y-4 text-[14px]">
+              {{ profile.bio || (profile.firstName + ' ' + profile.lastName + ' est disponible pour échanger sur son parcours et ses compétences.') }}
             </p>
           </div>
 

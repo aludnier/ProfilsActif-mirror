@@ -2,7 +2,7 @@ import type { RowDataPacket } from 'mysql2'
 
 import { db } from '../../infrastructure/db.client.js'
 
-import type { UpdateProfilInput } from './ProfilSchema.js'
+import type { UpdateCompetencesInput, UpdateProfilInput } from './ProfilSchema.js'
 
 type SqlValue = string | number | boolean | null
 
@@ -98,6 +98,45 @@ export class ProfilRepository {
 
     return rows[0] ?? null
   }
+
+  async findCompetences(id: string): Promise<string[]> {
+    const [rows] = await db.query<RowDataPacket[]>(
+      "SELECT s.name FROM seeker_skill ss INNER JOIN skill s ON s.id = ss.skill_id WHERE ss.seeker_id = ? ORDER BY s.name ASC",
+      [id],
+    )
+    return rows.map((row) => String(row.name))
+  }
+
+  async replaceCompetences(id: string, data: UpdateCompetencesInput): Promise<void> {
+    const connection = await db.getConnection()
+    try {
+      await connection.beginTransaction()
+      await connection.execute("DELETE FROM seeker_skill WHERE seeker_id = ?", [id])
+
+      for (const name of [...new Set(data.competences.map((value) => value.trim()))]) {
+        await connection.execute("INSERT IGNORE INTO skill (name) VALUES (?)", [name])
+        const [rows] = await connection.query<RowDataPacket[]>(
+          "SELECT id FROM skill WHERE name = ?",
+          [name],
+        )
+        const skillId = rows[0]?.id
+        if (skillId) {
+          await connection.execute(
+            "INSERT INTO seeker_skill (seeker_id, skill_id) VALUES (?, ?)",
+            [id, skillId],
+          )
+        }
+      }
+
+      await connection.commit()
+    } catch (err) {
+      await connection.rollback()
+      throw err
+    } finally {
+      connection.release()
+    }
+  }
+
 
   async update(
     id: string,

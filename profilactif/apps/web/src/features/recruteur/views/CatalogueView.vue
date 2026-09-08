@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Paginator from 'primevue/paginator'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import ProfileService from '@/services/ProfileService'
 import heroStudio from '@/assets/images/hero-studio.webp'
@@ -8,6 +8,7 @@ import EnteteCatalogue from '@/features/recruteur/components/EnteteCatalogue.vue
 import FiltresCatalogue from '@/features/recruteur/components/FiltresCatalogue.vue'
 import GrilleCandidats from '@/features/recruteur/components/GrilleCandidats.vue'
 import { formaterNombre } from '@/shared/formatage'
+import { estCertifie } from '@/shared/certification'
 import type { Profile } from '@/shared/types/api'
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue'
 
@@ -17,6 +18,9 @@ const error = ref('')
 const niveau = ref('all')
 const types = ref<string[]>([])
 const modalites = ref<string[]>([])
+const secteur = ref('')
+const localisation = ref('')
+const competence = ref('')
 const premierProfil = ref(0)
 
 const niveauLabels: Record<string, string> = {
@@ -51,11 +55,20 @@ function niveauCorrespond(profile: Profile) {
   return years >= 7
 }
 
-const filteredProfiles = computed(() => profiles.value.filter((profile) => {
-  const typeOk = !types.value.length || (profile.employmentType !== null && types.value.includes(profile.employmentType))
-  const modeOk = !modalites.value.length || (profile.workMode !== null && modalites.value.includes(profile.workMode))
-  return niveauCorrespond(profile) && typeOk && modeOk
-}))
+const filteredProfiles = computed(() => {
+  const normalizedSecteur = secteur.value.trim().toLowerCase()
+  const normalizedLocalisation = localisation.value.trim().toLowerCase()
+  const normalizedCompetence = competence.value.trim().toLowerCase()
+
+  return profiles.value.filter((profile) => {
+    const typeOk = !types.value.length || (profile.employmentType !== null && types.value.includes(profile.employmentType))
+    const modeOk = !modalites.value.length || (profile.workMode !== null && modalites.value.includes(profile.workMode))
+    const secteurOk = !normalizedSecteur || (profile.targetSector ?? '').toLowerCase().includes(normalizedSecteur)
+    const localisationOk = !normalizedLocalisation || (profile.location ?? '').toLowerCase().includes(normalizedLocalisation)
+    const competenceOk = !normalizedCompetence || (profile.competences ?? []).some((value) => value.toLowerCase().includes(normalizedCompetence))
+    return niveauCorrespond(profile) && typeOk && modeOk && secteurOk && localisationOk && competenceOk
+  })
+})
 
 const profils = computed<ProfilResume[]>(() => filteredProfiles.value.map((profile) => ({
   nom: profile.firstName + ' ' + profile.lastName,
@@ -66,9 +79,9 @@ const profils = computed<ProfilResume[]>(() => filteredProfiles.value.map((profi
   experience: profile.experienceYears !== null && profile.experienceYears !== undefined
     ? Number(profile.experienceYears).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' ans d experience'
     : 'Experience non renseignee',
-  competences: [],
+  competences: profile.competences ?? [],
   dureeVideo: 'Video disponible',
-  certifie: false,
+  certifie: estCertifie(profile.certificationRate),
   miniature: heroStudio,
   to: { name: 'recruiter-candidate-profile', params: { id: profile.id } },
 })))
@@ -77,12 +90,22 @@ const filtresActifs = computed(() => [
   ...(niveau.value !== 'all' ? [niveauLabels[niveau.value]] : []),
   ...types.value.map((value) => typeLabels[value]),
   ...modalites.value.map((value) => modaliteLabels[value]),
+  ...(competence.value.trim() ? ['Compétence : ' + competence.value.trim()] : []),
+  ...(secteur.value.trim() ? ['Secteur : ' + secteur.value.trim()] : []),
+  ...(localisation.value.trim() ? ['Localisation : ' + localisation.value.trim()] : []),
 ])
+
+watch([niveau, types, modalites, secteur, localisation, competence], () => {
+  premierProfil.value = 0
+})
 
 function retirerFiltre(filtre: string) {
   if (niveauLabels[niveau.value] === filtre) niveau.value = 'all'
   types.value = types.value.filter((value) => typeLabels[value] !== filtre)
   modalites.value = modalites.value.filter((value) => modaliteLabels[value] !== filtre)
+  if (filtre === 'Compétence : ' + competence.value.trim()) competence.value = ''
+  if (filtre === 'Secteur : ' + secteur.value.trim()) secteur.value = ''
+  if (filtre === 'Localisation : ' + localisation.value.trim()) localisation.value = ''
 }
 
 async function chargerProfils() {
@@ -106,7 +129,7 @@ onMounted(chargerProfils)
   />
 
   <div class="flex items-stretch">
-    <FiltresCatalogue v-model:niveau="niveau" v-model:types="types" v-model:modalites="modalites" />
+    <FiltresCatalogue v-model:niveau="niveau" v-model:types="types" v-model:modalites="modalites" v-model:secteur="secteur" v-model:localisation="localisation" v-model:competence="competence" />
 
     <section class="flex min-w-0 flex-1 flex-col gap-10 p-10">
       <p v-if="loading" class="text-ink-muted">Chargement des candidats...</p>

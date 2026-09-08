@@ -1,12 +1,16 @@
 
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
+
 DELETE FROM questionnaire_attempt;
 DELETE FROM questionnaire_version;
 DELETE FROM questionnaire;
-DELETE FROM app_user WHERE mail = 'candidat@test.fr';
-SET FOREIGN_KEY_CHECKS = 1;
 
+DELETE FROM app_user
+WHERE uuid LIKE '20000000-0000-4000-8000-%'
+   OR uuid LIKE '30000000-0000-4000-8000-%'
+   OR mail = 'rachid@rekrut.fr';
+
+-- Candidat de test — identifiants : candidat@test.fr / candidat123
 
 INSERT INTO app_user (uuid, first_name, last_name, mail, phone, password_hash, role, status)
 VALUES (
@@ -18,6 +22,33 @@ VALUES (
 
 INSERT INTO seeker (id, location, target_sector)
 VALUES ('20000000-0000-4000-8000-000000000001', 'Paris', 'Développement web');
+
+
+-- Recruteurs de test. Mot de passe commun : recruteur123
+
+INSERT INTO app_user (uuid, first_name, last_name, mail, phone, password_hash, role, status) VALUES
+  ('30000000-0000-4000-8000-000000000001', 'Rachid', 'Rekrut',   'rachid.rekrut@rekrut.fr',                 '0600000001', '$2a$10$OYzLcWDC/Qxy/kYHqjZaVOeyqUUZe6q4Ecmb8XXFOkRtFUlDckohC', 'recruiter', 'active'),
+  ('30000000-0000-4000-8000-000000000002', 'Sophie', 'Bernard',  'sophie.bernard@dgfip.finances.gouv.fr',   '0600000002', '$2a$10$OYzLcWDC/Qxy/kYHqjZaVOeyqUUZe6q4Ecmb8XXFOkRtFUlDckohC', 'recruiter', 'active'),
+  ('30000000-0000-4000-8000-000000000003', 'Karim',  'Toumi',    'k.toumi@atos.net',                        '0600000003', '$2a$10$OYzLcWDC/Qxy/kYHqjZaVOeyqUUZe6q4Ecmb8XXFOkRtFUlDckohC', 'recruiter', 'active'),
+  ('30000000-0000-4000-8000-000000000004', 'Élise',  'Fontaine', 'recrutement@mairie-lyon.fr',              '0600000004', '$2a$10$OYzLcWDC/Qxy/kYHqjZaVOeyqUUZe6q4Ecmb8XXFOkRtFUlDckohC', 'recruiter', 'active'),
+  ('30000000-0000-4000-8000-000000000005', 'Marc',   'Dubois',   'm.dubois@capgemini.com',                  '0600000005', '$2a$10$OYzLcWDC/Qxy/kYHqjZaVOeyqUUZe6q4Ecmb8XXFOkRtFUlDckohC', 'recruiter', 'active');
+
+INSERT INTO recruiter (id) VALUES
+  ('30000000-0000-4000-8000-000000000001'),
+  ('30000000-0000-4000-8000-000000000002'),
+  ('30000000-0000-4000-8000-000000000003'),
+  ('30000000-0000-4000-8000-000000000004'),
+  ('30000000-0000-4000-8000-000000000005');
+
+INSERT INTO contact (id, recruiter_id, seeker_id, message, created_at) VALUES
+  (UUID(), '30000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000001',
+   'Bonjour Camille, la DGFiP recrute un développeur web pour son pôle numérique. Votre profil correspond, seriez-vous disponible pour un premier échange ?', NOW() - INTERVAL 6 DAY),
+  (UUID(), '30000000-0000-4000-8000-000000000003', '20000000-0000-4000-8000-000000000001',
+   'Bonjour, nous avons une mission longue en développement front chez un client public. Votre vidéo de présentation nous a convaincus.', NOW() - INTERVAL 2 DAY),
+  (UUID(), '30000000-0000-4000-8000-000000000004', '20000000-0000-4000-8000-000000000001',
+   'La Ville de Lyon ouvre un poste en alternance sur ses services en ligne. Intéressé(e) ?', NOW() - INTERVAL 1 DAY),
+  (UUID(), '30000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
+   'Poste de développeur Vue.js à pourvoir rapidement, télétravail partiel possible.', NOW());
 
 INSERT INTO questionnaire (id, code, title, created_by) VALUES
   ('10000000-0000-4000-8000-000000000001',
@@ -38,9 +69,9 @@ VALUES (
       "minCategoryScore": 50,
       "retakeDelayDays": 14,
       "badgeBands": [
-        { "min": 90, "level": "or" },
-        { "min": 80, "level": "argent" },
-        { "min": 70, "level": "bronze" }
+        { "min": 90, "level": "senior" },
+        { "min": 80, "level": "intermédiaire" },
+        { "min": 70, "level": "débutant" }
       ]
     },
     "categories": [

@@ -118,6 +118,10 @@ import { computed, onMounted, ref } from 'vue'
 
 /* Les points vont de 0 à 10 partout : les questions restent comparables entre elles. */
 const POINTS_MAX = 10
+import type { QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
+import { onMounted, ref } from 'vue'
+
+const questionTemplateYesNo = ["Oui", "Non"]
 const questionTemplateScale = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 
 type Config = NonNullable<QuestionnaireContent['config']>
@@ -138,7 +142,6 @@ const tempAnswerPoints = ref<number>(POINTS_MAX)
 const tempCategory = ref(CATEGORIE_LIBRE.code)
 const responses = ref<{ label: string; points: number }[]>([])
 const questionType = ref<'personalized' | 'YesNo' | 'Scale'>("personalized")
-const multipleChoice = ref<boolean>(false)
 
 const createdQuestions = ref<QuestionnaireQuestion[]>([])
 const categories = ref<QuestionnaireCategory[]>([{ ...CATEGORIE_LIBRE }])
@@ -203,6 +206,31 @@ async function checkDraft(){
   tempCategory.value = categories.value[0]?.code ?? CATEGORIE_LIBRE.code
   questionnaireCode.value = draft.code
   questionnaireTitle.value = draft.title
+
+function mapType(responses: { id: string; label: string; points: number }[], type: string): 'single' | 'multiple' {
+  if (type === "YesNo") {
+    return 'single'
+  }
+
+  let nbvalid = 0
+  for (let r = 0; r < responses.length; r++) {
+    if ((responses.at(r)?.points ?? 0) > 0) {
+      nbvalid++
+    }
+  }
+  return nbvalid > 1 ? 'multiple' : 'single'
+}
+
+async function checkDraft() {
+  try {
+    const draft = await CertificationService.getDraft()
+    if (!draft) return
+    createdQuestions.value = (draft.content.questions ?? []) as QuestionnaireQuestion[]
+    questionnaireCode.value = draft.code
+    questionnaireTitle.value = draft.title
+  } catch (err) {
+    console.error('Impossible de charger le brouillon', err)
+  }
 }
 
 function resetQuestion() {
@@ -252,6 +280,7 @@ function addQuestion() {
     type: questionType.value === 'personalized' && multipleChoice.value ? 'multiple' : 'single',
     /* Notation proportionnelle : une échelle ou un QCM nuancé n'a pas UNE bonne réponse. */
     scoring: 'graded',
+    type: mapType(mappedrespond, questionType.value),
     prompt: tempQuestion.value,
     options: mappedrespond,
   })
@@ -375,7 +404,7 @@ select {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
- 
+
 
 input:focus,
 select:focus {

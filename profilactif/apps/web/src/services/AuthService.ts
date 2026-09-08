@@ -16,6 +16,10 @@ export class AuthService {
     const { data } = await axiosInstance.get<PublicUser>('/auth/me')
     return data
   }
+
+  static async deleteMe(): Promise<void> {
+    await axiosInstance.delete('/auth/me')
+  }
 }
 
 export default AuthService

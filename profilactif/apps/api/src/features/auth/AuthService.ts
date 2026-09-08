@@ -102,4 +102,13 @@ export class AuthService {
     if (!row) throw new NonTrouve('Utilisateur introuvable', 'UTILISATEUR_INTROUVABLE')
     return toPublicUser(row)
   }
+  async deleteAccount(id: string): Promise<void> {
+    const user = await this.repo.findById(id)
+    if (!user) {
+      throw new NonTrouve('Utilisateur introuvable', 'UTILISATEUR_INTROUVABLE')
+    }
+
+    await this.repo.deleteById(id)
+  }
+
 }
