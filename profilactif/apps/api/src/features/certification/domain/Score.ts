@@ -33,8 +33,33 @@ export function normalizeAnswers(raw: unknown): Answers {
   return sortie
 }
 
+/*
+ * Notation proportionnelle : le ratio est « points obtenus / points maximum ».
+ * Sur une question 'single' on retient le meilleur choix plutôt que la somme,
+ * sinon tout cocher sur une échelle donnerait le maximum.
+ */
+function ratioGradue(question: Question, chosen: Set<string>): number {
+  const retenues = question.options.filter((o) => chosen.has(o.id))
+
+  const maximum =
+    question.type === 'single'
+      ? Math.max(...question.options.map((o) => o.points))
+      : question.options.reduce((somme, o) => somme + o.points, 0)
+  if (maximum <= 0) return 0
+
+  const obtenus =
+    question.type === 'single'
+      ? retenues.reduce((meilleur, o) => Math.max(meilleur, o.points), 0)
+      : retenues.reduce((somme, o) => somme + o.points, 0)
+
+  return Math.min(1, Math.max(0, obtenus / maximum))
+}
+
 function questionRatio(question: Question, selected: string[]): number {
   const chosen = new Set(selected)
+
+  if (question.scoring === 'graded') return ratioGradue(question, chosen)
+
   const correct = question.options.filter((o) => o.points > 0).map((o) => o.id)
   const wrong = question.options.filter((o) => o.points <= 0).map((o) => o.id)
 

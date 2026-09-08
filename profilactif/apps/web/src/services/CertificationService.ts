@@ -30,6 +30,14 @@ export class CertificationService {
     return data
   }
 
+  /** Tentative en cours du candidat connecté, ou `null`. Permet la reprise sur un autre appareil. */
+  static async getCurrentAttempt(): Promise<QuestionnaireAttempt | null> {
+    const { data } = await axiosInstance.get<QuestionnaireAttempt | null>(
+      '/certifications/attempts/en-cours',
+    )
+    return data
+  }
+
   static async getAttempt(id: string): Promise<QuestionnaireAttempt> {
     const { data } = await axiosInstance.get<QuestionnaireAttempt>(`/certifications/attempts/${id}`)
     return data

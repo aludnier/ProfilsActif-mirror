@@ -66,6 +66,25 @@ export const useCertificationStore = defineStore('certification', () => {
   const started = computed(() => attemptId.value !== null && result.value === null)
   const finished = computed(() => result.value !== null)
 
+  /*
+   * Tentative reprenable. Le localStorage répond instantanément sur l'appareil
+   * habituel ; sinon on demande à l'API, sans quoi un changement de navigateur
+   * ferait repartir de zéro alors que les réponses sont bien en base.
+   */
+  async function repriseDisponible(): Promise<string | null> {
+    const local = lireTentativeEnAttente()
+    if (local) return local
+    try {
+      const attempt = await CertificationService.getCurrentAttempt()
+      if (!attempt) return null
+      memoriserTentative(attempt.id)
+      return attempt.id
+    } catch {
+      /* Pas de reprise disponible : on démarre une nouvelle tentative. */
+      return null
+    }
+  }
+
   async function loadQuestionnaire(): Promise<void> {
     if (questionnaire.value) return
     loading.value = true
@@ -201,7 +220,7 @@ export const useCertificationStore = defineStore('certification', () => {
     isLast,
     started,
     finished,
-    pendingAttemptId: lireTentativeEnAttente,
+    repriseDisponible,
     loadQuestionnaire,
     start,
     resume,

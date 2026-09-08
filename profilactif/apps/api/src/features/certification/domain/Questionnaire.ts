@@ -1,6 +1,13 @@
 
 export type QuestionType = 'single' | 'multiple'
 
+/*
+ * 'exact' : une seule combinaison vaut le point (question de connaissance).
+ * 'graded' : chaque option rapporte ses points, le ratio est proportionnel —
+ * indispensable pour une échelle de 1 à 10, où répondre 7 ne vaut ni 0 ni tout.
+ */
+export type QuestionScoring = 'exact' | 'graded'
+
 export interface Option {
   id: string
   label: string
@@ -12,6 +19,7 @@ export interface Question {
   category: string
   weight: number
   type: QuestionType
+  scoring: QuestionScoring
   prompt: string
   options: Option[]
 }
@@ -170,19 +178,34 @@ function parseQuestions(brut: unknown, codesCategories: Set<string>): Question[]
     }
     const type = source.type as QuestionType
 
+    if (source.scoring !== undefined && source.scoring !== 'exact' && source.scoring !== 'graded') {
+      invalide(`questions[${i}].scoring doit être 'exact' ou 'graded'`, 'SCORING_INVALIDE')
+    }
+    /* Absent = 'exact' : les questionnaires écrits avant ce mode gardent leur notation. */
+    const scoring = (source.scoring ?? 'exact') as QuestionScoring
+
     const weight = source.weight === undefined ? 1 : nombre(source.weight, `questions[${i}].weight`)
     if (weight <= 0) invalide(`questions[${i}].weight doit être > 0`, 'POIDS_INVALIDE')
 
     const options = parseOptions(source.options, `questions[${i}]`)
     const bonnes = options.filter((o) => o.points > 0)
     if (bonnes.length === 0) {
-      invalide(`questions[${i}] n'a aucune bonne réponse`, 'AUCUNE_BONNE_REPONSE')
+      invalide(`questions[${i}] n'a aucune option qui rapporte des points`, 'AUCUNE_BONNE_REPONSE')
     }
-    if (type === 'single' && bonnes.length > 1) {
+    /* En 'graded', plusieurs options positives sont la norme (une échelle en a dix). */
+    if (scoring === 'exact' && type === 'single' && bonnes.length > 1) {
       invalide(`questions[${i}] est 'single' mais a ${bonnes.length} bonnes réponses`, 'SINGLE_MULTI_BONNES')
     }
 
-    return { id, category, weight, type, prompt: texte(source.prompt, `questions[${i}].prompt`), options }
+    return {
+      id,
+      category,
+      weight,
+      type,
+      scoring,
+      prompt: texte(source.prompt, `questions[${i}].prompt`),
+      options,
+    }
   })
 }
 
