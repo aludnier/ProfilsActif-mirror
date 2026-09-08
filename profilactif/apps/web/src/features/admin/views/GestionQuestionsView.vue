@@ -1,5 +1,5 @@
-<template >
-  <div class="frame" v-on:load="checkDraft">
+<template>
+  <div class="frame">
   <div class="question-form">
     <label for="code">Code du questionnaire</label>
     <input id="code" v-model="questionnaireCode"><br>
@@ -22,7 +22,7 @@
     
       <span class="w-1/5">
         <label for="weight">Poids</label>
-        <input type="number" v-model="tempWeight" min="1">
+        <input v-model="tempWeight" type="number" min="1">
       </span>
     </div>
 
@@ -34,7 +34,7 @@
       <div class="Answer-list">
         <span v-for="(response, index) in responses" :key="index" class="Answer-tag">
           {{ response.label }}
-           <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
+           <input v-model.number="response.points" type="number" class="points-edit" min="0"/>
           <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
         </span>
       </div>
@@ -58,7 +58,7 @@
               class="Answer-tag"
             >
               {{ response.label }}
-              <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
+              <input v-model.number="response.points" type="number" class="points-edit" min="0"/>
             </span>
           </div>
       </div>
@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import CertificationService from '@/services/CertificationService'
-import type { Questionnaire, QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
+import type { QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
 import { onMounted, ref } from 'vue'
 
 const questionTemplateYesNo = ["Oui", "Non"]
@@ -80,7 +80,6 @@ const tempWeight = ref<number>(1)
 const tempAnswerPoints = ref<number>(1)
 const responses = ref<{ label: string; points: number }[]>([])
 const questionType = ref<'personalized' | 'YesNo' | 'Scale'>("personalized")
-const multipleChoice = ref<boolean>(false)
 
 const createdQuestions = ref<QuestionnaireQuestion[]>([])
 
@@ -99,23 +98,23 @@ function mapType(responses: { id: string; label: string; points: number }[], typ
 
   let nbvalid = 0
   for (let r = 0; r < responses.length; r++) {
-    if (responses.at(r)?.points ?? 0 > 0) {
+    if ((responses.at(r)?.points ?? 0) > 0) {
       nbvalid++
     }
   }
   return nbvalid > 1 ? 'multiple' : 'single'
 }
 
-async function checkDraft(){
-  console.log("check for draft")
-  const draft = await CertificationService.getDraft();
-
-  if (draft == undefined) {
-    return
+async function checkDraft() {
+  try {
+    const draft = await CertificationService.getDraft()
+    if (!draft) return
+    createdQuestions.value = (draft.content.questions ?? []) as QuestionnaireQuestion[]
+    questionnaireCode.value = draft.code
+    questionnaireTitle.value = draft.title
+  } catch (err) {
+    console.error('Impossible de charger le brouillon', err)
   }
-  createdQuestions.value =  draft.content.questions as QuestionnaireQuestion[]
-  questionnaireCode.value = draft.code
-  questionnaireTitle.value = draft.title
 }
 
 function resetQuestion() {
@@ -142,16 +141,16 @@ function addQuestion() {
       break
   }
   const mappedrespond = responsesToSend.map((r, i) => ({
-      id: `opt-${i}`,
-      label: r.label,
-      points: r.points,
-    }), questionType.value)
+    id: `opt-${i}`,
+    label: r.label,
+    points: r.points,
+  }))
 
   createdQuestions.value.push({
     id: crypto.randomUUID(),
     category: 'general',
     weight: tempWeight.value,
-    type: mapType(mappedrespond),
+    type: mapType(mappedrespond, questionType.value),
     prompt: tempQuestion.value,
     options: mappedrespond,
   })
