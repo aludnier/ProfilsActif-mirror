@@ -12,7 +12,11 @@ export type ProfilResume = {
   dureeVideo: string;
   certifie: boolean;
   miniature: string;
-  /* Absent sur la grille publique : aucune fiche publique n'existe encore. */
+  /*
+   * Sans `to`, la carte n'affiche aucun lien. C'est le cas sur le fil pour un
+   * candidat ou un visiteur : aucune fiche publique n'existe, la seule fiche
+   * candidat est réservée au recruteur.
+   */
   to?: RouteLocationNamedRaw;
 };
 
