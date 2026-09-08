@@ -30,8 +30,18 @@ const VERSION = lireVersion()
 
 export const healthRoutes = new Hono()
 
-// Mêmes clés en 200 et en 503, sans horodatage : la réponse doit être identique
-// d'un appel à l'autre.
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Vérifie l'état du service et de la base de données
+ *     responses:
+ *       200:
+ *         description: API et base de données disponibles
+ *       503:
+ *         description: API disponible mais base de données indisponible
+ */
 healthRoutes.get('/', async (c) => {
   const baseDisponible = await pingDatabase()
 
