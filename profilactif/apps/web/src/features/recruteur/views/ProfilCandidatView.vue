@@ -457,7 +457,12 @@ onMounted(() => {
               <dt class="font-bold text-brand">Certification</dt>
               <dd>{{ profile.certificationRate }} %</dd>
             </div>
-            <div>
+            <!--
+              Coordonnees : reservees a qui a une raison de contacter. La fiche
+              est aussi lue par des candidats depuis le fil, et rien ne
+              justifie qu'ils obtiennent l'e-mail et le telephone des autres.
+            -->
+            <div v-if="canContact || isAdmin">
               <dt class="font-bold text-brand">Coordonnees</dt>
               <dd>{{ profile.mail }}</dd>
               <dd v-if="profile.phone">{{ profile.phone }}</dd>
