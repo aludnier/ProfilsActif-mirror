@@ -77,6 +77,11 @@ export class CertificationService {
     return this.repository.createAttempt(data, seekerId)
   }
 
+  /* `null` et non une erreur : n'avoir aucune tentative en cours est le cas normal. */
+  getCurrentAttempt(seekerId: string) {
+    return this.repository.getCurrentAttempt(seekerId)
+  }
+
   getAttempt(id: string, seekerId: string) {
     return this.repository.getAttempt(id, seekerId).then((value) => {
       if (!value) throw new NonTrouve('Tentative introuvable', 'TENTATIVE_NON_TROUVEE')

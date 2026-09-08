@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { storeToRefs } from 'pinia'
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 
-import CarteQuestion from '@/features/certification/components/CarteQuestion.vue'
-import { useCertificationStore } from '@/features/certification/store'
+import CarteQuestion from '@/features/certification/components/CarteQuestion.vue';
+import { useCertificationStore } from '@/features/certification/store';
 
-const store = useCertificationStore()
-const router = useRouter()
+const store = useCertificationStore();
+const router = useRouter();
 const {
   questionnaire,
   loading,
@@ -23,36 +23,55 @@ const {
   isLast,
   started,
   attemptId,
-} = storeToRefs(store)
+} = storeToRefs(store);
 
-const reprise = ref<string | null>(null)
+const reprise = ref<string | null>(null);
 
 onMounted(async () => {
-  await store.loadQuestionnaire()
-  reprise.value = store.pendingAttemptId()
-})
+  await store.loadQuestionnaire();
+  reprise.value = await store.repriseDisponible();
+});
 
-const passThreshold = computed(() => questionnaire.value?.content.config?.passThreshold ?? null)
+const passThreshold = computed(() => questionnaire.value?.content.config?.passThreshold ?? null);
 
 async function reprendre() {
-  if (reprise.value) await store.resume(reprise.value)
-  reprise.value = null
+  if (reprise.value) await store.resume(reprise.value);
+  reprise.value = null;
 }
 
 async function recommencer() {
-  reprise.value = null
-  await store.start()
+  reprise.value = null;
+  await store.start();
 }
 
 async function terminer() {
-  const id = await store.submit()
-  if (id) router.push({ name: 'candidate-certification-result', params: { attemptId: id } })
+  const id = await store.submit();
+  if (id) router.push({ name: 'candidate-certification-result', params: { attemptId: id } });
 }
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 py-12">
     <div class="mx-auto max-w-2xl px-4">
+      <!--
+        Sans ce lien, l'écran est sans issue quand aucun questionnaire n'existe :
+        il n'y a ni barre latérale ni bouton, seulement le message d'erreur.
+      -->
+      <router-link
+        :to="{ name: 'candidate-dashboard' }"
+        class="mb-6 inline-flex items-center gap-2 font-heading text-[14px] font-medium text-brand hover:underline"
+      >
+        <svg class="size-4 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path
+            d="M12.6672 8H3.3328M8 3.3328L3.3328 8L8 12.6672"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+        Retour au tableau de bord
+      </router-link>
+
       <div v-if="loading" class="text-center text-gray-500">Chargement…</div>
 
       <div
