@@ -33,7 +33,8 @@
       <p>{{ tempQuestion }}</p>
       <div class="Answer-list">
         <span v-for="(response, index) in responses" :key="index" class="Answer-tag">
-          {{ response }}
+          {{ response.label }}
+           <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
           <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
         </span>
       </div>
@@ -49,7 +50,7 @@
       </div>
       <div v-for="(question, index) in createdQuestions" :key="index" class="question-block">
         <button type="button" class="question-remove" @click="removeQuestion(index)">✕</button>
-          <p class="question-title">{{ question.prompt }}</p>
+          <p class="question-title">{{ question.prompt }} - {{ question.type }}</p>
           <div class="Answer-list">
             <span
               v-for="(response, indexReponse) in question.options"
@@ -57,6 +58,7 @@
               class="Answer-tag"
             >
               {{ response.label }}
+              <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
             </span>
           </div>
       </div>
@@ -75,7 +77,8 @@ const questionTemplateScale = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"
 const tempQuestion = ref("")
 const tempResponse = ref("")
 const tempWeight = ref<number>(1)
-const responses = ref<string[]>([])
+const tempAnswerPoints = ref<number>(1)
+const responses = ref<{ label: string; points: number }[]>([])
 const questionType = ref<'personalized' | 'YesNo' | 'Scale'>("personalized")
 const multipleChoice = ref<boolean>(false)
 
@@ -89,11 +92,18 @@ onMounted(() => {
 })
 
 
-function mapType(type: string): 'single' | 'multiple' {
-  if (type === 'personalized' && multipleChoice.value) {
-    return 'multiple'
+function mapType(responses: { id: string; label: string; points: number }[], type: string): 'single' | 'multiple' {
+  if (type === "YesNo") {
+    return 'single'
   }
-  return 'single'
+
+  let nbvalid = 0
+  for (let r = 0; r < responses.length; r++) {
+    if (responses.at(r)?.points ?? 0 > 0) {
+      nbvalid++
+    }
+  }
+  return nbvalid > 1 ? 'multiple' : 'single'
 }
 
 async function checkDraft(){
@@ -115,7 +125,7 @@ function resetQuestion() {
 }
 
 function addQuestion() {
-  let responsesToSend: string[] = []
+  let responsesToSend: { label: string; points: number }[] = []
 
   if (tempQuestion.value == "") return
 
@@ -125,39 +135,39 @@ function addQuestion() {
       responsesToSend = responses.value
       break
     case "YesNo":
-      responsesToSend = questionTemplateYesNo
+      responsesToSend = questionTemplateYesNo.map(label => ({ label, points: label == "Oui" ? 1 : 0 }))
       break
     case "Scale":
-      responsesToSend = questionTemplateScale
+      responsesToSend = questionTemplateScale.map(label => ({ label, points: Number(label) }))
       break
   }
+  const mappedrespond = responsesToSend.map((r, i) => ({
+      id: `opt-${i}`,
+      label: r.label,
+      points: r.points,
+    }), questionType.value)
 
   createdQuestions.value.push({
     id: crypto.randomUUID(),
     category: 'general',
     weight: tempWeight.value,
-    type: /* mapType(questionType.value) */ 'multiple',
+    type: mapType(mappedrespond),
     prompt: tempQuestion.value,
-    options: responsesToSend.map((label, i) => ({
-      id: `opt-${i}`,
-      label,
-      points: 1, // add something to edit point
-    })),
+    options: mappedrespond,
   })
 
   resetQuestion()
 }
-
 function removeQuestion(index: number) {
   createdQuestions.value.splice(index, 1)
 }
 
 function addanswer() {
   if (tempResponse.value == "") return
-  responses.value.push(tempResponse.value)
+  responses.value.push({ label: tempResponse.value, points: tempAnswerPoints.value })
   tempResponse.value = ""
+  tempAnswerPoints.value = 1
 }
-
 function removeAnswer(index: number) {
   responses.value.splice(index, 1)
 }
@@ -400,6 +410,14 @@ div[v-for] > p,
   background: #fff;
   border: 1px solid var(--navy);
   border-radius: 10px;
+}
+
+.points-edit {
+  width: 48px;
+  padding: 2px 4px;
+  margin: 0;
+  font-size: 12px;
+  border-radius: 4px;
 }
 
 .question-remove {
