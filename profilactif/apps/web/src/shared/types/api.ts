@@ -238,3 +238,16 @@ export interface AppNotification {
   recruiterMail: string | null
   recruiterPhone: string | null
 }
+
+export interface AdminStats {
+  activeSeekers: number
+  activeRecruiters: number
+  suspendedUsers: number
+  certifiedSeekers: number
+  avgCertificationRate: number
+  submittedAttempts: number
+  totalContacts: number
+  totalFavorites: number
+  pendingVideos: number
+  approvedVideos: number
+}

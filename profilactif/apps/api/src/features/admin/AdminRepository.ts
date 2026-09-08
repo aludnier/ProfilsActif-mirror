@@ -33,6 +33,19 @@ export interface PaginatedUsers {
   totalPages: number
 }
 
+export interface GlobalStats extends RowDataPacket {
+  activeSeekers: number
+  activeRecruiters: number
+  suspendedUsers: number
+  certifiedSeekers: number
+  avgCertificationRate: number
+  submittedAttempts: number
+  totalContacts: number
+  totalFavorites: number
+  pendingVideos: number
+  approvedVideos: number
+}
+
 export class AdminRepository {
   async findUsers(
     filters: ListUsersInput,
@@ -196,5 +209,22 @@ export class AdminRepository {
   }
   async deleteUser(id: string): Promise<void> {
     await db.execute('DELETE FROM app_user WHERE uuid = ?', [id])
+  }
+
+  async getGlobalStats(): Promise<GlobalStats> {
+    const [rows] = await db.query<GlobalStats[]>(`
+      SELECT
+        (SELECT COUNT(*) FROM app_user WHERE role = 'seeker'    AND status = 'active')  AS activeSeekers,
+        (SELECT COUNT(*) FROM app_user WHERE role = 'recruiter' AND status = 'active')  AS activeRecruiters,
+        (SELECT COUNT(*) FROM app_user WHERE status = 'suspended')                      AS suspendedUsers,
+        (SELECT COUNT(*) FROM seeker WHERE certification_rate >= 70)                    AS certifiedSeekers,
+        (SELECT CAST(COALESCE(ROUND(AVG(certification_rate)), 0) AS UNSIGNED) FROM seeker) AS avgCertificationRate,
+        (SELECT COUNT(*) FROM questionnaire_attempt WHERE status = 'submitted')         AS submittedAttempts,
+        (SELECT COUNT(*) FROM contact)                                                 AS totalContacts,
+        (SELECT COUNT(*) FROM favorite)                                                AS totalFavorites,
+        (SELECT COUNT(*) FROM video WHERE status = 'pending')                          AS pendingVideos,
+        (SELECT COUNT(*) FROM video WHERE status = 'approved')                         AS approvedVideos
+    `)
+    return rows[0] as GlobalStats
   }
 }

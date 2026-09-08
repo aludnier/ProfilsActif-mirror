@@ -142,6 +142,10 @@ export async function deleteUserHandler(
 
 const videoRepository = new VideoRepository()
 
+export async function getStatsHandler(c: Context) {
+  return c.json(await adminService.getGlobalStats())
+}
+
 export async function getPendingVideosHandler(c: Context) {
   return c.json(await videoRepository.findPending())
 }

@@ -97,6 +97,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/features/certification/views/CertificationView.vue'),
   },
   {
+    path: '/admin/stats',
+    name: 'admin-stats',
+    component: () => import('@/features/admin/views/StatistiquesView.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
     path: '/admin/dashboard',
     name: 'admin-dashboard',
     component: () => import('@/features/admin/views/AdminDashboardView.vue'),

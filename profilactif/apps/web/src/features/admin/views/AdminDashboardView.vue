@@ -4,6 +4,7 @@ import Message from 'primevue/message'
 import { nextTick, ref, onMounted } from 'vue'
 
 import AdminService from '@/features/admin/api'
+import NavAdmin from '@/features/admin/components/NavAdmin.vue'
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue'
 import { extraireIdYouTube } from '@/shared/youtube'
 import type { PublicUser, Video } from '@/shared/types/api'
@@ -159,6 +160,7 @@ onMounted(() => { void load() })
 <template>
   <main class="min-h-screen bg-surface-subtle p-6 lg:p-10">
     <div class="mx-auto flex max-w-7xl flex-col gap-8">
+      <NavAdmin />
       <header class="flex flex-wrap items-end justify-between gap-5">
         <div>
           <h1 class="text-[28px] text-brand">Administration</h1>
