@@ -11,8 +11,8 @@ defineProps<{ profils: ProfilResume[] }>();
     landing : même CarteProfil, contexte de mise en page différent.
   -->
   <ul class="grid list-none grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-8">
-    <li v-for="profil in profils.slice(0, 20)" :key="profil.nom" class="flex">
-        <CarteProfil :profil="profil" />
+    <li v-for="profil in profils" :key="profil.nom" class="flex">
+      <CarteProfil :profil="profil" />
     </li>
   </ul>
 </template>
