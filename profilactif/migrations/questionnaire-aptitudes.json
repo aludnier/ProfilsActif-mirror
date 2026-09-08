@@ -5,7 +5,12 @@
     "config": {
       "passThreshold": 50,
       "minCategoryScore": 0,
-      "retakeDelayDays": 0
+      "retakeDelayDays": 0,
+      "badgeBands": [
+        { "min": 85, "level": "senior" },
+        { "min": 70, "level": "intermédiaire" },
+        { "min": 50, "level": "débutant" }
+      ]
     },
     "categories": [
       {
