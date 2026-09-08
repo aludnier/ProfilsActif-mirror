@@ -12,6 +12,8 @@ import FormulaireProfil from '@/features/profil/components/FormulaireProfil.vue'
 import type { InfosProfil } from '@/features/profil/components/FormulaireProfil.vue'
 import type { Favorite, Profile, Video } from '@/shared/types/api'
 import { extraireIdYouTube } from '@/shared/youtube'
+import { estCertifie, niveauBadge } from '@/shared/certification'
+import BadgeCertification from '@/shared/ui/BadgeCertification.vue'
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue'
 
 const route = useRoute()
@@ -229,12 +231,17 @@ onMounted(() => {
 
     <div v-else-if="profile" class="mx-auto max-w-6xl space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-5 rounded-card border border-surface-line bg-surface-page p-6">
-        <div>
+        <div class="space-y-1.5">
           <h1 class="text-[26px] text-brand">{{ profile.firstName }} {{ profile.lastName }}</h1>
           <p class="font-heading text-[15px] font-bold">{{ profile.targetSector || 'Candidat disponible' }}</p>
           <p class="text-[13px] italic text-ink-muted">
             {{ profile.location || 'Localisation non renseignee' }} - Profil candidat
           </p>
+          <BadgeCertification
+            v-if="estCertifie(profile.certificationRate)"
+            :level="niveauBadge(profile.certificationRate)"
+            :score="profile.certificationRate"
+          />
         </div>
 
         <div class="flex flex-wrap gap-3">
