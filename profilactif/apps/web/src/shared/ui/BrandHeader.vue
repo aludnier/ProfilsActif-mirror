@@ -28,7 +28,7 @@ const authStore = useAuthStore();
 const liensNav = computed<LienNav[]>(() => {
   const liens: LienNav[] = [
     authStore.user?.role === 'seeker'
-      ? { libelle: 'Feeds', to: { name: 'feed' } }
+      ? { libelle: 'Profils', to: { name: 'feed' } }
       : { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
     /* A section of the landing page, not a view of its own. */
     { libelle: 'Comment ça marche', to: { name: 'home', hash: '#comment-ca-marche' } },
@@ -124,7 +124,8 @@ onBeforeUnmount(() => {
       <template #center>
         <!-- Below `xl` the drawer serves these same links. -->
         <nav aria-label="Navigation principale" class="hidden xl:block">
-          <ul class="flex items-center gap-8 font-heading text-[14px]">
+          <!-- 16px et non les 14px de la maquette : Faber, en serif, rend plus fin qu'Inter. -->
+          <ul class="flex items-center gap-8 font-heading text-[16px]">
             <li v-for="lien in liensNav" :key="lien.libelle">
               <router-link
                 v-if="lien.to"

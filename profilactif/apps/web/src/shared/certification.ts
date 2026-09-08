@@ -1,18 +1,21 @@
 /**
- * Barème d'affichage du badge de certification, aligné sur le `content` du
- * questionnaire semé (migrations/seed.sql) : seuil de réussite à 70, bandes
- * débutant / intermédiaire / senior.
+ * Barème d'affichage du badge de certification.
  *
  * L'API renvoie `certificationRate` (0–100) sur le profil ; on en dérive le
  * badge ici plutôt que d'appeler le questionnaire.
+ *
+ * Ces valeurs doublent celles de la version publiée
+ * (`migrations/questionnaire-aptitudes.json`, config `passThreshold` et
+ * `badgeBands`) : les deux doivent bouger ensemble. Désaccordées, l'écran de
+ * résultat et les cartes de profil se contredisent sur le même candidat.
  */
 
-export const SEUIL_CERTIFICATION = 70
+export const SEUIL_CERTIFICATION = 50
 
 const BANDES: { min: number; niveau: string }[] = [
-  { min: 90, niveau: 'senior' },
-  { min: 80, niveau: 'intermédiaire' },
-  { min: 70, niveau: 'débutant' },
+  { min: 85, niveau: 'avancée' },
+  { min: 70, niveau: 'intermédiaire' },
+  { min: 50, niveau: 'initiale' },
 ]
 
 /** `true` dès que le seuil de validation est atteint. */

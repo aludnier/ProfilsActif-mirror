@@ -11,15 +11,26 @@ type EntreeEspace = {
 const entrees: EntreeEspace[] = [
   { libelle: 'Tableau de bord', to: { name: 'recruiter-dashboard' } },
   { libelle: 'Catalogue des profils', to: { name: 'recruiter-catalog' } },
-  { libelle: 'Mes favoris' },
-  { libelle: 'Mes contacts' },
+  /* Le tableau de bord porte déjà la liste : l'onglet se choisit par l'URL. */
+  { libelle: 'Mes favoris', to: { name: 'recruiter-dashboard', query: { onglet: 'favoris' } } },
+  {
+    libelle: 'Mes contacts',
+    to: { name: 'recruiter-dashboard', query: { onglet: 'contactes' } },
+  },
   { libelle: "Paramètres d'accès" },
 ];
 
 const route = useRoute();
 
 function estActive(entree: EntreeEspace): boolean {
-  return entree.to !== undefined && route.name === entree.to.name;
+  if (entree.to === undefined || route.name !== entree.to.name) {
+    return false;
+  }
+
+  /* Deux entrées visent le tableau de bord : seul l'onglet les distingue. */
+  const onglet = entree.to.query?.onglet;
+
+  return onglet === undefined ? route.query.onglet === undefined : route.query.onglet === onglet;
 }
 </script>
 

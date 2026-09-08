@@ -74,7 +74,7 @@ const routes: RouteRecordRaw[] = [
     name: 'recruiter-candidate-profile',
     component: () => import('@/features/recruteur/views/ProfilCandidatView.vue'),
     props: true,
-    meta: { roles: ['recruiter', 'admin'] },
+    meta: { roles: ['recruiter', 'admin', 'seeker'] },
   },
   {
     path: '/candidate/dashboard',
@@ -122,6 +122,12 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/dashboard',
     name: 'admin-dashboard',
     component: () => import('@/features/admin/views/AdminDashboardView.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
+    path: '/admin/videos',
+    name: 'admin-videos',
+    component: () => import('@/features/admin/views/ModerationView.vue'),
     meta: { roles: ['admin'] },
   },
   {

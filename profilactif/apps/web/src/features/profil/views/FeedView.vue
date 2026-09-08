@@ -5,12 +5,23 @@ import { computed, onMounted, ref } from 'vue';
 
 import heroStudio from '@/assets/images/hero-studio.webp';
 import ProfileService from '@/services/ProfileService';
+import { estCertifie } from '@/shared/certification';
 import { formaterNombre } from '@/shared/formatage';
 import type { Profile } from '@/shared/types/api';
+import { useAuthStore } from '@/shared/stores/auth';
 import CarteProfil from '@/shared/ui/CarteProfil.vue';
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue';
 
 const PAR_PAGE = 20;
+
+const authStore = useAuthStore();
+
+/*
+ * La fiche exige un compte (`meta.roles` sur `recruiter-candidate-profile`) :
+ * proposé à un visiteur, le lien l'enverrait sur la page de connexion. On ne
+ * le montre donc qu'à un utilisateur connecté, quel que soit son rôle.
+ */
+const peutOuvrirUneFiche = computed(() => authStore.user !== null);
 
 const profils = ref<Profile[]>([]);
 const chargement = ref(true);
@@ -45,8 +56,11 @@ const resumes = computed<ProfilResume[]>(() =>
         : 'Expérience non renseignée',
     competences: [],
     dureeVideo: 'Vidéo de présentation',
-    certifie: false,
+    certifie: estCertifie(profil.certificationRate),
     miniature: heroStudio,
+    to: peutOuvrirUneFiche.value
+      ? { name: 'recruiter-candidate-profile', params: { id: profil.id } }
+      : undefined,
   })),
 );
 

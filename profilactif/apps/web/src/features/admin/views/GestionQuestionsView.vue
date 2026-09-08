@@ -73,6 +73,7 @@
 
       <div class="import-block">
         <button type="button" @click="chargerDefaut">Charger le questionnaire par défaut</button>
+        <button type="button" @click="chargerPublie">Revenir à l'ancien questionnaire</button>
         <button type="button" @click="toutEffacer">Tout effacer</button>
         <p v-if="message" class="import-message">{{ message }}</p>
         <p class="import-hint">
@@ -110,6 +111,7 @@
 import CertificationService from '@/services/CertificationService'
 import questionnaireDefaut from '@data/questionnaire-aptitudes.json'
 import type {
+  Questionnaire,
   QuestionnaireCategory,
   QuestionnaireContent,
   QuestionnaireQuestion,
@@ -129,6 +131,16 @@ const CONFIG_DEFAUT: Config = {
   passThreshold: 50,
   minCategoryScore: 0,
   retakeDelayDays: 0,
+  /*
+   * Sans bandes, `badgeFor` ne trouve rien et un candidat reçu lit
+   * « Non certifié ». La bande la plus basse doit donc valoir `passThreshold`,
+   * sinon le trou revient entre le seuil de réussite et la première bande.
+   */
+  badgeBands: [
+    { min: 85, level: 'avancée' },
+    { min: 70, level: 'intermédiaire' },
+    { min: 50, level: 'initiale' },
+  ],
 }
 
 const tempQuestion = ref("")
@@ -163,16 +175,11 @@ onMounted(() => {
  * rien n'est publié tant que l'admin ne clique pas sur Publier.
  */
 function chargerDefaut() {
-  const contenu = questionnaireDefaut.content as unknown as QuestionnaireContent
-  questionnaireCode.value = questionnaireDefaut.code
-  questionnaireTitle.value = questionnaireDefaut.title
-  categories.value = (contenu.categories ?? []).map((c) => ({ ...c }))
-  config.value = { ...CONFIG_DEFAUT, ...(contenu.config ?? {}) }
-  createdQuestions.value = (contenu.questions ?? []).map((q) => ({
-    ...q,
-    options: q.options.map((o) => ({ ...o })),
-  }))
-  tempCategory.value = categories.value[0]?.code ?? CATEGORIE_LIBRE.code
+  appliquerVersion({
+    code: questionnaireDefaut.code,
+    title: questionnaireDefaut.title,
+    content: questionnaireDefaut.content as unknown as QuestionnaireContent,
+  })
   message.value = `${createdQuestions.value.length} questions chargées.`
 }
 
@@ -187,25 +194,55 @@ function toutEffacer() {
   resetQuestion()
 }
 
+/* Recopie dans le formulaire une version existante, ou le fichier de référence. */
+function appliquerVersion(version: Pick<Questionnaire, 'code' | 'title' | 'content'>) {
+  createdQuestions.value = (version.content.questions ?? []).map((q) => ({
+    ...q,
+    options: q.options.map((o) => ({ ...o })),
+  }))
+  /* Une version transporte ses propres catégories : sans elles, les questions
+     reprises pointeraient vers une catégorie inconnue et la publication échouerait. */
+  categories.value = version.content.categories?.length
+    ? version.content.categories.map((c) => ({ ...c }))
+    : [{ ...CATEGORIE_LIBRE }]
+  config.value = { ...CONFIG_DEFAUT, ...(version.content.config ?? {}) }
+  tempCategory.value = categories.value[0]?.code ?? CATEGORIE_LIBRE.code
+  questionnaireCode.value = version.code
+  questionnaireTitle.value = version.title
+}
+
+/* À l'ouverture : le brouillon seulement. Le questionnaire publié se recharge
+   à la demande, par « Revenir à l'ancien questionnaire ». */
 async function checkDraft() {
   try {
     const draft = await CertificationService.getDraft()
     if (!draft) return
 
-    createdQuestions.value = draft.content.questions ?? []
-    /* Un brouillon transporte ses propres catégories : sans elles, les questions
-       reprises pointeraient vers une catégorie inconnue et la publication échouerait. */
-    categories.value = draft.content.categories?.length
-      ? draft.content.categories.map((c) => ({ ...c }))
-      : [{ ...CATEGORIE_LIBRE }]
-    config.value = { ...CONFIG_DEFAUT, ...(draft.content.config ?? {}) }
-    tempCategory.value = categories.value[0]?.code ?? CATEGORIE_LIBRE.code
-    questionnaireCode.value = draft.code
-    questionnaireTitle.value = draft.title
+    appliquerVersion(draft)
+    message.value = `Brouillon (version ${draft.version}) chargé.`
   } catch (err) {
     /* Au chargement de la page : sans message, l'admin croirait à un brouillon vide. */
-    message.value = "Impossible de charger le brouillon."
+    message.value = 'Impossible de charger le brouillon.'
     console.error('Impossible de charger le brouillon', err)
+  }
+}
+
+/*
+ * Recharge la version en service pour la modifier. Sans ça, l'écran s'ouvrait
+ * vide dès qu'un questionnaire était publié — plus aucun brouillon n'existe à
+ * ce moment-là — et le seul moyen de le retoucher était de tout retaper.
+ * Republier le même `code` archive la version en cours et crée la suivante.
+ */
+async function chargerPublie() {
+  try {
+    const publie = await CertificationService.getPublished()
+    appliquerVersion(publie)
+    message.value =
+      `Version ${publie.version} publiée, chargée pour modification. ` +
+      `Publier créera la version ${publie.version + 1}.`
+  } catch {
+    /* 404 tant que rien n'a jamais été publié : il n'y a rien à reprendre. */
+    message.value = "Aucun questionnaire publié pour le moment."
   }
 }
 
@@ -330,15 +367,15 @@ function saveQuestionnaire() {
 
 </script>
 
-<style>
-:root {
-  --navy: #1B3A6B;
+<style scoped>
+.frame {
+  --navy: #1b3a6b;
   --navy-light: #253e66;
   --accent: #d9534f;
   --accent-hover: #c44844;
   --bg: #f4f6f9;
   --border: #e2e5eb;
-  --text: #1B3A6B;
+  --text: #1b3a6b;
   --text-light: #6b7280;
 }
 
@@ -557,6 +594,16 @@ div[v-for] > p,
   padding: 12px 16px;
   border: 1px dashed var(--navy-light);
   border-radius: 10px;
+}
+
+/*
+ * Les deux boutons se touchaient. Un écart franc, et pas seulement décoratif :
+ * « Tout effacer » est irréversible et ne doit pas jouxter son voisin.
+ * En marge plutôt qu'en padding — un padding agrandirait le bouton, donc sa
+ * zone cliquable, ce qui rapprocherait le danger au lieu de l'éloigner.
+ */
+.import-block button + button {
+  margin-left: 16px;
 }
 
 .import-hint {

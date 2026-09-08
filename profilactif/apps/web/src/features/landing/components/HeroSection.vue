@@ -1,8 +1,32 @@
 <script setup lang="ts">
 import Button from 'primevue/button';
+import { computed } from 'vue';
 
 import flecheDroite from '@/assets/icons/arrow-right.svg';
 import studioVideo from '@/assets/images/hero-studio.webp';
+import { useAuthStore } from '@/shared/stores/auth';
+import { LIBELLES_ROLE, ROUTE_ESPACE } from '@/shared/types/roles';
+
+const authStore = useAuthStore();
+
+/*
+ * L'appel à l'action s'adresse d'abord au visiteur. Une fois connecté,
+ * l'inscription n'a plus de sens : chacun repart vers son espace, et le
+ * libellé suit la destination plutôt que de promettre une création de compte.
+ */
+const actionPrincipale = computed(() => {
+  const compte = authStore.user;
+
+  if (compte === null) {
+    return { libelle: 'Créer mon profil vidéo', to: { name: 'signup' } };
+  }
+
+  return {
+    libelle:
+      compte.role === 'seeker' ? 'Compléter mon profil' : `Espace ${LIBELLES_ROLE[compte.role]}`,
+    to: { name: ROUTE_ESPACE[compte.role] },
+  };
+});
 </script>
 
 <template>
@@ -23,16 +47,19 @@ import studioVideo from '@/assets/images/hero-studio.webp';
       <div class="flex items-start gap-4">
         <Button
           as="router-link"
-          :to="{ name: 'signup' }"
+          :to="actionPrincipale.to"
           class="gap-2 rounded-control px-7 py-4 font-heading text-[16px] font-bold"
         >
-          Créer mon profil vidéo
+          {{ actionPrincipale.libelle }}
           <img :src="flecheDroite" alt="" class="size-5" />
         </Button>
 
+        <!-- La grille publique, pas le catalogue recruteur : celui-ci est gardé
+             (`meta.roles`), il renvoyait le visiteur vers la connexion et le
+             candidat vers son tableau de bord. -->
         <Button
           as="router-link"
-          :to="{ name: 'recruiter-catalog' }"
+          :to="{ name: 'feed' }"
           class="rounded-control border-2 border-brand bg-transparent px-7 py-4 font-heading text-[16px] font-bold text-brand hover:bg-brand-50"
         >
           Les Profils
