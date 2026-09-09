@@ -60,3 +60,12 @@ export const updateCompetencesSchema = z.object({
 })
 
 export type UpdateCompetencesInput = z.infer<typeof updateCompetencesSchema>
+
+/* Même forme que la modération vidéo : un statut, un motif facultatif. */
+export const moderatePhotoSchema = z.object({
+  status: z.enum(['approved', 'rejected']),
+  reason: z.string().max(500).optional().nullable(),
+})
+
+export type ModeratePhotoInput = z.infer<typeof moderatePhotoSchema>
+
