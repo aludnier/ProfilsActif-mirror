@@ -1,4 +1,4 @@
-import type { RowDataPacket } from 'mysql2'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 
 import { db } from '../../infrastructure/db.client.js'
 
@@ -23,6 +23,8 @@ export interface Profil extends RowDataPacket {
   experienceYears: number | null
   certificationRate: number
   catalogVisible: boolean
+  /* `null` quand le candidat n'a jamais envoyé de photo. */
+  photoStatus: 'pending' | 'approved' | 'rejected' | null
   role: 'seeker'
   status: 'active' | 'suspended' | 'deleted'
   createdAt: Date
@@ -51,10 +53,25 @@ export interface ProfilListe extends RowDataPacket {
   experienceYears: number | null
   certificationRate: number
   catalogVisible: boolean
+  /* `null` quand le candidat n'a jamais envoyé de photo. */
+  photoStatus: 'pending' | 'approved' | 'rejected' | null
   role: 'seeker'
   status: 'active' | 'suspended' | 'deleted'
   createdAt: Date
   updatedAt: Date
+}
+
+export interface PhotoEnAttente extends RowDataPacket {
+  seekerId: string
+  firstName: string
+  lastName: string
+  path: string
+  updatedAt: Date
+}
+
+export interface PhotoProfil extends RowDataPacket {
+  path: string | null
+  status: 'pending' | 'approved' | 'rejected' | null
 }
 
 export interface ConsultationProfil extends RowDataPacket {
@@ -69,7 +86,7 @@ export class ProfilRepository {
       SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName,
         u.age AS age,
         s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
-        s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible,
+        s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus,
         u.role AS role, u.status AS status,
         s.created_at AS createdAt, s.updated_at AS updatedAt
       FROM seeker s INNER JOIN app_user u ON u.uuid = s.id
@@ -142,7 +159,7 @@ export class ProfilRepository {
     const page = Math.max(1, filters.page)
     const limit = Math.min(50, Math.max(1, filters.limit))
     const offset = (page - 1) * limit
-    const sql = 'SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName, u.mail AS mail, u.phone AS phone, u.age AS age, s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio, s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, u.role AS role, u.status AS status, s.created_at AS createdAt, s.updated_at AS updatedAt, COALESCE((SELECT GROUP_CONCAT(page_skill.name ORDER BY page_skill.name SEPARATOR \'||\') FROM seeker_skill page_ss INNER JOIN skill page_skill ON page_skill.id = page_ss.skill_id WHERE page_ss.seeker_id = s.id), \'\') AS competencesRaw FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where + ' ORDER BY s.updated_at DESC, s.id ASC LIMIT ? OFFSET ?'
+    const sql = 'SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName, u.mail AS mail, u.phone AS phone, u.age AS age, s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio, s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus, u.role AS role, u.status AS status, s.created_at AS createdAt, s.updated_at AS updatedAt, COALESCE((SELECT GROUP_CONCAT(page_skill.name ORDER BY page_skill.name SEPARATOR \'||\') FROM seeker_skill page_ss INNER JOIN skill page_skill ON page_skill.id = page_ss.skill_id WHERE page_ss.seeker_id = s.id), \'\') AS competencesRaw FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where + ' ORDER BY s.updated_at DESC, s.id ASC LIMIT ? OFFSET ?'
     const [rows] = await db.query<Profil[]>(sql, [...values, limit, offset])
     const data = rows.map((row) => ({
       ...row,
@@ -169,6 +186,7 @@ export class ProfilRepository {
           s.bio AS bio,
           s.certification_rate AS certificationRate,
           s.catalog_visible AS catalogVisible,
+          s.photo_status AS photoStatus,
           u.role AS role,
           u.status AS status,
           s.created_at AS createdAt,
@@ -348,5 +366,76 @@ export class ProfilRepository {
         seekerValues,
       )
     }
+  }
+
+  /* --- Photo de profil ---------------------------------------------------
+   * Le fichier vit sur le disque, la base ne garde que son nom et son état de
+   * modération. Ces colonnes appartiennent à la tranche `profil`, sauf
+   * `photo_status` que l'admin fait évoluer (règle de propriété : l'admin
+   * possède les colonnes de modération).
+   */
+
+  async findPhoto(id: string): Promise<PhotoProfil | null> {
+    const [rows] = await db.query<PhotoProfil[]>(
+      `SELECT photo_path AS path, photo_status AS status FROM seeker WHERE id = ?`,
+      [id],
+    )
+
+    return rows[0] ?? null
+  }
+
+  /* Toute nouvelle photo repart en attente : une image validée ne doit pas
+     pouvoir être remplacée en douce par une autre déjà approuvée. */
+  async updatePhoto(id: string, nomFichier: string): Promise<void> {
+    await db.execute(
+      `UPDATE seeker
+         SET photo_path = ?, photo_status = 'pending',
+             photo_moderated_by = NULL, photo_moderated_at = NULL,
+             photo_moderation_reason = NULL
+       WHERE id = ?`,
+      [nomFichier, id],
+    )
+  }
+
+  async clearPhoto(id: string): Promise<void> {
+    await db.execute(
+      `UPDATE seeker
+         SET photo_path = NULL, photo_status = NULL,
+             photo_moderated_by = NULL, photo_moderated_at = NULL,
+             photo_moderation_reason = NULL
+       WHERE id = ?`,
+      [id],
+    )
+  }
+
+  /* Photos en attente, pour l'écran de modération. */
+  async findPendingPhotos(): Promise<PhotoEnAttente[]> {
+    const [rows] = await db.query<PhotoEnAttente[]>(
+      `SELECT s.id AS seekerId, u.first_name AS firstName, u.last_name AS lastName,
+              s.photo_path AS path, s.updated_at AS updatedAt
+         FROM seeker s
+         INNER JOIN app_user u ON u.uuid = s.id
+        WHERE s.photo_status = 'pending' AND s.photo_path IS NOT NULL
+        ORDER BY s.updated_at ASC`,
+    )
+
+    return rows
+  }
+
+  async updatePhotoStatus(
+    id: string,
+    status: 'approved' | 'rejected',
+    adminId: string,
+    reason: string | null,
+  ): Promise<boolean> {
+    const [result] = await db.execute<ResultSetHeader>(
+      `UPDATE seeker
+         SET photo_status = ?, photo_moderated_by = ?,
+             photo_moderated_at = CURRENT_TIMESTAMP, photo_moderation_reason = ?
+       WHERE id = ? AND photo_path IS NOT NULL`,
+      [status, adminId, reason, id],
+    )
+
+    return result.affectedRows > 0
   }
 }
