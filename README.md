@@ -13,6 +13,21 @@ ProfilActif is a web application for job seekers and recruiters that helps them 
 
 There are two ways to set up and launch the application.
 
+#### 0. Create a SQL User
+First, create a MySQL user to access the database. Replace `USER` and `MDP` with your desired username and password:
+
+```sql
+CREATE USER IF NOT EXISTS 'USER'@'localhost'
+IDENTIFIED BY 'MDP';
+
+GRANT ALL PRIVILEGES
+ON profilsactif.*
+TO 'USER'@'localhost';
+
+FLUSH PRIVILEGES;
+```
+
+
 ### Option 1 - Setup Script
 
 The setup script automates most of the installation process.
