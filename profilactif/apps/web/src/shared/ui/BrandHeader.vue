@@ -25,13 +25,22 @@ const authStore = useAuthStore();
  * "Institutionnel" and "Aide" were dropped: they had no page, and the footer
  * already covers that ground. They come back the day their view exists.
  */
-const liensNav = computed<LienNav[]>(() => [
-  authStore.user?.role === 'seeker'
-    ? { libelle: 'Feeds', to: { name: 'feed' } }
-    : { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
-  /* A section of the landing page, not a view of its own. */
-  { libelle: 'Comment ça marche', to: { name: 'home', hash: '#comment-ca-marche' } },
-]);
+const liensNav = computed<LienNav[]>(() => {
+  const liens: LienNav[] = [
+    authStore.user?.role === 'seeker'
+      ? { libelle: 'Profils', to: { name: 'feed' } }
+      : { libelle: 'Découvrir les profils', to: { name: 'recruiter-catalog' } },
+    /* A section of the landing page, not a view of its own. */
+    { libelle: 'Comment ça marche', to: { name: 'home', hash: '#comment-ca-marche' } },
+  ];
+
+  /* L'édition du questionnaire de certification n'a pas d'autre point d'entrée. */
+  if (authStore.user?.role === 'admin') {
+    liens.push({ libelle: 'Questionnaire', to: { name: 'admin-questions' } });
+  }
+
+  return liens;
+});
 
 function estActif(lien: LienNav): boolean {
   if (lien.to === undefined || route.name !== lien.to.name) {
@@ -115,7 +124,8 @@ onBeforeUnmount(() => {
       <template #center>
         <!-- Below `xl` the drawer serves these same links. -->
         <nav aria-label="Navigation principale" class="hidden xl:block">
-          <ul class="flex items-center gap-8 font-heading text-[14px]">
+          <!-- 16px et non les 14px de la maquette : Faber, en serif, rend plus fin qu'Inter. -->
+          <ul class="flex items-center gap-8 font-heading text-[16px]">
             <li v-for="lien in liensNav" :key="lien.libelle">
               <router-link
                 v-if="lien.to"

@@ -8,6 +8,7 @@ import EnteteCatalogue from '@/features/recruteur/components/EnteteCatalogue.vue
 import FiltresCatalogue from '@/features/recruteur/components/FiltresCatalogue.vue'
 import GrilleCandidats from '@/features/recruteur/components/GrilleCandidats.vue'
 import { formaterNombre } from '@/shared/formatage'
+import { estCertifie } from '@/shared/certification'
 import type { Profile } from '@/shared/types/api'
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue'
 
@@ -80,7 +81,7 @@ const profils = computed<ProfilResume[]>(() => filteredProfiles.value.map((profi
     : 'Experience non renseignee',
   competences: profile.competences ?? [],
   dureeVideo: 'Video disponible',
-  certifie: false,
+  certifie: estCertifie(profile.certificationRate),
   miniature: heroStudio,
   to: { name: 'recruiter-candidate-profile', params: { id: profile.id } },
 })))

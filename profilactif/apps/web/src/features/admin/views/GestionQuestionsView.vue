@@ -1,5 +1,5 @@
-<template >
-  <div class="frame" v-on:load="checkDraft">
+<template>
+  <div class="frame">
   <div class="question-form">
     <label for="code">Code du questionnaire</label>
     <input id="code" v-model="questionnaireCode"><br>
@@ -7,9 +7,16 @@
     <label for="title">Titre du questionnaire</label>
     <input id="title" v-model="questionnaireTitle"><br>
 
+    <label for="categorie">Catégorie de la question</label>
+    <select id="categorie" v-model="tempCategory">
+      <option v-for="categorie in categories" :key="categorie.code" :value="categorie.code">
+        {{ categorie.label }}
+      </option>
+    </select><br>
+
     <label for="Questiontype">Type de question</label>
     <select id="Questiontype" v-model="questionType">
-        <option value="personalized">Persionaliser</option>
+        <option value="personalized">Personnalisée</option>
         <option value="YesNo">Oui ou Non</option>
         <option value="Scale">Echelle de 1 à 10</option>
     </select><br>
@@ -22,19 +29,34 @@
     
       <span class="w-1/5">
         <label for="weight">Poids</label>
-        <input type="number" v-model="tempWeight" min="1">
+        <input v-model="tempWeight" type="number" min="1">
       </span>
     </div>
 
     <div v-if="questionType === 'personalized'">
-      <label for="Answer">Réponses</label>
-      <input id="Answer" v-model="tempResponse" @keyup.enter="addanswer"/><br>
+      <div class="double-input">
+        <span class="w-3/4">
+          <label for="Answer">Réponses (Entrée pour ajouter)</label>
+          <input id="Answer" v-model="tempResponse" @keyup.enter="addanswer"/>
+        </span>
+        <span class="w-1/5">
+          <label for="points">Points (0 à 10)</label>
+          <input id="points" v-model.number="tempAnswerPoints" type="number" min="0" max="10"/>
+        </span>
+      </div>
+
+      <!-- Le type ne se déduit pas des points : sans cette case, un QCM nuancé
+           serait pris pour une question à réponses multiples. -->
+      <label class="inline-choice">
+        <input v-model="multipleChoice" type="checkbox"/>
+        Plusieurs réponses possibles
+      </label>
 
       <p>{{ tempQuestion }}</p>
       <div class="Answer-list">
         <span v-for="(response, index) in responses" :key="index" class="Answer-tag">
           {{ response.label }}
-           <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
+           <input v-model.number="response.points" type="number" class="points-edit" min="0"/>
           <button type="button" class="answer-remove" @click="removeAnswer(index)">✕</button>
         </span>
       </div>
@@ -48,9 +70,28 @@
         <button class="m-1" @click="publishQuestionnaire">Publier le questionnaire</button>
         <button class="m-1" @click="saveQuestionnaire">Sauver le brouillon</button>
       </div>
-      <div v-for="(question, index) in createdQuestions" :key="index" class="question-block">
+
+      <div class="import-block">
+        <button type="button" @click="chargerDefaut">Charger le questionnaire par défaut</button>
+        <button type="button" @click="chargerPublie">Revenir à l'ancien questionnaire</button>
+        <button type="button" @click="toutEffacer">Tout effacer</button>
+        <p v-if="message" class="import-message">{{ message }}</p>
+        <p class="import-hint">
+          Réussite à partir de {{ config.passThreshold }} % ·
+          {{ createdQuestions.length }} question(s) en préparation
+        </p>
+      </div>
+
+      <div v-for="(question, index) in createdQuestions" :key="question.id ?? index" class="question-block">
         <button type="button" class="question-remove" @click="removeQuestion(index)">✕</button>
-          <p class="question-title">{{ question.prompt }} - {{ question.type }}</p>
+          <p class="question-title">
+            {{ index + 1 }}. {{ question.prompt }}
+          </p>
+          <p class="question-meta">
+            {{ libelleCategorie(question.category) }} ·
+            {{ question.type === 'multiple' ? 'plusieurs réponses' : 'une seule réponse' }} ·
+            poids {{ question.weight ?? 1 }}
+          </p>
           <div class="Answer-list">
             <span
               v-for="(response, indexReponse) in question.options"
@@ -58,7 +99,7 @@
               class="Answer-tag"
             >
               {{ response.label }}
-              <input type="number" class="points-edit" v-model.number="response.points" min="0"/>
+              <input v-model.number="response.points" type="number" class="points-edit" min="0"/>
             </span>
           </div>
       </div>
@@ -68,59 +109,149 @@
 
 <script setup lang="ts">
 import CertificationService from '@/services/CertificationService'
-import type { QuestionnaireContent, QuestionnaireQuestion } from '@/shared/types/api'
-import { onMounted, ref } from 'vue'
+import questionnaireDefaut from '@data/questionnaire-aptitudes.json'
+import type {
+  Questionnaire,
+  QuestionnaireCategory,
+  QuestionnaireContent,
+  QuestionnaireQuestion,
+} from '@/shared/types/api'
+import { computed, onMounted, ref } from 'vue'
 
-const questionTemplateYesNo = ["Oui", "Non"]
+/* Les points vont de 0 à 10 partout : les questions restent comparables entre elles. */
+const POINTS_MAX = 10
 const questionTemplateScale = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+
+type Config = NonNullable<QuestionnaireContent['config']>
+
+const CATEGORIE_LIBRE: QuestionnaireCategory = { code: 'general', label: 'Général', weight: 1 }
+
+/* Même règle que le questionnaire livré : réussite à 50, pas de plancher par catégorie. */
+const CONFIG_DEFAUT: Config = {
+  passThreshold: 50,
+  minCategoryScore: 0,
+  retakeDelayDays: 0,
+  /*
+   * Sans bandes, `badgeFor` ne trouve rien et un candidat reçu lit
+   * « Non certifié ». La bande la plus basse doit donc valoir `passThreshold`,
+   * sinon le trou revient entre le seuil de réussite et la première bande.
+   */
+  badgeBands: [
+    { min: 85, level: 'avancée' },
+    { min: 70, level: 'intermédiaire' },
+    { min: 50, level: 'initiale' },
+  ],
+}
 
 const tempQuestion = ref("")
 const tempResponse = ref("")
 const tempWeight = ref<number>(1)
-const tempAnswerPoints = ref<number>(1)
+const tempAnswerPoints = ref<number>(POINTS_MAX)
+const tempCategory = ref(CATEGORIE_LIBRE.code)
 const responses = ref<{ label: string; points: number }[]>([])
 const questionType = ref<'personalized' | 'YesNo' | 'Scale'>("personalized")
+const multipleChoice = ref<boolean>(false)
 
 const createdQuestions = ref<QuestionnaireQuestion[]>([])
+const categories = ref<QuestionnaireCategory[]>([{ ...CATEGORIE_LIBRE }])
+const config = ref<Config>({ ...CONFIG_DEFAUT })
 
 const questionnaireCode = ref("")
 const questionnaireTitle = ref("")
+const message = ref<string | null>(null)
+
+const libelleCategorie = computed(() => {
+  const table = new Map(categories.value.map((c) => [c.code, c.label]))
+  return (code: string) => table.get(code) ?? code
+})
 
 onMounted(() => {
   checkDraft()
 })
 
-
-function mapType(responses: { id: string; label: string; points: number }[], type: string): 'single' | 'multiple' {
-  if (type === "YesNo") {
-    return 'single'
-  }
-
-  let nbvalid = 0
-  for (let r = 0; r < responses.length; r++) {
-    if (responses.at(r)?.points ?? 0 > 0) {
-      nbvalid++
-    }
-  }
-  return nbvalid > 1 ? 'multiple' : 'single'
+/*
+ * Reprend le fichier `shared/data/questionnaire-aptitudes.json`. Éditer ce fichier
+ * puis recharger la page suffit à faire évoluer le questionnaire de référence :
+ * rien n'est publié tant que l'admin ne clique pas sur Publier.
+ */
+function chargerDefaut() {
+  appliquerVersion({
+    code: questionnaireDefaut.code,
+    title: questionnaireDefaut.title,
+    content: questionnaireDefaut.content as unknown as QuestionnaireContent,
+  })
+  message.value = `${createdQuestions.value.length} questions chargées.`
 }
 
-async function checkDraft(){
-  console.log("check for draft")
-  const draft = await CertificationService.getDraft();
+function toutEffacer() {
+  createdQuestions.value = []
+  categories.value = [{ ...CATEGORIE_LIBRE }]
+  config.value = { ...CONFIG_DEFAUT }
+  tempCategory.value = CATEGORIE_LIBRE.code
+  questionnaireCode.value = ""
+  questionnaireTitle.value = ""
+  message.value = null
+  resetQuestion()
+}
 
-  if (draft == undefined) {
-    return
+/* Recopie dans le formulaire une version existante, ou le fichier de référence. */
+function appliquerVersion(version: Pick<Questionnaire, 'code' | 'title' | 'content'>) {
+  createdQuestions.value = (version.content.questions ?? []).map((q) => ({
+    ...q,
+    options: q.options.map((o) => ({ ...o })),
+  }))
+  /* Une version transporte ses propres catégories : sans elles, les questions
+     reprises pointeraient vers une catégorie inconnue et la publication échouerait. */
+  categories.value = version.content.categories?.length
+    ? version.content.categories.map((c) => ({ ...c }))
+    : [{ ...CATEGORIE_LIBRE }]
+  config.value = { ...CONFIG_DEFAUT, ...(version.content.config ?? {}) }
+  tempCategory.value = categories.value[0]?.code ?? CATEGORIE_LIBRE.code
+  questionnaireCode.value = version.code
+  questionnaireTitle.value = version.title
+}
+
+/* À l'ouverture : le brouillon seulement. Le questionnaire publié se recharge
+   à la demande, par « Revenir à l'ancien questionnaire ». */
+async function checkDraft() {
+  try {
+    const draft = await CertificationService.getDraft()
+    if (!draft) return
+
+    appliquerVersion(draft)
+    message.value = `Brouillon (version ${draft.version}) chargé.`
+  } catch (err) {
+    /* Au chargement de la page : sans message, l'admin croirait à un brouillon vide. */
+    message.value = 'Impossible de charger le brouillon.'
+    console.error('Impossible de charger le brouillon', err)
   }
-  createdQuestions.value =  draft.content.questions as QuestionnaireQuestion[]
-  questionnaireCode.value = draft.code
-  questionnaireTitle.value = draft.title
+}
+
+/*
+ * Recharge la version en service pour la modifier. Sans ça, l'écran s'ouvrait
+ * vide dès qu'un questionnaire était publié — plus aucun brouillon n'existe à
+ * ce moment-là — et le seul moyen de le retoucher était de tout retaper.
+ * Republier le même `code` archive la version en cours et crée la suivante.
+ */
+async function chargerPublie() {
+  try {
+    const publie = await CertificationService.getPublished()
+    appliquerVersion(publie)
+    message.value =
+      `Version ${publie.version} publiée, chargée pour modification. ` +
+      `Publier créera la version ${publie.version + 1}.`
+  } catch {
+    /* 404 tant que rien n'a jamais été publié : il n'y a rien à reprendre. */
+    message.value = "Aucun questionnaire publié pour le moment."
+  }
 }
 
 function resetQuestion() {
   responses.value = []
   tempQuestion.value = ""
   tempWeight.value = 1
+  tempAnswerPoints.value = POINTS_MAX
+  multipleChoice.value = false
 }
 
 function addQuestion() {
@@ -134,7 +265,10 @@ function addQuestion() {
       responsesToSend = responses.value
       break
     case "YesNo":
-      responsesToSend = questionTemplateYesNo.map(label => ({ label, points: label == "Oui" ? 1 : 0 }))
+      responsesToSend = [
+        { label: "Oui", points: POINTS_MAX },
+        { label: "Non", points: 0 },
+      ]
       break
     case "Scale":
       responsesToSend = questionTemplateScale.map(label => ({ label, points: Number(label) }))
@@ -144,17 +278,26 @@ function addQuestion() {
       id: `opt-${i}`,
       label: r.label,
       points: r.points,
-    }), questionType.value)
+    }))
+
+  if (!mappedrespond.some((o) => o.points > 0)) {
+    message.value = "Au moins une réponse doit rapporter des points."
+    return
+  }
 
   createdQuestions.value.push({
     id: crypto.randomUUID(),
-    category: 'general',
+    category: tempCategory.value,
     weight: tempWeight.value,
-    type: mapType(mappedrespond, questionType.value),
+    /* Le type ne se devine pas depuis les points : l'admin le déclare. */
+    type: questionType.value === 'personalized' && multipleChoice.value ? 'multiple' : 'single',
+    /* Notation proportionnelle : une échelle ou un QCM nuancé n'a pas UNE bonne réponse. */
+    scoring: 'graded',
     prompt: tempQuestion.value,
     options: mappedrespond,
   })
 
+  message.value = null
   resetQuestion()
 }
 function removeQuestion(index: number) {
@@ -165,98 +308,74 @@ function addanswer() {
   if (tempResponse.value == "") return
   responses.value.push({ label: tempResponse.value, points: tempAnswerPoints.value })
   tempResponse.value = ""
-  tempAnswerPoints.value = 1
+  tempAnswerPoints.value = POINTS_MAX
 }
 function removeAnswer(index: number) {
   responses.value.splice(index, 1)
 }
 
 function normalizeContent(): QuestionnaireContent {
+  /* On ne publie que les catégories réellement utilisées : l'API refuse une
+     question dont la catégorie est inconnue, jamais l'inverse. */
+  const utilisees = new Set(createdQuestions.value.map((q) => q.category))
+  const retenues = categories.value.filter((c) => utilisees.has(c.code))
+
   return {
-    config: {
-      passThreshold: 70,
-      minCategoryScore: 50,
-      retakeDelayDays: 30,
-      badgeBands: [
-        { min: 90, level: 'expert' },
-        { min: 70, level: 'confirmé' },
-        { min: 50, level: 'débutant' },
-      ],
-    },
-    categories: [
-      { code: 'general', label: 'Général', weight: 1 },
-    ],
+    config: config.value,
+    categories: retenues.length > 0 ? retenues : [{ ...CATEGORIE_LIBRE }],
     questions: createdQuestions.value,
   }
 }
 
-async function publishQuestionnaire() {
+/* Publier et sauver ne diffèrent que par l'appel final : même création de version. */
+async function enregistrer(publier: boolean) {
   if (!questionnaireCode.value) {
-    console.error('Code requis')
+    message.value = 'Le code du questionnaire est requis.'
     return
   }
   if (createdQuestions.value.length === 0) {
-    console.error('Aucune question à publier')
+    message.value = 'Aucune question à enregistrer.'
     return
   }
   try {
-    const content = normalizeContent()
     const questionnaire = await CertificationService.createQuestionnaire(
       questionnaireCode.value,
       questionnaireTitle.value ? questionnaireTitle.value : 'Questionnaire-' + questionnaireCode.value,
-      content,
+      normalizeContent(),
     )
-    console.log('Questionnaire créé :', questionnaire)
 
-    await CertificationService.publishQuestionnaire(questionnaire.id)
-    console.log('Questionnaire publié :', questionnaire)
+    if (publier) await CertificationService.publishQuestionnaire(questionnaire.id)
+    else await CertificationService.publishQuestionnaireDraft(questionnaire.id)
 
+    message.value = publier
+      ? `Questionnaire publié (version ${questionnaire.version}) : il est désormais servi aux candidats.`
+      : `Brouillon enregistré (version ${questionnaire.version}).`
     resetQuestion()
   } catch (err) {
-    console.error(err)
+    message.value = err instanceof Error ? err.message : 'Enregistrement impossible'
   }
 }
 
-async function saveQuestionnaire() {
-  if (!questionnaireCode.value) {
-    console.error('Code requis')
-    return
-  }
-  if (createdQuestions.value.length === 0) {
-    console.error('Aucune question à publier')
-    return
-  }
-  try {
-    const content = normalizeContent()
-    const questionnaire = await CertificationService.createQuestionnaire(
-      questionnaireCode.value,
-      questionnaireTitle.value ? questionnaireTitle.value : 'Questionnaire-' + questionnaireCode.value,
-      content,
-    )
-    console.log('Questionnaire créé :', questionnaire)
-    console.log('Questionnaire créé :', questionnaire)
-    await CertificationService.publishQuestionnaireDraft(questionnaire.id)
-    console.log('Questionnaire publié :', questionnaire)
-
-    resetQuestion()
-  } catch (err) {
-    console.error(err)
-  }
+function publishQuestionnaire() {
+  return enregistrer(true)
 }
 
+function saveQuestionnaire() {
+  return enregistrer(false)
+}
 
 
 </script>
 
-<style>
-:root {
-  --navy: #1B3A6B;
+<style scoped>
+.frame {
+  --navy: #1b3a6b;
   --navy-light: #253e66;
   --accent: #d9534f;
   --accent-hover: #c44844;
   --bg: #f4f6f9;
   --border: #e2e5eb;
-  --text: #1B3A6B;
+  --text: #1b3a6b;
   --text-light: #6b7280;
 }
 
@@ -468,6 +587,50 @@ div[v-for] > p,
   position: absolute;
   top: 0px;
   right: 5px;
-  /* border: solid red; */
-} 
+}
+
+.import-block {
+  margin: 12px 0 24px;
+  padding: 12px 16px;
+  border: 1px dashed var(--navy-light);
+  border-radius: 10px;
+}
+
+/*
+ * Les deux boutons se touchaient. Un écart franc, et pas seulement décoratif :
+ * « Tout effacer » est irréversible et ne doit pas jouxter son voisin.
+ * En marge plutôt qu'en padding — un padding agrandirait le bouton, donc sa
+ * zone cliquable, ce qui rapprocherait le danger au lieu de l'éloigner.
+ */
+.import-block button + button {
+  margin-left: 16px;
+}
+
+.import-hint {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.import-message {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.inline-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.inline-choice input {
+  width: auto;
+}
+
+.question-meta {
+  font-size: 13px;
+  color: var(--text-light);
+  margin: 0 0 8px;
+}
 </style>

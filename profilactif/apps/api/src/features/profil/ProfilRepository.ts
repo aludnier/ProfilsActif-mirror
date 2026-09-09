@@ -26,11 +26,34 @@ export interface Profil extends RowDataPacket {
   updatedAt: Date
 }
 
+/*
+ * La liste est servie par une route publique : elle ne porte ni le mail ni le
+ * téléphone. Champs écrits un par un plutôt qu'avec `Omit<Profil, …>` : `Profil`
+ * hérite de l'index de `RowDataPacket`, sur lequel `Omit` ne retire rien.
+ */
+export interface ProfilListe extends RowDataPacket {
+  id: string
+  firstName: string
+  lastName: string
+  age: number | null
+  location: string | null
+  targetSector: string | null
+  employmentType: string | null
+  bio: string | null
+  workMode: string | null
+  experienceYears: number | null
+  certificationRate: number
+  role: 'seeker'
+  status: 'active' | 'suspended' | 'deleted'
+  createdAt: Date
+  updatedAt: Date
+}
+
 export class ProfilRepository {
-  async findAll(): Promise<Profil[]> {
-    const [rows] = await db.query<Profil[]>(`
+  async findAll(): Promise<ProfilListe[]> {
+    const [rows] = await db.query<ProfilListe[]>(`
       SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName,
-        u.mail AS mail, u.phone AS phone, u.age AS age,
+        u.age AS age,
         s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
         s.certification_rate AS certificationRate,
         u.role AS role, u.status AS status,

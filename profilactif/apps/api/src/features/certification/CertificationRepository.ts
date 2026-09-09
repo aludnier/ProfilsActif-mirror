@@ -2,9 +2,6 @@ import { randomUUID } from 'node:crypto'
 import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 import { db } from '../../infrastructure/db.client.js'
 import type { CreateAttemptInput, CreateQuestionnaireVersionInput, UpdateAttemptInput } from './CertificationSchema.js'
-import { string } from 'zod/v4'
-import { get } from 'node:http'
-import { console } from 'node:inspector'
 
 export interface QuestionnaireVersion extends RowDataPacket {
   id: string
@@ -71,7 +68,6 @@ export class CertificationRepository {
     const [rows] = await db.query<QuestionnaireVersion[]>(
       `${versionSelect} WHERE v.status = 'draft' ORDER BY v.published_at DESC LIMIT 1`,
     )
-    console.log("test : " + rows)
     if (rows.length <= 0) {
       return null
     }
@@ -79,7 +75,8 @@ export class CertificationRepository {
     return row ? { ...row, content: parseJson(row.content) } : null
   }
 
-  async createVersion(data: CreateQuestionnaireVersionInput, createdBy: string): Promise<QuestionnaireVersion> {
+  /* `createdBy` nullable : la colonne l'est, et un seed n'a pas d'auteur humain. */
+  async createVersion(data: CreateQuestionnaireVersionInput, createdBy: string | null): Promise<QuestionnaireVersion> {
     const connection = await db.getConnection()
     const newQuestionnaireId = randomUUID()
     const versionId = randomUUID()
@@ -122,7 +119,6 @@ export class CertificationRepository {
     const version = await this.getVersion(id)
     if (!version) return null
     const connection = await db.getConnection()
-    console.log("")
     try {
       await connection.beginTransaction()
       await connection.execute(
@@ -147,7 +143,6 @@ export class CertificationRepository {
     const version = await this.getVersion(id)
     if (!version) return null
     const connection = await db.getConnection()
-    console.log("")
     try {
       await connection.beginTransaction()
       await connection.execute(
@@ -182,6 +177,22 @@ export class CertificationRepository {
         status, answers, score, started_at AS startedAt, submitted_at AS submittedAt, updated_at AS updatedAt
        FROM questionnaire_attempt WHERE id = ? AND seeker_id = ?`,
       [id, seekerId],
+    )
+    const row = rows[0]
+    return row ? { ...row, answers: parseJson(row.answers) } : null
+  }
+
+  /* Tentative en cours du candidat, indépendamment de l'appareil : la reprise ne
+     peut pas reposer sur le seul localStorage du navigateur. */
+  async getCurrentAttempt(seekerId: string): Promise<QuestionnaireAttempt | null> {
+    const [rows] = await db.query<QuestionnaireAttempt[]>(
+      `SELECT id, questionnaire_version_id AS questionnaireVersionId, seeker_id AS seekerId,
+        status, answers, score, started_at AS startedAt, submitted_at AS submittedAt, updated_at AS updatedAt
+       FROM questionnaire_attempt
+       WHERE seeker_id = ? AND status = 'in_progress'
+       ORDER BY updated_at DESC
+       LIMIT 1`,
+      [seekerId],
     )
     const row = rows[0]
     return row ? { ...row, answers: parseJson(row.answers) } : null

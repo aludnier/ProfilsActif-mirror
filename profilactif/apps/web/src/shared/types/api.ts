@@ -91,6 +91,8 @@ export interface Contact {
   id: string
   recruiterId: string
   seekerId: string
+  /** Le texte envoyé par le recruteur. L'API le renvoie depuis le début. */
+  message: string | null
   status: string
   createdAt: string
   updatedAt: string
@@ -152,6 +154,8 @@ export interface QuestionnaireQuestion {
   category: string
   weight?: number
   type: 'single' | 'multiple'
+  /** 'graded' : chaque option rapporte ses points. Absent = 'exact' (tout ou rien). */
+  scoring?: 'exact' | 'graded'
   prompt: string
   options: QuestionnaireOption[]
 }
@@ -237,4 +241,17 @@ export interface AppNotification {
   recruiterName: string | null
   recruiterMail: string | null
   recruiterPhone: string | null
+}
+
+export interface AdminStats {
+  activeSeekers: number
+  activeRecruiters: number
+  suspendedUsers: number
+  certifiedSeekers: number
+  avgCertificationRate: number
+  submittedAttempts: number
+  totalContacts: number
+  totalFavorites: number
+  pendingVideos: number
+  approvedVideos: number
 }

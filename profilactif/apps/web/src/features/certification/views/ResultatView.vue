@@ -1,114 +1,125 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import Button from 'primevue/button';
+import Message from 'primevue/message';
+import ProgressBar from 'primevue/progressbar';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-import { useCertificationStore } from '@/features/certification/store'
-import CertificationService from '@/services/CertificationService'
-import BadgeCertification from '@/shared/ui/BadgeCertification.vue'
-import type { CategoryScore } from '@/shared/types/api'
+import { useCertificationStore } from '@/features/certification/store';
+import CertificationService from '@/services/CertificationService';
+import BadgeCertification from '@/shared/ui/BadgeCertification.vue';
+import type { CategoryScore } from '@/shared/types/api';
 
-const props = defineProps<{ attemptId: string }>()
+const props = defineProps<{ attemptId: string }>();
 
-const store = useCertificationStore()
-const router = useRouter()
+const store = useCertificationStore();
+const router = useRouter();
 
-const loading = ref(false)
-const error = ref<string | null>(null)
-const nonTermine = ref(false)
+const loading = ref(false);
+const error = ref<string | null>(null);
+const nonTermine = ref(false);
 
-const score = ref<number | null>(null)
-const passThreshold = ref<number | null>(null)
-const badgeLevel = ref<string | null>(null)
-const categories = ref<CategoryScore[]>([])
+const score = ref<number | null>(null);
+const passThreshold = ref<number | null>(null);
+const badgeLevel = ref<string | null>(null);
+const categories = ref<CategoryScore[]>([]);
 
-function niveauBadge(bandes: { min: number; level: string }[] | undefined, valeur: number): string | null {
+function niveauBadge(
+  bandes: { min: number; level: string }[] | undefined,
+  valeur: number,
+): string | null {
   for (const bande of [...(bandes ?? [])].sort((a, b) => b.min - a.min)) {
-    if (valeur >= bande.min) return bande.level
+    if (valeur >= bande.min) return bande.level;
   }
-  return null
+  return null;
 }
 
 const reussi = computed(
   () => score.value !== null && passThreshold.value !== null && score.value >= passThreshold.value,
-)
+);
 
 onMounted(async () => {
-  loading.value = true
-  error.value = null
+  loading.value = true;
+  error.value = null;
   try {
     if (store.result && store.attemptId === props.attemptId) {
-      score.value = store.result.score
-      badgeLevel.value = store.result.badgeLevel
-      categories.value = store.result.categories
-      passThreshold.value = store.questionnaire?.content.config?.passThreshold ?? null
-      return
+      score.value = store.result.score;
+      badgeLevel.value = store.result.badgeLevel;
+      categories.value = store.result.categories;
+      passThreshold.value = store.questionnaire?.content.config?.passThreshold ?? null;
+      return;
     }
     const [attempt, questionnaire] = await Promise.all([
       CertificationService.getAttempt(props.attemptId),
       CertificationService.getPublished(),
-    ])
+    ]);
 
     if (attempt.status !== 'submitted') {
-      nonTermine.value = true
-      return
+      nonTermine.value = true;
+      return;
     }
 
-    score.value = Math.round(Number(attempt.score ?? 0))
-    passThreshold.value = questionnaire.content.config?.passThreshold ?? null
+    score.value = Math.round(Number(attempt.score ?? 0));
+    passThreshold.value = questionnaire.content.config?.passThreshold ?? null;
     badgeLevel.value = reussi.value
       ? niveauBadge(questionnaire.content.config?.badgeBands, score.value)
-      : null
-    categories.value = []
+      : null;
+    categories.value = [];
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Résultat introuvable'
+    error.value = e instanceof Error ? e.message : 'Résultat introuvable';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 
 function repasser() {
-  store.reset()
-  router.push({ name: 'candidate-certification' })
+  store.reset();
+  router.push({ name: 'candidate-certification' });
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 py-12">
+  <div class="min-h-screen bg-surface-subtle py-12">
     <div class="mx-auto max-w-2xl px-4">
-      <div v-if="loading" class="text-center text-gray-500">Chargement du résultat…</div>
+      <p v-if="loading" class="text-center text-ink-muted">Chargement du résultat…</p>
 
-      <div v-else-if="error" class="rounded border border-red-300 bg-red-50 p-4 text-red-700">
-        {{ error }}
-      </div>
+      <Message v-else-if="error" severity="error" :closable="false">{{ error }}</Message>
 
       <div
         v-else-if="nonTermine"
-        class="rounded-lg bg-white p-8 text-center shadow-lg"
+        class="rounded-card border border-surface-line bg-surface-page p-8 text-center"
       >
-        <h1 class="text-xl font-bold text-gray-800">Test non terminé</h1>
-        <p class="mt-2 text-sm text-gray-600">Cette tentative n'a pas encore été soumise.</p>
-        <button
-          type="button"
-          class="mt-4 rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white hover:bg-blue-700"
+        <h1 class="text-[20px]">Test non terminé</h1>
+        <p class="mt-2 text-[14px] text-ink-muted">Cette tentative n'a pas encore été soumise.</p>
+        <Button
+          label="Reprendre le test"
+          class="mt-4 rounded-control px-5 py-2.5 font-heading text-[14px] font-bold"
           @click="router.push({ name: 'candidate-certification' })"
-        >
-          Reprendre le test
-        </button>
+        />
       </div>
 
       <article v-else class="space-y-6">
         <div
-          class="rounded-lg p-8 text-center shadow-lg"
-          :class="reussi ? 'bg-green-50' : 'bg-white'"
+          class="rounded-card border p-8 text-center"
+          :class="
+            reussi
+              ? 'border-status-verified bg-surface-page'
+              : 'border-surface-line bg-surface-page'
+          "
         >
-          <p class="text-sm font-semibold uppercase tracking-wide text-gray-500">Score global</p>
-          <p class="my-2 text-6xl font-extrabold" :class="reussi ? 'text-green-700' : 'text-gray-900'">
-            {{ score }}<span class="text-2xl font-bold text-gray-400"> %</span>
+          <p class="font-heading text-[13px] font-bold uppercase tracking-wide text-ink-muted">
+            Score global
           </p>
-          <p class="text-lg font-semibold" :class="reussi ? 'text-green-700' : 'text-red-600'">
+          <p class="my-2 text-[56px] font-bold leading-none text-brand">
+            {{ score }}<span class="text-[24px] text-ink-muted"> %</span>
+          </p>
+          <p
+            class="font-heading text-[17px] font-bold"
+            :class="reussi ? 'text-status-valid' : 'text-ink'"
+          >
             {{ reussi ? 'Certification réussie' : 'Certification non obtenue' }}
             <template v-if="passThreshold !== null">
-              <span class="text-sm font-normal text-gray-500"> (seuil {{ passThreshold }} %)</span>
+              <span class="font-normal text-ink-muted">(seuil {{ passThreshold }} %)</span>
             </template>
           </p>
           <div class="mt-4">
@@ -116,35 +127,43 @@ function repasser() {
           </div>
         </div>
 
-        <section v-if="categories.length" class="rounded-lg bg-white p-6 shadow-lg">
-          <h2 class="mb-3 text-lg font-semibold text-gray-800">Détail par catégorie</h2>
-          <ul class="divide-y divide-gray-100">
-            <li
-              v-for="categorie in categories"
-              :key="categorie.code"
-              class="flex items-center justify-between py-3"
-            >
-              <span class="font-medium text-gray-900">{{ categorie.label }}</span>
-              <span class="text-sm font-semibold text-gray-600">{{ categorie.score }} %</span>
+        <section
+          v-if="categories.length"
+          class="rounded-card border border-surface-line bg-surface-page p-6"
+        >
+          <h2 class="mb-3 text-[17px]">Détail par catégorie</h2>
+          <ul class="flex flex-col gap-4">
+            <li v-for="categorie in categories" :key="categorie.code">
+              <div class="flex items-center justify-between pb-1">
+                <span class="font-heading text-[14px] font-medium">{{ categorie.label }}</span>
+                <span class="font-heading text-[14px] font-bold text-ink-muted">
+                  {{ categorie.score }} %
+                </span>
+              </div>
+              <!-- La barre double le chiffre : `showValue` ferait doublon. -->
+              <ProgressBar
+                :value="categorie.score"
+                :show-value="false"
+                class="h-2"
+                :aria-label="`${categorie.label} : ${categorie.score} %`"
+              />
             </li>
           </ul>
         </section>
 
         <div class="flex flex-wrap gap-3">
-          <button
-            type="button"
-            class="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700"
+          <Button
+            label="Retour à mon profil"
+            class="rounded-control px-6 py-3 font-heading text-[14px] font-bold"
             @click="router.push({ name: 'candidate-dashboard' })"
-          >
-            Retour à mon profil
-          </button>
-          <button
-            type="button"
-            class="rounded-lg border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50"
+          />
+          <Button
+            label="Repasser le test"
+            severity="secondary"
+            outlined
+            class="rounded-control px-6 py-3 font-heading text-[14px] font-bold"
             @click="repasser"
-          >
-            Repasser le test
-          </button>
+          />
         </div>
       </article>
     </div>

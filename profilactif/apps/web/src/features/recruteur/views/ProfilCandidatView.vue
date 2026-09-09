@@ -10,8 +10,10 @@ import Button from 'primevue/button'
 import EditeurCompetences from '@/features/profil/components/EditeurCompetences.vue'
 import FormulaireProfil from '@/features/profil/components/FormulaireProfil.vue'
 import type { InfosProfil } from '@/features/profil/components/FormulaireProfil.vue'
-import type { Favorite, Profile, Video } from '@/shared/types/api'
+import type { Contact, Favorite, Profile, Video } from '@/shared/types/api'
 import { extraireIdYouTube } from '@/shared/youtube'
+import { estCertifie, niveauBadge } from '@/shared/certification'
+import BadgeCertification from '@/shared/ui/BadgeCertification.vue'
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue'
 
 const route = useRoute()
@@ -19,6 +21,8 @@ const auth = useAuthStore()
 const profile = ref<Profile | null>(null)
 const videos = ref<Video[]>([])
 const favorite = ref<Favorite | null>(null)
+/* Messages déjà envoyés à ce candidat, du plus récent au plus ancien. */
+const contactsEnvoyes = ref<Contact[]>([])
 const message = ref('')
 const showContact = ref(false)
 const loading = ref(true)
@@ -66,6 +70,13 @@ function libelleContrat(value: string | null): string {
 
 function libelleMode(value: string | null): string {
   return value === null ? 'Non renseignée' : MODE_TRAVAIL[value] ?? value
+}
+
+function formaterDateHeure(valeur: string): string {
+  return new Date(valeur).toLocaleString('fr-FR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  })
 }
 
 function libelleExperience(value: number | null): string {
@@ -162,8 +173,16 @@ async function load() {
     videos.value = await VideoService.getVideosBySeeker(candidateId)
 
     if (auth.user?.id && auth.user.role === 'recruiter') {
-      const favorites = await FavoriteService.getFavoritesByRecruiter(auth.user.id)
+      const [favorites, contacts] = await Promise.all([
+        FavoriteService.getFavoritesByRecruiter(auth.user.id),
+        ContactService.getContactsByRecruiter(auth.user.id),
+      ])
       favorite.value = favorites.find((item) => item.seekerId === candidateId) ?? null
+      /* L'API renvoie tous les contacts du recruteur : on ne garde que ceux
+         adressés à ce candidat. */
+      contactsEnvoyes.value = contacts
+        .filter((item) => item.seekerId === candidateId)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     }
   } catch (err: any) {
     error.value = err.message || 'Impossible de charger ce profil.'
@@ -193,7 +212,14 @@ async function contact() {
   if (!auth.user?.id || !message.value.trim()) return
   saving.value = true
   try {
-    await ContactService.createContact(auth.user.id, candidateId, message.value.trim())
+    const envoye = await ContactService.createContact(
+      auth.user.id,
+      candidateId,
+      message.value.trim(),
+    )
+    /* Ajouté en tête plutôt que rechargé : le message doit apparaître tout de
+       suite dans l'historique, sans nouvel aller-retour. */
+    contactsEnvoyes.value = [envoye, ...contactsEnvoyes.value]
     message.value = ''
     showContact.value = false
   } catch (err: any) {
@@ -229,12 +255,16 @@ onMounted(() => {
 
     <div v-else-if="profile" class="mx-auto max-w-6xl space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-5 rounded-card border border-surface-line bg-surface-page p-6">
-        <div>
+        <div class="space-y-1.5">
           <h1 class="text-[26px] text-brand">{{ profile.firstName }} {{ profile.lastName }}</h1>
           <p class="font-heading text-[15px] font-bold">{{ profile.targetSector || 'Candidat disponible' }}</p>
           <p class="text-[13px] italic text-ink-muted">
             {{ profile.location || 'Localisation non renseignee' }} - Profil candidat
           </p>
+          <BadgeCertification
+            v-if="estCertifie(profile.certificationRate)"
+            :level="niveauBadge(profile.certificationRate)"
+          />
         </div>
 
         <div class="flex flex-wrap gap-3">
@@ -351,6 +381,38 @@ onMounted(() => {
         {{ editSuccess }}
       </p>
 
+      <!--
+        Historique des messages : sans lui, un recruteur qui revient sur la
+        fiche ne sait plus ce qu'il a écrit, ni quand. Réservé à l'auteur des
+        messages — l'API renvoie les contacts d'un recruteur, pas ceux des
+        autres.
+      -->
+      <section
+        v-if="canContact && contactsEnvoyes.length"
+        class="rounded-card border border-surface-line bg-surface-page p-6"
+      >
+        <h2 class="font-heading text-[14px] font-bold text-brand">
+          Messages envoyés ({{ contactsEnvoyes.length }})
+        </h2>
+        <ul class="mt-3 flex flex-col gap-3">
+          <li
+            v-for="envoi in contactsEnvoyes"
+            :key="envoi.id"
+            class="rounded-control border border-surface-line p-4"
+          >
+            <p class="font-heading text-[12px] uppercase tracking-[0.5px] text-ink-muted">
+              {{ formaterDateHeure(envoi.createdAt) }}
+            </p>
+            <!-- `whitespace-pre-line` : les retours à la ligne du recruteur
+                 doivent survivre à la relecture. -->
+            <p v-if="envoi.message" class="mt-1 whitespace-pre-line text-[14px]">
+              {{ envoi.message }}
+            </p>
+            <p v-else class="mt-1 text-[14px] italic text-ink-muted">Message vide.</p>
+          </li>
+        </ul>
+      </section>
+
       <div v-if="showContact" class="rounded-card border border-surface-line bg-surface-page p-6">
         <label for="contact-message" class="font-heading text-[14px] font-bold text-brand">
           Votre message
@@ -451,7 +513,12 @@ onMounted(() => {
               <dt class="font-bold text-brand">Certification</dt>
               <dd>{{ profile.certificationRate }} %</dd>
             </div>
-            <div>
+            <!--
+              Coordonnees : reservees a qui a une raison de contacter. La fiche
+              est aussi lue par des candidats depuis le fil, et rien ne
+              justifie qu'ils obtiennent l'e-mail et le telephone des autres.
+            -->
+            <div v-if="canContact || isAdmin">
               <dt class="font-bold text-brand">Coordonnees</dt>
               <dd>{{ profile.mail }}</dd>
               <dd v-if="profile.phone">{{ profile.phone }}</dd>

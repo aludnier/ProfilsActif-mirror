@@ -1,9 +1,6 @@
 import type { RowDataPacket } from 'mysql2'
 import { db } from '../../infrastructure/db.client.js'
-import type {
-  CreateContactInput,
-  UpdateContactInput,
-} from './ContactSchema.js'
+import type { UpdateContactInput } from './ContactSchema.js'
 
 export interface Contact extends RowDataPacket {
   id: string
@@ -12,6 +9,8 @@ export interface Contact extends RowDataPacket {
   message: string | null
   createdAt: Date
 }
+
+export type NewContact = { recruiterId: string; seekerId: string; message: string }
 
 type SqlValue = string | number | boolean | null
 
@@ -78,8 +77,22 @@ export class ContactRepository {
     return rows
   }
 
+  async findByRecruiterAndSeeker(recruiterId: string, seekerId: string): Promise<Contact | null> {
+    const [rows] = await db.query<Contact[]>(
+      `
+      SELECT id, recruiter_id AS recruiterId, seeker_id AS seekerId, message, created_at AS createdAt
+      FROM contact
+      WHERE recruiter_id = ? AND seeker_id = ?
+      LIMIT 1
+      `,
+      [recruiterId, seekerId],
+    )
+
+    return rows[0] ?? null
+  }
+
   async create(
-    data: CreateContactInput,
+    data: NewContact,
   ): Promise<Contact> {
     const [result] = await db.execute(
       `

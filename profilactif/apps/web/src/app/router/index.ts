@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
 import { useAuthStore } from '@/shared/stores/auth';
 import { ROUTE_ESPACE } from '@/shared/types/roles';
@@ -36,6 +36,22 @@ const routes: RouteRecordRaw[] = [
     name: 'signup',
     component: () => import('@/features/auth/views/InscriptionView.vue'),
   },
+  /*
+   * Anciennes adresses du fil vertical. Des liens ont circulé : elles doivent
+   * mener à la grille, jamais à une page d'erreur.
+   */
+  {
+    path: '/feed',
+    redirect: { name: 'feed' },
+  },
+  {
+    path: '/feeds',
+    redirect: { name: 'feed' },
+  },
+  {
+    path: '/fil',
+    redirect: { name: 'feed' },
+  },
   {
     path: '/profiles/:id',
     name: 'candidate-profile',
@@ -58,7 +74,7 @@ const routes: RouteRecordRaw[] = [
     name: 'recruiter-candidate-profile',
     component: () => import('@/features/recruteur/views/ProfilCandidatView.vue'),
     props: true,
-    meta: { roles: ['recruiter', 'admin'] },
+    meta: { roles: ['recruiter', 'admin', 'seeker'] },
   },
   {
     path: '/candidate/dashboard',
@@ -97,9 +113,21 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/features/certification/views/CertificationView.vue'),
   },
   {
+    path: '/admin/stats',
+    name: 'admin-stats',
+    component: () => import('@/features/admin/views/StatistiquesView.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
     path: '/admin/dashboard',
     name: 'admin-dashboard',
     component: () => import('@/features/admin/views/AdminDashboardView.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
+    path: '/admin/videos',
+    name: 'admin-videos',
+    component: () => import('@/features/admin/views/ModerationView.vue'),
     meta: { roles: ['admin'] },
   },
   {
@@ -107,6 +135,11 @@ const routes: RouteRecordRaw[] = [
     name: 'admin-questions',
     component: () => import('@/features/admin/views/GestionQuestionsView.vue'),
     meta: { roles: ['admin'] },
+  },
+  /* Raccourci : l'adresse courte circule, elle doit mener à l'éditeur. */
+  {
+    path: '/questions',
+    redirect: { name: 'admin-questions' },
   },
   {
     path: '/:cheminInconnu(.*)',

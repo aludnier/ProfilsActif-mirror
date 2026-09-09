@@ -12,7 +12,12 @@ export type ProfilResume = {
   dureeVideo: string;
   certifie: boolean;
   miniature: string;
-  to: RouteLocationNamedRaw;
+  /*
+   * Sans `to`, la carte n'affiche aucun lien. C'est le cas sur le fil pour un
+   * candidat ou un visiteur : aucune fiche publique n'existe, la seule fiche
+   * candidat est réservée au recruteur.
+   */
+  to?: RouteLocationNamedRaw;
 };
 
 defineProps<{ profil: ProfilResume }>();
@@ -47,7 +52,8 @@ defineProps<{ profil: ProfilResume }>();
         <h3 class="text-[16px]">{{ profil.nom }}</h3>
         <p class="font-heading text-[14px] font-medium">{{ profil.intitule }}</p>
         <p class="text-[13px] italic text-ink-muted">
-          {{ profil.ville }} • {{ profil.typeContrat ? profil.typeContrat + ' &bull; ' : '' }} {{ profil.modalite }} • {{ profil.experience }}
+          {{ profil.ville }} • {{ profil.typeContrat ? profil.typeContrat + ' &bull; ' : '' }}
+          {{ profil.modalite }} • {{ profil.experience }}
         </p>
       </div>
 
@@ -71,7 +77,7 @@ defineProps<{ profil: ProfilResume }>();
         </li>
       </ul>
 
-      <div class="mt-auto flex flex-col gap-4">
+      <div v-if="profil.to" class="mt-auto flex flex-col gap-4">
         <span class="h-px w-full bg-surface-line" aria-hidden="true" />
 
         <router-link
