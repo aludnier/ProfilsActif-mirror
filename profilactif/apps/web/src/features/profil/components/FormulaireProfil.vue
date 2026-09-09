@@ -15,6 +15,8 @@ export type InfosProfil = {
   location: string;
   targetSector: string;
   employmentType: 'full_time' | 'part_time' | 'freelance' | 'internship' | null;
+  contractStartDate: string | null;
+  contractEndDate: string | null;
   workMode: 'on_site' | 'hybrid' | 'remote' | null;
   experienceYears: number | null;
   bio: string;
@@ -135,6 +137,20 @@ const initiales = computed(() =>
           <option value="freelance">Freelance</option>
           <option value="internship">Stage / alternance</option>
         </select>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="contrat-du" class="font-heading text-[15px] font-semibold text-brand">
+          Contrat du
+        </label>
+        <input id="contrat-du" v-model="infos.contractStartDate" type="date" :disabled="desactive" class="w-full rounded-control border border-surface-line px-3 py-2.5">
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="contrat-au" class="font-heading text-[15px] font-semibold text-brand">
+          Contrat au
+        </label>
+        <input id="contrat-au" v-model="infos.contractEndDate" type="date" :disabled="desactive" class="w-full rounded-control border border-surface-line px-3 py-2.5">
       </div>
 
       <div class="flex flex-col gap-1.5">

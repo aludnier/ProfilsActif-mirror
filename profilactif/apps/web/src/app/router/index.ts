@@ -74,7 +74,6 @@ const routes: RouteRecordRaw[] = [
     name: 'recruiter-candidate-profile',
     component: () => import('@/features/recruteur/views/ProfilCandidatView.vue'),
     props: true,
-    meta: { roles: ['recruiter', 'admin', 'seeker'] },
   },
   {
     path: '/candidate/dashboard',

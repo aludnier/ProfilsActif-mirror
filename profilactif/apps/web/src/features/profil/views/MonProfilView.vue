@@ -12,7 +12,7 @@ import FormulaireVideo from '@/features/profil/components/FormulaireVideo.vue';
 import AuthService from '@/services/AuthService';
 import ProfileService from '@/services/ProfileService';
 import { useAuthStore } from '@/shared/stores/auth';
-import type { Profile, UpdateProfileInput } from '@/shared/types/api';
+import type { Profile, ProfileConsultation, UpdateProfileInput } from '@/shared/types/api';
 
 const CRITERES_VIDEO = [
   'Qualité sonore (voix claire et audible)',
@@ -32,6 +32,8 @@ const infos = ref<InfosProfil>({
   location: '',
   targetSector: '',
   employmentType: null,
+  contractStartDate: null,
+  contractEndDate: null,
   workMode: null,
   experienceYears: null,
   bio: '',
@@ -40,6 +42,8 @@ const infos = ref<InfosProfil>({
 const competences = ref<string[]>([]);
 const competencesInitiales = ref<string[]>([]);
 const aUneVideo = ref(false);
+const consultations = ref<ProfileConsultation[]>([]);
+const visibiliteEnCours = ref(false);
 
 const chargement = ref(false);
 const enregistrement = ref(false);
@@ -86,6 +90,8 @@ const modifie = computed(() => {
     infos.value.location !== (source.location ?? '') ||
     infos.value.targetSector !== (source.targetSector ?? '') ||
     infos.value.employmentType !== source.employmentType ||
+    infos.value.contractStartDate !== source.contractStartDate ||
+    infos.value.contractEndDate !== source.contractEndDate ||
     infos.value.workMode !== source.workMode ||
     infos.value.experienceYears !== source.experienceYears ||
     infos.value.bio !== (source.bio ?? '') ||
@@ -111,6 +117,7 @@ async function charger(id: string): Promise<void> {
     appliquer(await ProfileService.getProfile(id))
     competences.value = await ProfileService.getCompetences(id)
     competencesInitiales.value = [...competences.value];
+    consultations.value = await ProfileService.getConsultations(id).catch(() => []);
   } catch (err: any) {
     erreur.value = err.message || 'Erreur lors du chargement du profil.';
   } finally {
@@ -128,6 +135,8 @@ function appliquer(source: Profile): void {
     location: source.location ?? '',
     targetSector: source.targetSector ?? '',
     employmentType: source.employmentType,
+    contractStartDate: source.contractStartDate,
+    contractEndDate: source.contractEndDate,
     workMode: source.workMode,
     experienceYears: source.experienceYears === null ? null : Number(source.experienceYears),
     bio: source.bio ?? '',
@@ -158,6 +167,12 @@ function differences(source: Profile): UpdateProfileInput {
   }
   if (infos.value.employmentType !== source.employmentType) {
     modifications.employmentType = infos.value.employmentType;
+  }
+  if (infos.value.contractStartDate !== source.contractStartDate) {
+    modifications.contractStartDate = infos.value.contractStartDate;
+  }
+  if (infos.value.contractEndDate !== source.contractEndDate) {
+    modifications.contractEndDate = infos.value.contractEndDate;
   }
   if (infos.value.workMode !== source.workMode) {
     modifications.workMode = infos.value.workMode;
@@ -195,6 +210,33 @@ async function enregistrer(): Promise<void> {
   } finally {
     enregistrement.value = false;
   }
+}
+
+async function basculerVisibilite(): Promise<void> {
+  if (!profil.value) return;
+  visibiliteEnCours.value = true;
+  erreur.value = '';
+  succes.value = '';
+  try {
+    const misAJour = await ProfileService.updateProfile(profil.value.id, {
+      catalogVisible: !profil.value.catalogVisible,
+    });
+    appliquer(misAJour);
+    succes.value = misAJour.catalogVisible
+      ? 'Votre profil est de nouveau visible dans le catalogue.'
+      : 'Votre profil a été retiré du catalogue.';
+  } catch (err: any) {
+    erreur.value = err.message || 'Impossible de modifier la visibilité du profil.';
+  } finally {
+    visibiliteEnCours.value = false;
+  }
+}
+
+function formaterConsultation(valeur: string): string {
+  return new Date(valeur).toLocaleString('fr-FR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
 }
 
 function ouvrirConfirmationSuppression(): void {
@@ -296,6 +338,47 @@ async function confirmerSuppressionCompte(): Promise<void> {
           </section>
         </div>
       </div>
+
+      <section class="flex flex-col gap-4 rounded-card border border-surface-line bg-surface-page p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="font-heading text-[17px] font-bold text-brand">Visibilité du profil</h2>
+            <p class="mt-1 text-[14px] text-ink-muted">
+              Vous pouvez retirer ou remettre votre profil dans le catalogue à tout moment.
+            </p>
+          </div>
+          <Button
+            :label="profil?.catalogVisible ? 'Retirer du catalogue' : 'Remettre dans le catalogue'"
+            severity="secondary"
+            outlined
+            :loading="visibiliteEnCours"
+            :disabled="visibiliteEnCours || enregistrement"
+            class="rounded-control font-heading text-[13px] font-bold"
+            @click="basculerVisibilite"
+          />
+        </div>
+        <p class="text-[13px] text-ink-muted">
+          {{ profil?.catalogVisible ? 'Votre fiche est actuellement visible par les recruteurs.' : 'Votre fiche est actuellement retirée. Vos données et votre compte sont conservés.' }}
+        </p>
+      </section>
+
+      <section class="flex flex-col gap-4 rounded-card border border-surface-line bg-surface-page p-6">
+        <div>
+          <h2 class="font-heading text-[17px] font-bold text-brand">Qui a consulté mon profil ?</h2>
+          <p class="mt-1 text-[14px] text-ink-muted">
+            Seules les consultations effectuées par un compte recruteur sont indiquées. Les consultations anonymes ne sont pas enregistrées.
+          </p>
+        </div>
+        <p v-if="consultations.length === 0" class="text-[14px] text-ink-muted">
+          Aucune consultation enregistrée.
+        </p>
+        <ul v-else class="flex flex-col gap-3">
+          <li v-for="consultation in consultations" :key="consultation.id" class="flex flex-wrap justify-between gap-2 border-t border-surface-line pt-3 text-[14px]">
+            <span class="font-heading font-medium text-ink">{{ consultation.organization }}</span>
+            <time class="text-ink-muted" :datetime="consultation.viewedAt">{{ formaterConsultation(consultation.viewedAt) }}</time>
+          </li>
+        </ul>
+      </section>
 
       <footer
         class="flex flex-wrap items-center justify-between gap-4 border-t border-surface-line pt-6"

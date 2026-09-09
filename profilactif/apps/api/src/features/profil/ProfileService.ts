@@ -8,6 +8,23 @@ export class ProfileService {constructor(private readonly profilRepository = new
     return this.profilRepository.findAll()
   }
 
+
+  async getProfilsPage(filters: {
+    page: number
+    limit: number
+    secteur?: string
+    localisation?: string
+    competence?: string
+    niveau?: string
+    types?: string[]
+    modalites?: string[]
+    certification?: string
+    contratDu?: string
+    contratAu?: string
+  }) {
+    return this.profilRepository.findPage(filters)
+  }
+
   async getProfil(id: string) {
     const profil = await this.profilRepository.findById(id)
 
@@ -19,6 +36,15 @@ export class ProfileService {constructor(private readonly profilRepository = new
     }
 
     return profil
+  }
+
+  async recordConsultation(seekerId: string, recruiterId: string): Promise<void> {
+    await this.profilRepository.recordConsultation(seekerId, recruiterId)
+  }
+
+  async getConsultations(seekerId: string) {
+    await this.getProfil(seekerId)
+    return this.profilRepository.findConsultations(seekerId)
   }
 
   async updateProfil(

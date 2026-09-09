@@ -8,6 +8,9 @@ const modalites = defineModel<string[]>('modalites', { required: true })
 const secteur = defineModel<string>('secteur', { required: true })
 const localisation = defineModel<string>('localisation', { required: true })
 const competence = defineModel<string>('competence', { required: true })
+const contratDu = defineModel<string>('contratDu', { required: true })
+const contratAu = defineModel<string>('contratAu', { required: true })
+const certification = defineModel<string>('certification', { required: true })
 
 const niveaux = [
   { value: 'all', label: 'Tous niveaux' },
@@ -48,10 +51,19 @@ const modesTravail = [
 
     <fieldset class="flex w-full flex-col gap-3">
       <legend class="mb-1 font-heading text-[14px] font-bold text-brand">Statut de certification</legend>
-      <select disabled class="w-full rounded-control border border-surface-line bg-surface-muted px-3 py-2 text-[14px] text-ink-muted" aria-label="Filtre de certification à venir">
-        <option>Filtre à venir</option>
+      <select v-model="certification" class="w-full rounded-control border border-surface-line bg-surface-page px-3 py-2 text-[14px]" aria-label="Statut de certification">
+        <option value="">Tous les statuts</option>
+        <option value="certifiee">Certifiée</option>
+        <option value="non_certifiee">Non certifiée</option>
       </select>
-      <p class="text-[12px] text-ink-muted">Disponible lorsque le statut métier sera défini.</p>
+    </fieldset>
+
+    <fieldset class="flex w-full flex-col gap-3">
+      <legend class="mb-1 font-heading text-[14px] font-bold text-brand">Durée du contrat</legend>
+      <label for="filtre-contrat-du" class="font-heading text-[13px] text-ink-muted">Du</label>
+      <input id="filtre-contrat-du" v-model="contratDu" type="date" class="w-full rounded-control border border-surface-line px-3 py-2 text-[14px]">
+      <label for="filtre-contrat-au" class="font-heading text-[13px] text-ink-muted">Au</label>
+      <input id="filtre-contrat-au" v-model="contratAu" type="date" class="w-full rounded-control border border-surface-line px-3 py-2 text-[14px]">
     </fieldset>
 
     <fieldset class="flex w-full flex-col items-start gap-3">

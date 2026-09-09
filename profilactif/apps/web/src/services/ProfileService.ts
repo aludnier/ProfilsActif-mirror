@@ -1,7 +1,16 @@
 import axiosInstance from '@/shared/api-client'
-import type { Profile, UpdateProfileInput } from '@/shared/types/api'
+import type { Profile, ProfileConsultation, UpdateProfileInput } from '@/shared/types/api'
+
+export interface ProfilePage {
+  data: Profile[]
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
 
 export class ProfileService {
+
   static async getProfiles(): Promise<Profile[]> {
     const { data } = await axiosInstance.get<Profile[]>('/profiles')
     return Promise.all(
@@ -10,6 +19,42 @@ export class ProfileService {
         competences: await this.getCompetences(profile.id).catch(() => []),
       })),
     )
+  }
+
+  static async getProfilesPage(filters: {
+    page: number
+    limit: number
+    niveau?: string
+    secteur?: string
+    localisation?: string
+    competence?: string
+    types?: string[]
+    modalites?: string[]
+    certification?: string
+    contratDu?: string
+    contratAu?: string
+  }): Promise<ProfilePage> {
+    const { data } = await axiosInstance.get<ProfilePage>('/profiles/catalogue', {
+      params: {
+        page: filters.page,
+        limit: filters.limit,
+        niveau: filters.niveau === 'all' ? undefined : filters.niveau,
+        secteur: filters.secteur || undefined,
+        localisation: filters.localisation || undefined,
+        competence: filters.competence || undefined,
+        types: filters.types?.join(',') || undefined,
+        modalites: filters.modalites?.join(',') || undefined,
+        certification: filters.certification || undefined,
+        contratDu: filters.contratDu || undefined,
+        contratAu: filters.contratAu || undefined,
+      },
+    })
+    return data
+  }
+
+  static async getConsultations(id: string): Promise<ProfileConsultation[]> {
+    const { data } = await axiosInstance.get<ProfileConsultation[]>(`/profiles/${id}/consultations`)
+    return data
   }
 
   static async getProfile(id: string): Promise<Profile> {

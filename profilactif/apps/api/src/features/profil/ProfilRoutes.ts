@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
-import { requireAuth } from '../../infrastructure/auth.middleware.js'
-import {getCompetencesHandler, getProfilHandler, getProfilsHandler, updateCompetencesHandler, updateProfilHandler} from './ProfileHandler.js'
+import { optionalAuth, requireAuth } from '../../infrastructure/auth.middleware.js'
+import {getCompetencesHandler, getConsultationsHandler, getProfilHandler, getProfilsHandler, getProfilsPageHandler, updateCompetencesHandler, updateProfilHandler} from './ProfileHandler.js'
 
 export const profilRoutes = new Hono()
 
@@ -34,7 +34,8 @@ profilRoutes.get('/', getProfilsHandler)
  *       404:
  *         description: Profil introuvable
  */
-profilRoutes.get('/:id', getProfilHandler)
+profilRoutes.get('/catalogue', getProfilsPageHandler)
+profilRoutes.get('/:id', optionalAuth, getProfilHandler)
 
 /**
  * @openapi
@@ -54,7 +55,8 @@ profilRoutes.get('/:id', getProfilHandler)
  *       404:
  *         description: Profil introuvable
  */
-profilRoutes.get('/:id/competences', getCompetencesHandler)
+profilRoutes.get('/:id/competences', optionalAuth, getCompetencesHandler)
+profilRoutes.get('/:id/consultations', requireAuth, getConsultationsHandler)
 
 /**
  * @openapi
