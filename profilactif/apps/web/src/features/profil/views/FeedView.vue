@@ -4,6 +4,7 @@ import Paginator from 'primevue/paginator';
 import { computed, onMounted, ref } from 'vue';
 
 import heroStudio from '@/assets/images/hero-studio.webp';
+import { photoValidee, urlPhotoProfil } from '@/shared/photoProfil';
 import ProfileService from '@/services/ProfileService';
 import { estCertifie } from '@/shared/certification';
 import { formaterNombre } from '@/shared/formatage';
@@ -57,7 +58,7 @@ const resumes = computed<ProfilResume[]>(() =>
     competences: [],
     dureeVideo: 'Vidéo de présentation',
     certifie: estCertifie(profil.certificationRate),
-    miniature: heroStudio,
+    miniature: photoValidee(profil.photoStatus) ? urlPhotoProfil(profil.id) : heroStudio,
     to: peutOuvrirUneFiche.value
       ? { name: 'recruiter-candidate-profile', params: { id: profil.id } }
       : undefined,

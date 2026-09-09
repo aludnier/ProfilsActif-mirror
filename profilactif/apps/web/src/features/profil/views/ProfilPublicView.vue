@@ -10,6 +10,7 @@ import VideoService from '@/services/VideoService';
 import BadgeCertification from '@/shared/ui/BadgeCertification.vue';
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue';
 import { estCertifie, niveauBadge } from '@/shared/certification';
+import { photoValidee, urlPhotoProfil } from '@/shared/photoProfil';
 import { useAuthStore } from '@/shared/stores/auth';
 import type { Profile } from '@/shared/types/api';
 import { extraireIdYouTube } from '@/shared/youtube';
@@ -113,7 +114,15 @@ async function charger(id: string): Promise<void> {
         <section
           class="flex flex-wrap items-center gap-5 rounded-card border border-surface-line bg-surface-page p-6"
         >
+          <!-- Photo seulement si elle est validée : c'est la vue publique. -->
+          <img
+            v-if="photoValidee(profil.photoStatus)"
+            :src="urlPhotoProfil(profil.id)"
+            :alt="`Photo de ${profil.firstName} ${profil.lastName}`"
+            class="size-16 shrink-0 rounded-full object-cover"
+          />
           <span
+            v-else
             class="flex size-16 shrink-0 items-center justify-center rounded-full bg-surface-muted font-heading text-[20px] font-bold text-brand"
             aria-hidden="true"
           >

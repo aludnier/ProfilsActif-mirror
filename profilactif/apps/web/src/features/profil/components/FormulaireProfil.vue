@@ -3,9 +3,10 @@ import Button from 'primevue/button';
 import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import EditeurCompetences from '@/features/profil/components/EditeurCompetences.vue';
+import { LIBELLES_STATUT_PHOTO } from '@/shared/photoProfil';
 
 export type InfosProfil = {
   firstName: string;
@@ -30,7 +31,25 @@ export type InfosProfil = {
 const infos = defineModel<InfosProfil>('infos', { required: true });
 const competences = defineModel<string[]>('competences', { required: true });
 
-defineProps<{ desactive?: boolean }>();
+defineProps<{
+  desactive?: boolean;
+  /* URL locale de la photo (objet Blob), `null` s'il n'y en a pas. */
+  photoUrl?: string | null;
+  photoStatut?: string | null;
+  photoEnCours?: boolean;
+}>();
+
+/* Le composant reste présentatif : c'est la vue qui envoie le fichier, comme
+   elle possède déjà l'enregistrement du reste du formulaire. */
+const emit = defineEmits<{ 'photo-choisie': [File]; 'photo-supprimee': [] }>();
+
+const champFichier = ref<HTMLInputElement | null>(null);
+
+function choisirFichier(evenement: Event): void {
+  const fichier = (evenement.target as HTMLInputElement).files?.[0];
+  if (fichier) emit('photo-choisie', fichier);
+  (evenement.target as HTMLInputElement).value = '';
+}
 
 const initiales = computed(() =>
   `${infos.value.firstName.charAt(0)}${infos.value.lastName.charAt(0)}`.toUpperCase(),
@@ -42,23 +61,59 @@ const initiales = computed(() =>
     <h2 class="text-[18px]">Informations personnelles</h2>
 
     <div class="flex items-center gap-4">
-      <!-- Initials rather than a photo: `seeker` has no avatar column and there
-           is no upload endpoint, so an upload button would lead nowhere. -->
+      <img
+        v-if="photoUrl"
+        :src="photoUrl"
+        alt="Votre photo de profil"
+        class="size-14 shrink-0 rounded-full object-cover"
+      />
       <span
+        v-else
         class="flex size-14 shrink-0 items-center justify-center rounded-full bg-surface-muted font-heading text-[16px] font-bold text-brand"
         aria-hidden="true"
       >
         {{ initiales }}
       </span>
+
       <div class="flex flex-col gap-1">
-        <Button
-          label="Modifier la photo"
-          severity="secondary"
-          outlined
-          disabled
-          class="rounded-control font-heading text-[14px] font-semibold"
+        <div class="flex flex-wrap items-center gap-2">
+          <Button
+            :label="photoUrl ? 'Remplacer la photo' : 'Ajouter une photo'"
+            severity="secondary"
+            outlined
+            :disabled="desactive || photoEnCours"
+            :loading="photoEnCours"
+            class="rounded-control font-heading text-[14px] font-semibold"
+            @click="champFichier?.click()"
+          />
+          <Button
+            v-if="photoUrl"
+            label="Supprimer"
+            severity="danger"
+            text
+            :disabled="desactive || photoEnCours"
+            class="rounded-control font-heading text-[14px] font-semibold"
+            @click="emit('photo-supprimee')"
+          />
+        </div>
+
+        <input
+          ref="champFichier"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          class="hidden"
+          aria-hidden="true"
+          tabindex="-1"
+          @change="choisirFichier"
         />
-        <p class="text-[13px] text-ink-muted">Disponible une fois l'envoi de fichiers en place.</p>
+
+        <p v-if="photoStatut" class="text-[13px] text-ink-muted">
+          {{ LIBELLES_STATUT_PHOTO[photoStatut] ?? photoStatut }}
+          <template v-if="photoStatut === 'pending'">
+            — elle n'est pas encore visible des recruteurs.
+          </template>
+        </p>
+        <p v-else class="text-[13px] text-ink-muted">Fichier JPG, PNG ou WebP. 2 Mo maximum.</p>
       </div>
     </div>
 
