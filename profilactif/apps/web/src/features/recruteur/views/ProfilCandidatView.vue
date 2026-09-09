@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import ProfileService from '@/services/ProfileService'
+import { ApiError } from '@/shared/api-client'
 import VideoService from '@/services/VideoService'
 import FavoriteService from '@/services/FavoriteService'
 import ContactService from '@/services/ContactService'
@@ -28,6 +29,7 @@ const showContact = ref(false)
 const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
+const profilIndisponible = ref(false)
 
 const candidateId = route.params.id as string
 const canContact = computed(() => auth.user?.role === 'recruiter' && !!auth.user?.id)
@@ -43,6 +45,8 @@ const editInfos = ref<InfosProfil>({
   location: '',
   targetSector: '',
   employmentType: null,
+  contractStartDate: null,
+  contractEndDate: null,
   workMode: null,
   experienceYears: null,
   bio: '',
@@ -92,6 +96,8 @@ function appliquerEdition(source: Profile): void {
     location: source.location ?? '',
     targetSector: source.targetSector ?? '',
     employmentType: source.employmentType,
+    contractStartDate: source.contractStartDate,
+    contractEndDate: source.contractEndDate,
     workMode: source.workMode,
     experienceYears: source.experienceYears === null ? null : Number(source.experienceYears),
     bio: source.bio ?? '',
@@ -146,6 +152,8 @@ async function enregistrerEdition(): Promise<void> {
       location: editInfos.value.location,
       targetSector: editInfos.value.targetSector || null,
       employmentType: editInfos.value.employmentType,
+      contractStartDate: editInfos.value.contractStartDate,
+      contractEndDate: editInfos.value.contractEndDate,
       workMode: editInfos.value.workMode,
       experienceYears: editInfos.value.experienceYears,
       bio: editInfos.value.bio || null,
@@ -170,7 +178,7 @@ async function load() {
       const viewed = JSON.parse(localStorage.getItem(key) || '[]') as string[]
       if (!viewed.includes(candidateId)) localStorage.setItem(key, JSON.stringify([...viewed, candidateId]))
     }
-    videos.value = await VideoService.getVideosBySeeker(candidateId)
+    videos.value = auth.user ? await VideoService.getVideosBySeeker(candidateId) : []
 
     if (auth.user?.id && auth.user.role === 'recruiter') {
       const [favorites, contacts] = await Promise.all([
@@ -185,7 +193,11 @@ async function load() {
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     }
   } catch (err: any) {
-    error.value = err.message || 'Impossible de charger ce profil.'
+    if (err instanceof ApiError && err.errorCode === 'PROFIL_RETIRE_DU_CATALOGUE') {
+      profilIndisponible.value = true
+    } else {
+      error.value = err.message || 'Impossible de charger ce profil.'
+    }
   } finally {
     loading.value = false
   }
@@ -247,6 +259,11 @@ onMounted(() => {
   <main class="min-h-screen bg-surface-subtle px-gutter py-10">
     <div v-if="loading" class="mx-auto max-w-6xl py-16 text-center text-ink-muted">
       Chargement du profil...
+    </div>
+
+    <div v-else-if="profilIndisponible" class="mx-auto max-w-2xl rounded-card border border-surface-line bg-surface-page p-8 text-center">
+      <h1 class="text-[24px] text-brand">Profil indisponible</h1>
+      <p class="mt-3 text-[15px] text-ink-muted">Ce profil n’est plus disponible dans le catalogue.</p>
     </div>
 
     <div v-else-if="error" class="mx-auto max-w-6xl rounded-card border border-red-200 bg-red-50 p-5 text-red-700">
@@ -496,6 +513,10 @@ onMounted(() => {
             <div>
               <dt class="font-bold text-brand">Type de contrat</dt>
               <dd>{{ libelleContrat(profile.employmentType) }}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-brand">Durée du contrat</dt>
+              <dd>{{ profile.contractStartDate || 'Non renseignée' }} → {{ profile.contractEndDate || 'En cours' }}</dd>
             </div>
             <div>
               <dt class="font-bold text-brand">Modalite</dt>

@@ -46,8 +46,11 @@ export const updateProfilSchema = z.object({
     .optional(),
 
   employmentType: z.enum(['full_time', 'part_time', 'freelance', 'internship']).nullable().optional(),
+  contractStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  contractEndDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   workMode: z.enum(['on_site', 'hybrid', 'remote']).nullable().optional(),
   experienceYears: z.coerce.number().min(0).max(60).nullable().optional(),
+  catalogVisible: z.boolean().optional(),
 })
 
 export type UpdateProfilInput = z.infer<typeof updateProfilSchema>

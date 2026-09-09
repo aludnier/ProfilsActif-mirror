@@ -34,6 +34,12 @@ export interface LoginInput {
   password: string
 }
 
+export interface ProfileConsultation {
+  id: string
+  organization: string
+  viewedAt: string
+}
+
 export interface Profile {
   id: string
   firstName: string
@@ -49,9 +55,12 @@ export interface Profile {
     | 'freelance'
     | 'internship'
     | null
+  contractStartDate: string | null
+  contractEndDate: string | null
   workMode: 'on_site' | 'hybrid' | 'remote' | null
   experienceYears: number | null
   certificationRate: number
+  catalogVisible: boolean
   bio: string | null
   competences?: string[]
   role: Role
@@ -73,9 +82,12 @@ export interface UpdateProfileInput {
     | 'freelance'
     | 'internship'
     | null
+  contractStartDate?: string | null
+  contractEndDate?: string | null
   workMode?: 'on_site' | 'hybrid' | 'remote' | null
   experienceYears?: number | null
   bio?: string | null
+  catalogVisible?: boolean
 }
 
 /** Favoris */

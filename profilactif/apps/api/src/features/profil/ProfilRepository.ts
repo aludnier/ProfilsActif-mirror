@@ -16,14 +16,19 @@ export interface Profil extends RowDataPacket {
   location: string | null
   targetSector: string | null
   employmentType: string | null
+  contractStartDate: string | null
+  contractEndDate: string | null
   bio: string | null
   workMode: string | null
   experienceYears: number | null
   certificationRate: number
+  catalogVisible: boolean
   role: 'seeker'
   status: 'active' | 'suspended' | 'deleted'
   createdAt: Date
   updatedAt: Date
+  competences?: string[]
+  competencesRaw?: string
 }
 
 /*
@@ -39,14 +44,23 @@ export interface ProfilListe extends RowDataPacket {
   location: string | null
   targetSector: string | null
   employmentType: string | null
+  contractStartDate: string | null
+  contractEndDate: string | null
   bio: string | null
   workMode: string | null
   experienceYears: number | null
   certificationRate: number
+  catalogVisible: boolean
   role: 'seeker'
   status: 'active' | 'suspended' | 'deleted'
   createdAt: Date
   updatedAt: Date
+}
+
+export interface ConsultationProfil extends RowDataPacket {
+  id: string
+  organization: string
+  viewedAt: Date
 }
 
 export class ProfilRepository {
@@ -54,17 +68,88 @@ export class ProfilRepository {
     const [rows] = await db.query<ProfilListe[]>(`
       SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName,
         u.age AS age,
-        s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
-        s.certification_rate AS certificationRate,
+        s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
+        s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible,
         u.role AS role, u.status AS status,
         s.created_at AS createdAt, s.updated_at AS updatedAt
       FROM seeker s INNER JOIN app_user u ON u.uuid = s.id
-      WHERE u.role = 'seeker' AND u.status = 'active'
-      ORDER BY s.created_at DESC
+      WHERE u.role = 'seeker' AND u.status = 'active' AND s.catalog_visible = 1
+      ORDER BY s.updated_at DESC, s.id ASC
     `)
     return rows
   }
 
+
+
+  async findPage(filters: {
+    page: number
+    limit: number
+    secteur?: string
+    localisation?: string
+    competence?: string
+    niveau?: string
+    types?: string[]
+    modalites?: string[]
+    certification?: string
+    contratDu?: string
+    contratAu?: string
+  }): Promise<{ data: Profil[]; page: number; limit: number; total: number; totalPages: number }> {
+    const conditions = ["u.role = 'seeker'", "u.status = 'active'", "s.catalog_visible = 1"]
+    const values: SqlValue[] = []
+
+    if (filters.secteur) {
+      conditions.push('s.target_sector LIKE ?')
+      values.push('%' + filters.secteur + '%')
+    }
+    if (filters.localisation) {
+      conditions.push('s.location LIKE ?')
+      values.push('%' + filters.localisation + '%')
+    }
+    if (filters.competence) {
+      conditions.push("EXISTS (SELECT 1 FROM seeker_skill filter_ss INNER JOIN skill filter_skill ON filter_skill.id = filter_ss.skill_id WHERE filter_ss.seeker_id = s.id AND filter_skill.name LIKE ?)")
+      values.push('%' + filters.competence + '%')
+    }
+    if (filters.certification === 'certifiee') conditions.push('s.certification_rate > 0')
+    if (filters.certification === 'non_certifiee') conditions.push('s.certification_rate = 0')
+    if (filters.niveau === 'junior') conditions.push('s.experience_years IS NOT NULL AND s.experience_years <= 2')
+    if (filters.niveau === 'confirmed') conditions.push('s.experience_years > 2 AND s.experience_years < 7')
+    if (filters.niveau === 'senior') conditions.push('s.experience_years >= 7')
+    if (filters.contratDu && filters.contratAu) {
+      conditions.push('s.contract_start_date <= ? AND (s.contract_end_date IS NULL OR s.contract_end_date >= ?)')
+      values.push(filters.contratAu, filters.contratDu)
+    } else if (filters.contratDu) {
+      conditions.push('(s.contract_end_date IS NULL OR s.contract_end_date >= ?)')
+      values.push(filters.contratDu)
+    } else if (filters.contratAu) {
+      conditions.push('s.contract_start_date <= ?')
+      values.push(filters.contratAu)
+    }
+    if (filters.types?.length) {
+      conditions.push('s.employment_type IN (' + filters.types.map(() => '?').join(', ') + ')')
+      values.push(...filters.types)
+    }
+    if (filters.modalites?.length) {
+      conditions.push('s.work_mode IN (' + filters.modalites.map(() => '?').join(', ') + ')')
+      values.push(...filters.modalites)
+    }
+
+    const where = 'WHERE ' + conditions.join(' AND ')
+    const [countRows] = await db.query<RowDataPacket[]>(
+      'SELECT COUNT(*) AS total FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where,
+      values,
+    )
+    const total = Number(countRows[0]?.total ?? 0)
+    const page = Math.max(1, filters.page)
+    const limit = Math.min(50, Math.max(1, filters.limit))
+    const offset = (page - 1) * limit
+    const sql = 'SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName, u.mail AS mail, u.phone AS phone, u.age AS age, s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio, s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, u.role AS role, u.status AS status, s.created_at AS createdAt, s.updated_at AS updatedAt, COALESCE((SELECT GROUP_CONCAT(page_skill.name ORDER BY page_skill.name SEPARATOR \'||\') FROM seeker_skill page_ss INNER JOIN skill page_skill ON page_skill.id = page_ss.skill_id WHERE page_ss.seeker_id = s.id), \'\') AS competencesRaw FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where + ' ORDER BY s.updated_at DESC, s.id ASC LIMIT ? OFFSET ?'
+    const [rows] = await db.query<Profil[]>(sql, [...values, limit, offset])
+    const data = rows.map((row) => ({
+      ...row,
+      competences: row.competencesRaw ? String(row.competencesRaw).split('||') : [],
+    }))
+    return { data, page, limit, total, totalPages: Math.ceil(total / limit) }
+  }
 
   async findById(id: string): Promise<Profil | null> {
     const [rows] = await db.query<Profil[]>(
@@ -83,6 +168,7 @@ export class ProfilRepository {
           s.experience_years AS experienceYears,
           s.bio AS bio,
           s.certification_rate AS certificationRate,
+          s.catalog_visible AS catalogVisible,
           u.role AS role,
           u.status AS status,
           s.created_at AS createdAt,
@@ -138,6 +224,30 @@ export class ProfilRepository {
   }
 
 
+  async recordConsultation(seekerId: string, recruiterId: string): Promise<void> {
+    await db.execute(
+      `INSERT INTO profile_view (id, seeker_id, recruiter_id, organization_name)
+       SELECT UUID(), ?, r.id,
+         COALESCE(NULLIF(r.organization_name, ''), SUBSTRING_INDEX(u.mail, '@', -1))
+       FROM recruiter r
+       INNER JOIN app_user u ON u.uuid = r.id
+       WHERE r.id = ? AND u.role = 'recruiter'`,
+      [seekerId, recruiterId],
+    )
+  }
+
+  async findConsultations(seekerId: string): Promise<ConsultationProfil[]> {
+    const [rows] = await db.query<ConsultationProfil[]>(
+      `SELECT id, organization_name AS organization, viewed_at AS viewedAt
+       FROM profile_view
+       WHERE seeker_id = ?
+       ORDER BY viewed_at DESC, id DESC`,
+      [seekerId],
+    )
+    return rows
+  }
+
+
   async update(
     id: string,
     data: UpdateProfilInput,
@@ -178,6 +288,15 @@ export class ProfilRepository {
       seekerValues.push(data.targetSector)
     }
 
+    if (data.contractStartDate !== undefined) {
+      seekerFields.push('contract_start_date = ?')
+      seekerValues.push(data.contractStartDate)
+    }
+    if (data.contractEndDate !== undefined) {
+      seekerFields.push('contract_end_date = ?')
+      seekerValues.push(data.contractEndDate)
+    }
+
     if (data.employmentType !== undefined) {
       seekerFields.push('employment_type = ?')
       seekerValues.push(data.employmentType)
@@ -191,6 +310,11 @@ export class ProfilRepository {
     if (data.experienceYears !== undefined) {
       seekerFields.push('experience_years = ?')
       seekerValues.push(data.experienceYears)
+    }
+
+    if (data.catalogVisible !== undefined) {
+      seekerFields.push('catalog_visible = ?')
+      seekerValues.push(data.catalogVisible ? 1 : 0)
     }
 
     if (data.bio !== undefined) {

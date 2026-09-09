@@ -154,6 +154,7 @@ CREATE TABLE `recruiter` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `organization_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_recruiter_user` FOREIGN KEY (`id`) REFERENCES `app_user` (`uuid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -180,10 +181,13 @@ CREATE TABLE `seeker` (
   `location` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `target_sector` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `employment_type` enum('full_time','part_time','freelance','internship') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contract_start_date` date DEFAULT NULL,
+  `contract_end_date` date DEFAULT NULL,
   `work_mode` enum('on_site','hybrid','remote') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `experience_years` decimal(4,1) unsigned DEFAULT NULL,
   `bio` text COLLATE utf8mb4_unicode_ci,
   `certification_rate` int NOT NULL DEFAULT '0',
+  `catalog_visible` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -411,3 +415,18 @@ VALUES
    '$2a$10$RiQm6qc0gNmlrdMkjJ8q4.40U8ev52QXKTbC0e.ScmHVHPbtWixxu',
    'admin', 'active')
 ON DUPLICATE KEY UPDATE role = 'admin', status = 'active';
+
+
+-- Journal de transparence : consultations effectuees par un recruteur authentifie.
+DROP TABLE IF EXISTS `profile_view`;
+CREATE TABLE `profile_view` (
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `seeker_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `recruiter_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `organization_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `viewed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_profile_view_seeker_date` (`seeker_id`, `viewed_at`),
+  CONSTRAINT `fk_profile_view_seeker` FOREIGN KEY (`seeker_id`) REFERENCES `seeker` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_profile_view_recruiter` FOREIGN KEY (`recruiter_id`) REFERENCES `recruiter` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

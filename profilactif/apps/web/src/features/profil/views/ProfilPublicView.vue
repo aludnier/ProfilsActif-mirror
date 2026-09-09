@@ -22,6 +22,7 @@ const profilVideoEnLigne = ref(false);
 const competences = ref<string[]>([]);
 const chargement = ref(false);
 const erreur = ref('');
+const profilIndisponible = ref(false);
 
 const initiales = computed(() => {
   const source = profil.value;
@@ -100,6 +101,11 @@ async function charger(id: string): Promise<void> {
       </div>
 
       <Message v-if="erreur" severity="error" :closable="false">{{ erreur }}</Message>
+
+      <section v-if="profilIndisponible" class="rounded-card border border-surface-line bg-surface-page p-8 text-center">
+        <h1 class="text-[24px] text-brand">Profil indisponible</h1>
+        <p class="mt-3 text-[15px] text-ink-muted">Ce profil n’est plus disponible dans le catalogue.</p>
+      </section>
 
       <p v-if="chargement" class="text-[15px] text-ink-muted">Chargement…</p>
 
