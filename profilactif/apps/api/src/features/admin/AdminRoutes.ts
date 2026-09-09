@@ -1,7 +1,10 @@
 import { Hono } from 'hono'
 import { requireAuth, requireRole, type AuthVariables } from '../../infrastructure/auth.middleware.js'
 
-import {deleteUserHandler, getUserByIdHandler, getUsersHandler, updateUserRoleHandler, updateUserStatusHandler, updateUserProfileHandler, getPendingVideosHandler, updateVideoStatusHandler, getStatsHandler} from './AdminHandler.js'
+import {deleteUserHandler, getUserByIdHandler, getUsersHandler, updateUserRoleHandler, updateUserStatusHandler, updateUserProfileHandler, getPendingVideosHandler, updateVideoStatusHandler, getStatsHandler,
+  getPendingPhotosHandler,
+  updatePhotoStatusHandler,
+} from './AdminHandler.js'
 
 export const adminRoutes = new Hono<{ Variables: AuthVariables }>()
 
@@ -156,3 +159,38 @@ adminRoutes.get('/videos/pending', getPendingVideosHandler)
  *         description: Statut vidéo mis à jour
  */
 adminRoutes.patch('/videos/:id/status', updateVideoStatusHandler)
+
+/**
+ * @openapi
+ * /admin/photos/pending:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Photos de profil en attente de validation
+ *     security:
+ *       - Bearer: []
+ *     responses:
+ *       200:
+ *         description: Liste des photos en attente
+ */
+adminRoutes.get('/photos/pending', getPendingPhotosHandler)
+
+/**
+ * @openapi
+ * /admin/photos/{id}/status:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Accepte ou refuse une photo de profil
+ *     security:
+ *       - Bearer: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Statut mis à jour
+ */
+adminRoutes.patch('/photos/:id/status', updatePhotoStatusHandler)
+
