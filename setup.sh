@@ -134,26 +134,39 @@ echo
 echo "Testing MySQL connection..."
 
 if ! mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "SELECT 1;" >/dev/null 2>&1; then
-    error "Could not connect to MySQL.
+    read -rp "Do you want to create a new User[y/N]: " NEW_USER
+    if [[ "$NEW_USER" =~ ^[Nn]$ ]]; then
+        error "Could not connect to MySQL.
 
 Please check your MySQL username and password."
+        file
+    fi
 fi
 
 success "MySQL connection successful."
 
 # ------------------------------------------------------------
-# Create database
+# Create user and database
 # ------------------------------------------------------------
 
-echo
-echo "Creating database '$DATABASE_NAME'..."
+echo "Creating MySQL user and database..."
 
-mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" <<EOF
+sudo mysql <<EOF
+CREATE USER IF NOT EXISTS '$MYSQL_USER'@'localhost'
+IDENTIFIED BY '$MYSQL_PASSWORD';
+
 CREATE DATABASE IF NOT EXISTS \`$DATABASE_NAME\`;
+
+GRANT ALL PRIVILEGES
+ON \`$DATABASE_NAME\`.*
+TO '$MYSQL_USER'@'localhost';
+
+FLUSH PRIVILEGES;
 EOF
 
-success "Database '$DATABASE_NAME' is ready."
-
+success "MySQL user created."
+success "Database created."
+success "Privileges granted."
 # ------------------------------------------------------------
 # Import database schema
 # ------------------------------------------------------------
