@@ -6,7 +6,7 @@ import Textarea from 'primevue/textarea';
 import { computed, ref } from 'vue';
 
 import EditeurCompetences from '@/features/profil/components/EditeurCompetences.vue';
-import { LIBELLES_STATUT_PHOTO } from '@/shared/photoProfil';
+import { CLASSES_STATUT_PHOTO, LIBELLES_STATUT_PHOTO } from '@/shared/photoProfil';
 
 export type InfosProfil = {
   firstName: string;
@@ -107,11 +107,18 @@ const initiales = computed(() =>
           @change="choisirFichier"
         />
 
-        <p v-if="photoStatut" class="text-[13px] text-ink-muted">
+        <p
+          v-if="photoStatut"
+          class="text-[13px] font-semibold"
+          :class="CLASSES_STATUT_PHOTO[photoStatut] ?? 'text-ink-muted'"
+        >
           {{ LIBELLES_STATUT_PHOTO[photoStatut] ?? photoStatut }}
-          <template v-if="photoStatut === 'pending'">
+          <span v-if="photoStatut === 'pending'" class="font-normal text-ink-muted">
             — elle n'est pas encore visible des recruteurs.
-          </template>
+          </span>
+          <span v-else-if="photoStatut === 'approved'" class="font-normal text-ink-muted">
+            — elle est visible des recruteurs.
+          </span>
         </p>
         <p v-else class="text-[13px] text-ink-muted">Fichier JPG, PNG ou WebP. 2 Mo maximum.</p>
       </div>

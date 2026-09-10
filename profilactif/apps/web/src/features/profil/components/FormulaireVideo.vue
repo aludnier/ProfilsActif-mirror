@@ -56,7 +56,8 @@ function appliquer(nouvelle: Video | null): void {
   lien.value = nouvelle?.url ?? '';
   /* A row whose URL we can't read (legacy, or a non-YouTube link) has no
      preview to show, so the field opens instead of leaving an empty card. */
-  modeEdition.value = nouvelle === null || nouvelle.status === 'rejected' || extraireIdYouTube(nouvelle.url) === null;
+  modeEdition.value =
+    nouvelle === null || nouvelle.status === 'rejected' || extraireIdYouTube(nouvelle.url) === null;
   emit('video-presente', nouvelle !== null);
 }
 
@@ -121,6 +122,10 @@ async function supprimer(): Promise<void> {
 
     <Message v-if="video?.status === 'pending'" severity="warn" :closable="false">
       Vidéo en attente de validation par un administrateur.
+    </Message>
+    <!-- The validated state said nothing: silence read like "still pending". -->
+    <Message v-else-if="video?.status === 'approved'" severity="success" :closable="false">
+      Vidéo validée : elle est visible des recruteurs.
     </Message>
     <Message v-else-if="video?.status === 'rejected'" severity="error" :closable="false">
       Vidéo refusée. Vous pouvez envoyer un nouveau lien.

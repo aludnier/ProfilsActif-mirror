@@ -2,10 +2,10 @@
 import { useRoute } from 'vue-router';
 import type { RouteLocationNamedRaw } from 'vue-router';
 
+// Every entry opens a real view: no inert label in the menu.
 type EntreeEspace = {
   libelle: string;
-  to?: RouteLocationNamedRaw;
-  requis?: boolean;
+  to: RouteLocationNamedRaw;
 };
 
 const entrees: EntreeEspace[] = [
@@ -13,15 +13,12 @@ const entrees: EntreeEspace[] = [
   { libelle: 'Mon profil public', to: { name: 'candidate-public-profile' } },
   { libelle: 'Mes certifications', to: { name: 'candidate-certification' } },
   { libelle: 'Mes interactions', to: { name: 'candidate-interactions' } },
-  { libelle: 'Ma vidéo de présentation', requis: true },
-  { libelle: 'Compétences & CV' },
-  { libelle: "Paramètres d'accès" },
 ];
 
 const route = useRoute();
 
 function estActive(entree: EntreeEspace): boolean {
-  return entree.to !== undefined && route.name === entree.to.name;
+  return route.name === entree.to.name;
 }
 </script>
 
@@ -36,27 +33,18 @@ function estActive(entree: EntreeEspace): boolean {
     <nav aria-label="Espace candidat" class="w-full">
       <ul class="flex flex-col gap-2">
         <li v-for="entree in entrees" :key="entree.libelle">
-          <component
-            :is="entree.to ? 'router-link' : 'span'"
+          <router-link
             :to="entree.to"
             :aria-current="estActive(entree) ? 'page' : undefined"
             class="flex w-full items-center justify-between gap-2 rounded-control p-3 font-heading text-[14px]"
             :class="
               estActive(entree)
                 ? 'bg-surface-muted font-bold text-brand'
-                : entree.to
-                  ? 'font-medium text-ink hover:bg-surface-subtle'
-                  : 'font-medium text-ink-muted'
+                : 'font-medium text-ink hover:bg-surface-subtle'
             "
           >
             {{ entree.libelle }}
-            <span
-              v-if="entree.requis"
-              class="rounded-full bg-action px-1.5 py-0.5 text-[10px] font-bold uppercase text-on-action"
-            >
-              Requis
-            </span>
-          </component>
+          </router-link>
         </li>
       </ul>
     </nav>
