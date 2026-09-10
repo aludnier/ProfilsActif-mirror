@@ -1,13 +1,17 @@
 <script setup lang="ts">
+import AutoComplete from 'primevue/autocomplete'
 import Checkbox from 'primevue/checkbox'
 import RadioButton from 'primevue/radiobutton'
+import { onMounted, ref } from 'vue'
+
+import SkillService from '@/services/SkillService'
 
 const niveau = defineModel<string>('niveau', { required: true })
 const types = defineModel<string[]>('types', { required: true })
 const modalites = defineModel<string[]>('modalites', { required: true })
 const secteur = defineModel<string>('secteur', { required: true })
 const localisation = defineModel<string>('localisation', { required: true })
-const competence = defineModel<string>('competence', { required: true })
+const competences = defineModel<string[]>('competences', { required: true })
 const contratDu = defineModel<string>('contratDu', { required: true })
 const contratAu = defineModel<string>('contratAu', { required: true })
 const certification = defineModel<string>('certification', { required: true })
@@ -24,6 +28,25 @@ const typesContrat = [
   { value: 'freelance', label: 'Freelance' },
   { value: 'internship', label: 'Stage / alternance' },
 ]
+
+const catalogueCompetences = ref<string[]>([])
+const suggestionsCompetences = ref<string[]>([])
+
+onMounted(async () => {
+  try {
+    catalogueCompetences.value = (await SkillService.getAllSkills()).map((skill) => skill.name)
+  } catch {
+    catalogueCompetences.value = []
+  }
+})
+
+function rechercherCompetences(event: { query: string }): void {
+  const query = event.query.trim().toLowerCase()
+  suggestionsCompetences.value = catalogueCompetences.value.filter((nom) =>
+    nom.toLowerCase().includes(query) && !competences.value.includes(nom),
+  )
+}
+
 const modesTravail = [
   { value: 'on_site', label: 'Presentiel' },
   { value: 'hybrid', label: 'Hybride' },
@@ -41,8 +64,20 @@ const modesTravail = [
 
     <fieldset class="flex w-full flex-col gap-3">
       <legend class="mb-1 font-heading text-[14px] font-bold text-brand">Recherche ciblée</legend>
-      <label for="filtre-competence" class="font-heading text-[13px] text-ink-muted">Compétence</label>
-      <input id="filtre-competence" v-model="competence" type="search" class="w-full rounded-control border border-surface-line px-3 py-2 text-[14px]" placeholder="Ex. React, gestion...">
+      <label for="filtre-competences" class="font-heading text-[13px] text-ink-muted">Compétences</label>
+      <AutoComplete
+        input-id="filtre-competences"
+        :model-value="competences"
+        :suggestions="suggestionsCompetences"
+        multiple
+        :typeahead="false"
+        :dropdown="catalogueCompetences.length > 0"
+        placeholder="Sélectionner une compétence"
+        class="w-full"
+        fluid
+        @complete="rechercherCompetences"
+        @update:model-value="competences = $event"
+      />
       <label for="filtre-secteur" class="font-heading text-[13px] text-ink-muted">Secteur</label>
       <input id="filtre-secteur" v-model="secteur" type="search" class="w-full rounded-control border border-surface-line px-3 py-2 text-[14px]" placeholder="Ex. Numérique">
       <label for="filtre-localisation" class="font-heading text-[13px] text-ink-muted">Localisation</label>

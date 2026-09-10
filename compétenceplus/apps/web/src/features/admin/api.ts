@@ -25,7 +25,7 @@ export default class AdminService {
     return data
   }
 
-  static async updateUserStatus(id: string, status: 'active' | 'suspended' | 'deleted'): Promise<PublicUser> {
+  static async updateUserStatus(id: string, status: 'active' | 'suspended'): Promise<PublicUser> {
     const { data } = await axiosInstance.patch<PublicUser>('/admin/users/' + id + '/status', { status })
     return data
   }

@@ -22,6 +22,7 @@ export interface Profil extends RowDataPacket {
   workMode: string | null
   experienceYears: number | null
   certificationRate: number
+  hasVideo: boolean
   catalogVisible: boolean
   /* `null` quand le candidat n'a jamais envoyé de photo. */
   photoStatus: 'pending' | 'approved' | 'rejected' | null
@@ -52,6 +53,7 @@ export interface ProfilListe extends RowDataPacket {
   workMode: string | null
   experienceYears: number | null
   certificationRate: number
+  hasVideo: boolean
   catalogVisible: boolean
   /* `null` quand le candidat n'a jamais envoyé de photo. */
   photoStatus: 'pending' | 'approved' | 'rejected' | null
@@ -86,7 +88,7 @@ export class ProfilRepository {
       SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName,
         u.age AS age,
         s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
-        s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus,
+        s.certification_rate AS certificationRate, EXISTS (SELECT 1 FROM video v WHERE v.seeker_id = s.id AND v.status = \'approved\') AS hasVideo, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus,
         u.role AS role, u.status AS status,
         s.created_at AS createdAt, s.updated_at AS updatedAt
       FROM seeker s INNER JOIN app_user u ON u.uuid = s.id
@@ -103,7 +105,7 @@ export class ProfilRepository {
     limit: number
     secteur?: string
     localisation?: string
-    competence?: string
+    competences?: string[]
     niveau?: string
     types?: string[]
     modalites?: string[]
@@ -122,9 +124,9 @@ export class ProfilRepository {
       conditions.push('s.location LIKE ?')
       values.push('%' + filters.localisation + '%')
     }
-    if (filters.competence) {
-      conditions.push("EXISTS (SELECT 1 FROM seeker_skill filter_ss INNER JOIN skill filter_skill ON filter_skill.id = filter_ss.skill_id WHERE filter_ss.seeker_id = s.id AND filter_skill.name LIKE ?)")
-      values.push('%' + filters.competence + '%')
+    if (filters.competences?.length) {
+      conditions.push('EXISTS (SELECT 1 FROM seeker_skill filter_ss INNER JOIN skill filter_skill ON filter_skill.id = filter_ss.skill_id WHERE filter_ss.seeker_id = s.id AND filter_skill.name IN (' + filters.competences.map(() => '?').join(', ') + '))')
+      values.push(...filters.competences)
     }
     if (filters.certification === 'certifiee') conditions.push('s.certification_rate > 0')
     if (filters.certification === 'non_certifiee') conditions.push('s.certification_rate = 0')
@@ -159,7 +161,7 @@ export class ProfilRepository {
     const page = Math.max(1, filters.page)
     const limit = Math.min(50, Math.max(1, filters.limit))
     const offset = (page - 1) * limit
-    const sql = 'SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName, u.mail AS mail, u.phone AS phone, u.age AS age, s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio, s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus, u.role AS role, u.status AS status, s.created_at AS createdAt, s.updated_at AS updatedAt, COALESCE((SELECT GROUP_CONCAT(page_skill.name ORDER BY page_skill.name SEPARATOR \'||\') FROM seeker_skill page_ss INNER JOIN skill page_skill ON page_skill.id = page_ss.skill_id WHERE page_ss.seeker_id = s.id), \'\') AS competencesRaw FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where + ' ORDER BY s.updated_at DESC, s.id ASC LIMIT ? OFFSET ?'
+    const sql = 'SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName, u.mail AS mail, u.phone AS phone, u.age AS age, s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio, s.certification_rate AS certificationRate, EXISTS (SELECT 1 FROM video v WHERE v.seeker_id = s.id AND v.status = \'approved\') AS hasVideo, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus, u.role AS role, u.status AS status, s.created_at AS createdAt, s.updated_at AS updatedAt, COALESCE((SELECT GROUP_CONCAT(page_skill.name ORDER BY page_skill.name SEPARATOR \'||\') FROM seeker_skill page_ss INNER JOIN skill page_skill ON page_skill.id = page_ss.skill_id WHERE page_ss.seeker_id = s.id), \'\') AS competencesRaw FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where + ' ORDER BY s.updated_at DESC, s.id ASC LIMIT ? OFFSET ?'
     const [rows] = await db.query<Profil[]>(sql, [...values, limit, offset])
     const data = rows.map((row) => ({
       ...row,

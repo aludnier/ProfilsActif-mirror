@@ -27,7 +27,7 @@ export class ProfileService {
     niveau?: string
     secteur?: string
     localisation?: string
-    competence?: string
+    competences?: string[]
     types?: string[]
     modalites?: string[]
     certification?: string
@@ -41,7 +41,7 @@ export class ProfileService {
         niveau: filters.niveau === 'all' ? undefined : filters.niveau,
         secteur: filters.secteur || undefined,
         localisation: filters.localisation || undefined,
-        competence: filters.competence || undefined,
+        competences: filters.competences?.join(',') || undefined,
         types: filters.types?.join(',') || undefined,
         modalites: filters.modalites?.join(',') || undefined,
         certification: filters.certification || undefined,

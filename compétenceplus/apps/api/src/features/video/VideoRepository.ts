@@ -80,9 +80,10 @@ export class VideoRepository {
         seeker_id,
         url,
         title,
-        description
+        description,
+        status
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, 'approved')
       `,
       [
         id,

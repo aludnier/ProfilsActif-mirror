@@ -1,5 +1,8 @@
 import { createMiddleware } from 'hono/factory'
 import jwt from 'jsonwebtoken'
+import type { RowDataPacket } from 'mysql2'
+
+import { db } from './db.client.js'
 
 import { Interdit, NonAuthentifie } from '../shared/errors.js'
 import { isRole, type Role } from '../shared/roles.js'
@@ -59,6 +62,11 @@ export const requireAuth = createMiddleware<{ Variables: AuthVariables }>(async 
   if (!payload) {
     throw new NonAuthentifie('Jeton absent ou invalide', 'JETON_INVALIDE')
   }
+  const [rows] = await db.query<(RowDataPacket & { status: 'active' | 'suspended' | 'deleted' })[]>('SELECT status FROM app_user WHERE uuid = ?', [payload.id])
+  if (rows[0]?.status !== 'active') {
+    throw new NonAuthentifie('Ce compte est désactivé', 'COMPTE_DESACTIVE')
+  }
+
   c.set('user', payload)
   await next()
 })

@@ -2,6 +2,7 @@
 import type { RouteLocationNamedRaw } from 'vue-router';
 
 export type ProfilResume = {
+  id?: string;
   nom: string;
   intitule: string;
   ville: string;

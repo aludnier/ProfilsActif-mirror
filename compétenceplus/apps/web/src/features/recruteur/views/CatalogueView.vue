@@ -24,7 +24,7 @@ const types = ref<string[]>([])
 const modalites = ref<string[]>([])
 const secteur = ref('')
 const localisation = ref('')
-const competence = ref('')
+const competences = ref<string[]>([])
 const contratDu = ref('')
 const contratAu = ref('')
 const certification = ref('')
@@ -48,6 +48,7 @@ const modaliteLabels: Record<string, string> = {
 }
 
 const profils = computed<ProfilResume[]>(() => profiles.value.map((profile) => ({
+  id: profile.id,
   nom: profile.firstName + ' ' + profile.lastName,
   intitule: profile.targetSector || 'Candidat disponible',
   ville: profile.location || 'Localisation non renseignee',
@@ -57,7 +58,7 @@ const profils = computed<ProfilResume[]>(() => profiles.value.map((profile) => (
     ? Number(profile.experienceYears).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' ans d experience'
     : 'Experience non renseignee',
   competences: profile.competences ?? [],
-  dureeVideo: 'Video disponible',
+  dureeVideo: profile.hasVideo ? 'Vidéo disponible' : 'Vidéo non disponible',
   certifie: estCertifie(profile.certificationRate),
   miniature: photoValidee(profile.photoStatus) ? urlPhotoProfil(profile.id) : heroStudio,
   to: { name: 'recruiter-candidate-profile', params: { id: profile.id } },
@@ -67,7 +68,7 @@ const filtresActifs = computed(() => [
   ...(niveau.value !== 'all' ? [niveauLabels[niveau.value]] : []),
   ...types.value.map((value) => typeLabels[value]),
   ...modalites.value.map((value) => modaliteLabels[value]),
-  ...(competence.value.trim() ? ['Compétence : ' + competence.value.trim()] : []),
+  ...competences.value.map((competence) => 'Compétence : ' + competence),
   ...(secteur.value.trim() ? ['Secteur : ' + secteur.value.trim()] : []),
   ...(localisation.value.trim() ? ['Localisation : ' + localisation.value.trim()] : []),
   ...(certification.value === 'certifiee' ? ['Certifiée'] : []),
@@ -88,7 +89,7 @@ async function chargerProfils(page = 1) {
       modalites: modalites.value,
       secteur: secteur.value.trim(),
       localisation: localisation.value.trim(),
-      competence: competence.value.trim(),
+      competences: competences.value,
       contratDu: contratDu.value,
       contratAu: contratAu.value,
       certification: certification.value,
@@ -107,7 +108,7 @@ function retirerFiltre(filtre: string) {
   if (niveauLabels[niveau.value] === filtre) niveau.value = 'all'
   types.value = types.value.filter((value) => typeLabels[value] !== filtre)
   modalites.value = modalites.value.filter((value) => modaliteLabels[value] !== filtre)
-  if (filtre === 'Compétence : ' + competence.value.trim()) competence.value = ''
+  if (filtre.startsWith('Compétence : ')) competences.value = competences.value.filter((competence) => 'Compétence : ' + competence !== filtre)
   if (filtre === 'Secteur : ' + secteur.value.trim()) secteur.value = ''
   if (filtre === 'Localisation : ' + localisation.value.trim()) localisation.value = ''
   if (filtre === 'Certifiée' || filtre === 'Non certifiée') certification.value = ''
@@ -119,7 +120,7 @@ function changerPage(event: { page: number }) {
   void chargerProfils(event.page + 1)
 }
 
-watch([niveau, types, modalites, secteur, localisation, competence, contratDu, contratAu, certification], () => {
+watch([niveau, types, modalites, secteur, localisation, competences, contratDu, contratAu, certification], () => {
   if (!loading.value) void chargerProfils(1)
 })
 
@@ -134,7 +135,7 @@ onMounted(() => void chargerProfils())
   />
 
   <div class="flex items-stretch">
-    <FiltresCatalogue v-model:niveau="niveau" v-model:types="types" v-model:modalites="modalites" v-model:secteur="secteur" v-model:localisation="localisation" v-model:competence="competence" v-model:contrat-du="contratDu" v-model:contrat-au="contratAu" v-model:certification="certification" />
+    <FiltresCatalogue v-model:niveau="niveau" v-model:types="types" v-model:modalites="modalites" v-model:secteur="secteur" v-model:localisation="localisation" v-model:competences="competences" v-model:contrat-du="contratDu" v-model:contrat-au="contratAu" v-model:certification="certification" />
 
     <section class="flex min-w-0 flex-1 flex-col gap-10 p-10">
       <p v-if="loading" class="text-ink-muted">Chargement des candidats...</p>

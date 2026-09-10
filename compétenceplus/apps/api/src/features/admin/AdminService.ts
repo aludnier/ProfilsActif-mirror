@@ -1,4 +1,4 @@
-import {Interdit, NonTrouve, ValidationInvalide} from '../../shared/errors.js'
+import {Interdit, NonTrouve} from '../../shared/errors.js'
 import {AdminRepository} from './AdminRepository.js'
 import type {ListUsersInput, UpdateUserProfileInput, UpdateUserRoleInput, UpdateUserStatusInput} from './AdminSchema.js'
 
@@ -44,13 +44,6 @@ export class AdminService {constructor(private readonly adminRepository = new Ad
       throw new Interdit(
         'Vous ne pouvez pas désactiver votre propre compte administrateur',
         'AUTO_DESACTIVATION_INTERDITE',
-      )
-    }
-
-    if (user.status === 'deleted') {
-      throw new ValidationInvalide(
-        'Cet utilisateur est déjà supprimé',
-        'UTILISATEUR_DEJA_SUPPRIME',
       )
     }
 

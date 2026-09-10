@@ -60,6 +60,7 @@ export interface Profile {
   workMode: 'on_site' | 'hybrid' | 'remote' | null
   experienceYears: number | null
   certificationRate: number
+  hasVideo: boolean
   catalogVisible: boolean
   /** État de modération de la photo. `null` = aucune photo envoyée. */
   photoStatus?: 'pending' | 'approved' | 'rejected' | null

@@ -4,11 +4,13 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Password from 'primevue/password'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/shared/stores/auth'
 import type { LoginInput } from '@/shared/types/api'
+import { ROUTE_ESPACE } from '@/shared/types/roles'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const email = ref('')
@@ -31,7 +33,12 @@ async function seConnecter(): Promise<void> {
       password: motDePasse.value,
     }
     await authStore.login(input)
-    router.push({ name: 'home' })
+    const suite = typeof route.query.suite === 'string' ? route.query.suite : ''
+    if (suite.startsWith('/')) {
+      await router.replace(suite)
+    } else if (authStore.user) {
+      await router.replace({ name: ROUTE_ESPACE[authStore.user.role] })
+    }
   } catch (err: any) {
     erreur.value = err.message || 'Erreur de connexion'
   } finally {
