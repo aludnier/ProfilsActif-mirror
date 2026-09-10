@@ -45,6 +45,12 @@ const aUneVideo = ref(false);
 const consultations = ref<ProfileConsultation[]>([]);
 const visibiliteEnCours = ref(false);
 
+/* Photo : l'URL est une URL d'objet locale, obtenue avec le jeton — une
+   balise `<img>` seule ne verrait pas une photo encore en attente. */
+const photoUrl = ref<string | null>(null);
+const photoStatut = ref<string | null>(null);
+const photoEnCours = ref(false);
+
 const chargement = ref(false);
 const enregistrement = ref(false);
 const erreur = ref('');
@@ -118,10 +124,62 @@ async function charger(id: string): Promise<void> {
     competences.value = await ProfileService.getCompetences(id)
     competencesInitiales.value = [...competences.value];
     consultations.value = await ProfileService.getConsultations(id).catch(() => []);
+    await rafraichirPhoto(id);
   } catch (err: any) {
     erreur.value = err.message || 'Erreur lors du chargement du profil.';
   } finally {
     chargement.value = false;
+  }
+}
+
+async function rafraichirPhoto(id: string): Promise<void> {
+  photoStatut.value = profil.value?.photoStatus ?? null;
+
+  /* L'ancienne URL d'objet est révoquée : sinon chaque remplacement laisserait
+     un blob en mémoire jusqu'au rechargement de la page. */
+  if (photoUrl.value) URL.revokeObjectURL(photoUrl.value);
+  photoUrl.value = photoStatut.value ? await ProfileService.getPhotoBlob(id) : null;
+}
+
+async function envoyerPhoto(fichier: File): Promise<void> {
+  const id = profil.value?.id;
+  if (!id) return;
+
+  photoEnCours.value = true;
+  erreur.value = '';
+  succes.value = '';
+
+  try {
+    const envoi = await ProfileService.uploadPhoto(id, fichier);
+    photoStatut.value = envoi.status;
+    if (photoUrl.value) URL.revokeObjectURL(photoUrl.value);
+    photoUrl.value = URL.createObjectURL(fichier);
+    succes.value = 'Photo envoyée : elle sera visible après validation.';
+  } catch (err: any) {
+    erreur.value = err.message || "Impossible d'envoyer la photo.";
+  } finally {
+    photoEnCours.value = false;
+  }
+}
+
+async function supprimerPhoto(): Promise<void> {
+  const id = profil.value?.id;
+  if (!id) return;
+
+  photoEnCours.value = true;
+  erreur.value = '';
+  succes.value = '';
+
+  try {
+    await ProfileService.deletePhoto(id);
+    if (photoUrl.value) URL.revokeObjectURL(photoUrl.value);
+    photoUrl.value = null;
+    photoStatut.value = null;
+    succes.value = 'Photo supprimée.';
+  } catch (err: any) {
+    erreur.value = err.message || 'Impossible de supprimer la photo.';
+  } finally {
+    photoEnCours.value = false;
   }
 }
 
@@ -301,6 +359,11 @@ async function confirmerSuppressionCompte(): Promise<void> {
           v-model:infos="infos"
           v-model:competences="competences"
           :desactive="enregistrement"
+          :photo-url="photoUrl"
+          :photo-statut="photoStatut"
+          :photo-en-cours="photoEnCours"
+          @photo-choisie="envoyerPhoto"
+          @photo-supprimee="supprimerPhoto"
         />
 
         <div class="flex flex-col gap-6">

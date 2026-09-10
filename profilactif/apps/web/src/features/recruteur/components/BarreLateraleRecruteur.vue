@@ -2,32 +2,31 @@
 import { useRoute } from 'vue-router';
 import type { RouteLocationNamedRaw } from 'vue-router';
 
+// Every entry opens a real view: no inert label in the menu.
 type EntreeEspace = {
   libelle: string;
-  to?: RouteLocationNamedRaw;
+  to: RouteLocationNamedRaw;
 };
 
-/* Entries without a `to` have no view yet: inert text rather than a dead link. */
 const entrees: EntreeEspace[] = [
   { libelle: 'Tableau de bord', to: { name: 'recruiter-dashboard' } },
   { libelle: 'Catalogue des profils', to: { name: 'recruiter-catalog' } },
-  /* Le tableau de bord porte déjà la liste : l'onglet se choisit par l'URL. */
+  // The dashboard already holds those lists: the tab is picked from the URL.
   { libelle: 'Mes favoris', to: { name: 'recruiter-dashboard', query: { onglet: 'favoris' } } },
   {
     libelle: 'Mes contacts',
     to: { name: 'recruiter-dashboard', query: { onglet: 'contactes' } },
   },
-  { libelle: "Paramètres d'accès" },
 ];
 
 const route = useRoute();
 
 function estActive(entree: EntreeEspace): boolean {
-  if (entree.to === undefined || route.name !== entree.to.name) {
+  if (route.name !== entree.to.name) {
     return false;
   }
 
-  /* Deux entrées visent le tableau de bord : seul l'onglet les distingue. */
+  // Three entries target the dashboard: only the tab tells them apart.
   const onglet = entree.to.query?.onglet;
 
   return onglet === undefined ? route.query.onglet === undefined : route.query.onglet === onglet;
@@ -45,21 +44,18 @@ function estActive(entree: EntreeEspace): boolean {
     <nav aria-label="Espace recruteur" class="w-full">
       <ul class="flex flex-col gap-2">
         <li v-for="entree in entrees" :key="entree.libelle">
-          <component
-            :is="entree.to ? 'router-link' : 'span'"
+          <router-link
             :to="entree.to"
             :aria-current="estActive(entree) ? 'page' : undefined"
             class="flex w-full items-center justify-between gap-2 rounded-control p-3 font-heading text-[14px]"
             :class="
               estActive(entree)
                 ? 'bg-surface-muted font-bold text-brand'
-                : entree.to
-                  ? 'font-medium text-ink hover:bg-surface-subtle'
-                  : 'font-medium text-ink-muted'
+                : 'font-medium text-ink hover:bg-surface-subtle'
             "
           >
             {{ entree.libelle }}
-          </component>
+          </router-link>
         </li>
       </ul>
     </nav>

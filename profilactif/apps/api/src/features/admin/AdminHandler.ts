@@ -3,6 +3,8 @@ import {ValidationInvalide} from '../../shared/errors.js'
 import type { AuthVariables } from '../../infrastructure/auth.middleware.js'
 import { NonTrouve } from '../../shared/errors.js'
 import { VideoRepository } from '../video/VideoRepository.js'
+import { ProfilRepository } from '../profil/ProfilRepository.js'
+import { moderatePhotoSchema } from '../profil/ProfilSchema.js'
 import { moderateVideoSchema } from '../video/VideoSchema.js'
 import {AdminService} from './AdminService.js'
 import {listUsersSchema, updateUserProfileSchema, updateUserRoleSchema, updateUserStatusSchema} from './AdminSchema.js'
@@ -162,3 +164,35 @@ export async function updateVideoStatusHandler(c: Context) {
   if (!video) throw new NonTrouve('Vidéo introuvable', 'VIDEO_NON_TROUVEE')
   return c.json(video)
 }
+
+/*
+ * Modération des photos. Le dépôt de la tranche `profil` est appelé
+ * directement, comme `VideoRepository` l'est plus haut : c'est le motif déjà
+ * en place ici pour la modération, qui ne possède pas de table à elle.
+ */
+const profilRepository = new ProfilRepository()
+
+export async function getPendingPhotosHandler(c: Context) {
+  return c.json(await profilRepository.findPendingPhotos())
+}
+
+export async function updatePhotoStatusHandler(c: Context) {
+  const id = c.req.param('id')
+  const adminId = (c.get('user') as AuthVariables['user']).id
+  const result = moderatePhotoSchema.safeParse(await c.req.json())
+
+  if (!id || !result.success) {
+    throw new ValidationInvalide('Données de modération photo invalides', 'MODERATION_PHOTO_INVALIDE')
+  }
+
+  const modifiee = await profilRepository.updatePhotoStatus(
+    id,
+    result.data.status,
+    adminId,
+    result.data.reason ?? null,
+  )
+  if (!modifiee) throw new NonTrouve('Photo introuvable', 'PHOTO_NON_TROUVEE')
+
+  return c.json({ seekerId: id, status: result.data.status })
+}
+

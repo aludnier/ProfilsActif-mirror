@@ -61,6 +61,8 @@ export interface Profile {
   experienceYears: number | null
   certificationRate: number
   catalogVisible: boolean
+  /** État de modération de la photo. `null` = aucune photo envoyée. */
+  photoStatus?: 'pending' | 'approved' | 'rejected' | null
   bio: string | null
   competences?: string[]
   role: Role
@@ -253,6 +255,15 @@ export interface AppNotification {
   recruiterName: string | null
   recruiterMail: string | null
   recruiterPhone: string | null
+}
+
+/** Une photo en attente, telle que la renvoie la file de modération. */
+export interface PhotoEnAttente {
+  seekerId: string
+  firstName: string
+  lastName: string
+  path: string
+  updatedAt: string
 }
 
 export interface AdminStats {

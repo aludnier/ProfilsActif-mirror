@@ -1,4 +1,5 @@
-import { NonTrouve } from '../../shared/errors.js'
+import { NonTrouve, ValidationInvalide } from '../../shared/errors.js'
+import { detecterFormat, enregistrerPhoto, supprimerPhoto } from '../../infrastructure/photoStorage.js'
 import { ProfilRepository } from './ProfilRepository.js'
 import type { UpdateCompetencesInput, UpdateProfilInput } from './ProfilSchema.js'
 
@@ -76,4 +77,44 @@ export class ProfileService {constructor(private readonly profilRepository = new
   }
 
 
+
+  /* --- Photo de profil --------------------------------------------------- */
+
+  async getPhoto(id: string) {
+    return this.profilRepository.findPhoto(id)
+  }
+
+  /*
+   * Remplacer une photo efface l'ancienne : sans ça, chaque essai laisserait
+   * un fichier orphelin que plus rien ne référence.
+   */
+  async remplacerPhoto(id: string, octets: Buffer) {
+    const format = detecterFormat(octets)
+
+    if (format === null) {
+      throw new ValidationInvalide(
+        'Format non reconnu : seuls JPEG, PNG et WebP sont acceptés',
+        'PHOTO_FORMAT_INVALIDE',
+      )
+    }
+
+    const profil = await this.profilRepository.findById(id)
+    if (!profil) throw new NonTrouve('Profil introuvable', 'PROFIL_NON_TROUVE')
+
+    const precedente = await this.profilRepository.findPhoto(id)
+    const nom = await enregistrerPhoto(octets, format)
+    await this.profilRepository.updatePhoto(id, nom)
+
+    if (precedente?.path) await supprimerPhoto(precedente.path)
+
+    return { path: nom, status: 'pending' as const }
+  }
+
+  async supprimerPhotoProfil(id: string) {
+    const photo = await this.profilRepository.findPhoto(id)
+    if (!photo?.path) throw new NonTrouve('Aucune photo à supprimer', 'PHOTO_NON_TROUVEE')
+
+    await this.profilRepository.clearPhoto(id)
+    await supprimerPhoto(photo.path)
+  }
 }

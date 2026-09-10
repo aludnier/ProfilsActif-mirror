@@ -12,12 +12,10 @@ export type ProfilResume = {
   dureeVideo: string;
   certifie: boolean;
   miniature: string;
-  /*
-   * Sans `to`, la carte n'affiche aucun lien. C'est le cas sur le fil pour un
-   * candidat ou un visiteur : aucune fiche publique n'existe, la seule fiche
-   * candidat est réservée au recruteur.
-   */
+  // No `to`, no link: there is no public candidate sheet.
   to?: RouteLocationNamedRaw;
+  // Overrides the link label when it does not open the sheet (signup teaser).
+  libelleLien?: string;
 };
 
 defineProps<{ profil: ProfilResume }>();
@@ -82,10 +80,10 @@ defineProps<{ profil: ProfilResume }>();
 
         <router-link
           :to="profil.to"
-          :aria-label="`Visionner le profil de ${profil.nom}`"
+          :aria-label="`${profil.libelleLien ?? 'Visionner le profil'} — ${profil.nom}`"
           class="flex items-center justify-between font-heading text-[13px] font-bold text-action hover:underline"
         >
-          Visionner le profil
+          {{ profil.libelleLien ?? 'Visionner le profil' }}
           <svg class="size-4 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path
               d="M3.3328 8H12.6672M8 12.6672L12.6672 8L8 3.3328"

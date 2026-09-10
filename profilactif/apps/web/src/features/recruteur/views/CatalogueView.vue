@@ -9,6 +9,7 @@ import FiltresCatalogue from '@/features/recruteur/components/FiltresCatalogue.v
 import GrilleCandidats from '@/features/recruteur/components/GrilleCandidats.vue'
 import { formaterNombre } from '@/shared/formatage'
 import { estCertifie } from '@/shared/certification'
+import { photoValidee, urlPhotoProfil } from '@/shared/photoProfil'
 import type { Profile } from '@/shared/types/api'
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue'
 
@@ -58,7 +59,7 @@ const profils = computed<ProfilResume[]>(() => profiles.value.map((profile) => (
   competences: profile.competences ?? [],
   dureeVideo: 'Video disponible',
   certifie: estCertifie(profile.certificationRate),
-  miniature: heroStudio,
+  miniature: photoValidee(profile.photoStatus) ? urlPhotoProfil(profile.id) : heroStudio,
   to: { name: 'recruiter-candidate-profile', params: { id: profile.id } },
 })))
 

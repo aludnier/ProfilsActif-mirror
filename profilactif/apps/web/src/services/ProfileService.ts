@@ -76,6 +76,33 @@ export class ProfileService {
     return data.competences
   }
 
+
+  static async uploadPhoto(id: string, fichier: File): Promise<{ path: string; status: string }> {
+    const corps = new FormData()
+    corps.append('photo', fichier)
+    const { data } = await axiosInstance.post<{ path: string; status: string }>(
+      `/profiles/${id}/photo`,
+      corps,
+      { headers: { 'Content-Type': undefined } },
+    )
+    return data
+  }
+
+  static async deletePhoto(id: string): Promise<void> {
+    await axiosInstance.delete(`/profiles/${id}/photo`)
+  }
+
+  static async getPhotoBlob(id: string): Promise<string | null> {
+    try {
+      const { data } = await axiosInstance.get<Blob>(`/profiles/${id}/photo`, {
+        responseType: 'blob',
+      })
+      return URL.createObjectURL(data)
+    } catch {
+      return null
+    }
+  }
+
 }
 
 export default ProfileService

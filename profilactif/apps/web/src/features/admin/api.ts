@@ -1,5 +1,5 @@
 import axiosInstance from '@/shared/api-client'
-import type { AdminStats, PublicUser, Video } from '@/shared/types/api'
+import type { AdminStats, PhotoEnAttente, PublicUser, Video } from '@/shared/types/api'
 
 export interface AdminUserPage {
   data: PublicUser[]
@@ -46,6 +46,23 @@ export default class AdminService {
 
   static async moderateVideo(id: string, status: 'approved' | 'rejected', reason?: string): Promise<Video> {
     const { data } = await axiosInstance.patch<Video>('/admin/videos/' + id + '/status', { status, reason: reason || null })
+    return data
+  }
+
+  static async getPendingPhotos(): Promise<PhotoEnAttente[]> {
+    const { data } = await axiosInstance.get<PhotoEnAttente[]>('/admin/photos/pending')
+    return data
+  }
+
+  static async moderatePhoto(
+    seekerId: string,
+    status: 'approved' | 'rejected',
+    reason?: string,
+  ): Promise<{ seekerId: string; status: string }> {
+    const { data } = await axiosInstance.patch<{ seekerId: string; status: string }>(
+      `/admin/photos/${seekerId}/status`,
+      { status, reason: reason ?? null },
+    )
     return data
   }
 }

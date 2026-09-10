@@ -5,6 +5,7 @@ const liens = [
   { libelle: 'Tableau de bord', to: 'admin-stats' },
   { libelle: 'Utilisateurs & modération', to: 'admin-dashboard' },
   { libelle: 'Validation vidéo', to: 'admin-videos' },
+  { libelle: 'Validation photo', to: 'admin-photos' },
   { libelle: 'Questionnaire', to: 'admin-questions' },
 ];
 

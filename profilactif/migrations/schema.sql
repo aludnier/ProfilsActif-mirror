@@ -430,3 +430,11 @@ CREATE TABLE `profile_view` (
   CONSTRAINT `fk_profile_view_seeker` FOREIGN KEY (`seeker_id`) REFERENCES `seeker` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_profile_view_recruiter` FOREIGN KEY (`recruiter_id`) REFERENCES `recruiter` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+ALTER TABLE seeker
+  ADD COLUMN photo_path VARCHAR(300) NULL,
+  ADD COLUMN photo_status ENUM('pending', 'approved', 'rejected') NULL,
+  ADD COLUMN photo_moderated_by CHAR(36) NULL,
+  ADD COLUMN photo_moderated_at DATETIME NULL,
+  ADD COLUMN photo_moderation_reason VARCHAR(500) NULL;

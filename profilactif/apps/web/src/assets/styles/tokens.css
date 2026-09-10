@@ -91,6 +91,13 @@
    */
   --color-status-valid: #1e7a34;
 
+  /*
+   * Rouge d'erreur. Le token manquait alors que `text-status-error` était déjà
+   * utilisé dans deux écrans : la classe ne générait rien, le texte restait de
+   * la couleur héritée. Contraste 6,54:1 sur blanc, 6,09:1 sur surface-subtle.
+   */
+  --color-status-error: #b3261e;
+
   /* ---- Typographie ------------------------------------------------------
    * Krylon pour les titres, Faber pour l'interface et le texte courant.
    */

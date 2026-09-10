@@ -14,6 +14,7 @@ import type { InfosProfil } from '@/features/profil/components/FormulaireProfil.
 import type { Contact, Favorite, Profile, Video } from '@/shared/types/api'
 import { extraireIdYouTube } from '@/shared/youtube'
 import { estCertifie, niveauBadge } from '@/shared/certification'
+import { photoValidee, urlPhotoProfil } from '@/shared/photoProfil'
 import BadgeCertification from '@/shared/ui/BadgeCertification.vue'
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue'
 
@@ -272,6 +273,15 @@ onMounted(() => {
 
     <div v-else-if="profile" class="mx-auto max-w-6xl space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-5 rounded-card border border-surface-line bg-surface-page p-6">
+        <div class="flex items-center gap-4">
+          <!-- Photo seulement si elle est validee : un recruteur ne doit pas
+               voir une image en attente de moderation. -->
+          <img
+            v-if="photoValidee(profile.photoStatus)"
+            :src="urlPhotoProfil(profile.id)"
+            :alt="`Photo de ${profile.firstName} ${profile.lastName}`"
+            class="size-16 shrink-0 rounded-full object-cover"
+          />
         <div class="space-y-1.5">
           <h1 class="text-[26px] text-brand">{{ profile.firstName }} {{ profile.lastName }}</h1>
           <p class="font-heading text-[15px] font-bold">{{ profile.targetSector || 'Candidat disponible' }}</p>
@@ -282,6 +292,7 @@ onMounted(() => {
             v-if="estCertifie(profile.certificationRate)"
             :level="niveauBadge(profile.certificationRate)"
           />
+        </div>
         </div>
 
         <div class="flex flex-wrap gap-3">
