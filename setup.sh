@@ -3,11 +3,11 @@
 set -e
 
 # ============================================================
-# ProfilActif - Development Setup Script
+# Compétences+ - Development Setup Script
 # ============================================================
 
 echo "========================================="
-echo "       ProfilActif - Setup"
+echo "       Compétences+ - Setup"
 echo "========================================="
 echo
 
@@ -15,8 +15,8 @@ echo
 # Configuration
 # ------------------------------------------------------------
 
-PROJECT_DIR="profilactif"
-DATABASE_NAME="profilsactif"
+PROJECT_DIR="compétenceplus"
+DATABASE_NAME="compétenceplus"
 ENV_EXAMPLE="apps/api/.env.example"
 ENV_FILE="apps/api/.env"
 SCHEMA_FILE="migrations/schema.sql"
@@ -226,12 +226,12 @@ echo
 echo "    npm run dev"
 echo
 
-read -rp "Start ProfilActif now? [Y/n]: " START_APP
+read -rp "Start Compétences+ now? [Y/n]: " START_APP
 
 if [[ ! "$START_APP" =~ ^[Nn]$ ]]; then
     echo
     echo "========================================="
-    echo "Starting ProfilActif..."
+    echo "Starting Compétences+..."
     echo "========================================="
     echo
 
