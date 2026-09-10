@@ -9,7 +9,7 @@ import FavoriteService from '@/services/FavoriteService';
 import ContactService from '@/services/ContactService';
 import ProfileService from '@/services/ProfileService';
 import { useAuthStore } from '@/shared/stores/auth';
-import type { Profile } from '@/shared/types/api';
+import type { Favorite, Profile } from '@/shared/types/api';
 
 const authStore = useAuthStore();
 
@@ -62,9 +62,46 @@ const profilsCategorie = computed(() => {
   return profils.value.filter((profil) => profilsConsultes.value.has(profil.id));
 });
 
+/*
+ * Ids of the active tab, whatever the tab. A candidate who left the catalogue
+ * is absent from `profils`, so counting the raw ids and listing the resolved
+ * ones gave two different numbers.
+ */
+const idsCategorie = computed(() => {
+  if (categorieActive.value === 'favoris') return favorisIdsSource.value;
+  if (categorieActive.value === 'contactes') return contactsIdsSource.value;
+  return profilsConsultesSource.value;
+});
+
+const profilsConnus = computed(() => new Set(profils.value.map((profil) => profil.id)));
+
+// No name, no sector: the row says a profile is gone, nothing about who.
+const retiresCategorie = computed(() =>
+  idsCategorie.value.filter((id) => !profilsConnus.value.has(id)),
+);
+
+function favoriDe(seekerId: string): Favorite | undefined {
+  return favorisSource.value.find((favori) => favori.seekerId === seekerId);
+}
+
+async function retirerFavori(seekerId: string): Promise<void> {
+  const favori = favoriDe(seekerId);
+  if (!favori) return;
+
+  try {
+    await FavoriteService.deleteFavorite(favori.id);
+    favorisSource.value = favorisSource.value.filter((item) => item.id !== favori.id);
+    favorisIdsSource.value = favorisSource.value.map((item) => item.seekerId);
+  } catch {
+    erreur.value = 'Impossible de retirer ce favori.';
+  }
+}
+
 const favorisIds = computed(() => new Set(favorisIdsSource.value));
 const contactsIds = computed(() => new Set(contactsIdsSource.value));
 const profilsConsultes = computed(() => new Set(profilsConsultesSource.value));
+// Full rows, not just ids: removing a favourite needs its own identifier.
+const favorisSource = ref<Favorite[]>([]);
 const favorisIdsSource = ref<string[]>([]);
 const contactsIdsSource = ref<string[]>([]);
 const profilsConsultesSource = ref<string[]>([]);
@@ -91,6 +128,7 @@ async function charger(recruiterId: string): Promise<void> {
     ]);
 
     profils.value = profiles;
+    favorisSource.value = favoris;
     favorisIdsSource.value = favoris.map((favori) => favori.seekerId);
     contactsIdsSource.value = [...new Set(contacts.map((contact) => contact.seekerId))];
     profilsConsultesSource.value = JSON.parse(
@@ -182,7 +220,10 @@ async function charger(recruiterId: string): Promise<void> {
                   : 'Profils contactes'
             }}
           </h2>
-          <p v-if="!profilsCategorie.length" class="text-[15px] text-ink-muted">
+          <p
+            v-if="!profilsCategorie.length && !retiresCategorie.length"
+            class="text-[15px] text-ink-muted"
+          >
             Aucun profil dans cette categorie.
           </p>
           <ul v-else class="flex flex-col gap-3">
@@ -207,6 +248,35 @@ async function charger(recruiterId: string): Promise<void> {
                   >
                 </span>
               </router-link>
+            </li>
+
+            <li v-for="id in retiresCategorie" :key="id">
+              <div
+                class="flex items-center gap-4 rounded-control border border-dashed border-surface-line p-4"
+              >
+                <span
+                  class="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-muted font-heading text-[14px] font-bold text-ink-muted"
+                  aria-hidden="true"
+                >
+                  —
+                </span>
+                <span class="flex min-w-0 flex-col gap-0.5">
+                  <span class="font-heading text-[15px] font-semibold text-ink-muted">
+                    Profil indisponible
+                  </span>
+                  <span class="text-[14px] text-ink-muted">
+                    Ce profil n'est plus consultable.
+                  </span>
+                </span>
+                <Button
+                  v-if="categorieActive === 'favoris'"
+                  label="Retirer"
+                  severity="secondary"
+                  outlined
+                  class="ml-auto rounded-control font-heading text-[13px] font-semibold"
+                  @click="retirerFavori(id)"
+                />
+              </div>
             </li>
           </ul>
         </section>
