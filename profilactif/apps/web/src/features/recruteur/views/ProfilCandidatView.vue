@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import ProfileService from '@/services/ProfileService'
 import { ApiError } from '@/shared/api-client'
+import { urlMedia } from '@/shared/media';
 import VideoService from '@/services/VideoService'
 import FavoriteService from '@/services/FavoriteService'
 import ContactService from '@/services/ContactService'
@@ -469,7 +470,7 @@ onMounted(() => {
               :id-you-tube="extraireIdYouTube(videos[0].url)!"
               :titre="videos[0].title || 'Vidéo de présentation'"
             />
-            <video v-else :src="videos[0].url" controls preload="metadata" class="aspect-video w-full" />
+            <video v-else :src="urlMedia(videos[0].url)" controls preload="metadata" class="aspect-video w-full" />
           </div>
 
           <div v-if="editCompetences.length" class="rounded-card border border-surface-line bg-surface-page p-6">
@@ -504,7 +505,7 @@ onMounted(() => {
                   :titre="video.title || 'Vidéo de présentation'"
                   class="mt-3"
                 />
-                <video v-else :src="video.url" controls preload="metadata" class="mt-3 aspect-video w-full rounded-control bg-black" />
+                <video v-else :src="urlMedia(video.url)" controls preload="metadata" class="mt-3 aspect-video w-full rounded-control bg-black" />
               </div>
             </div>
           </div>

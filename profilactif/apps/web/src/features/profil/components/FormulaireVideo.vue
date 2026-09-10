@@ -6,6 +6,7 @@ import { computed, ref, watch } from 'vue';
 
 import VideoService from '@/services/VideoService';
 import { useAuthStore } from '@/shared/stores/auth';
+import { urlMedia } from '@/shared/media';
 import type { Video } from '@/shared/types/api';
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue';
 import { extraireIdYouTube, urlPubliqueYouTube } from '@/shared/youtube';
@@ -22,6 +23,31 @@ const modeEdition = ref(false);
 const chargement = ref(false);
 const enregistrement = ref(false);
 const erreur = ref('');
+const champFichier = ref<HTMLInputElement | null>(null);
+
+const TAILLE_MAX_MO = 100;
+
+async function envoyerFichier(evenement: Event): Promise<void> {
+  const fichier = (evenement.target as HTMLInputElement).files?.[0];
+  // Reset first: picking the same file twice must still fire `change`.
+  (evenement.target as HTMLInputElement).value = '';
+
+  const seekerId = authStore.user?.id;
+  if (!fichier || seekerId === undefined) return;
+
+  enregistrement.value = true;
+  erreur.value = '';
+
+  try {
+    video.value = await VideoService.uploadVideo(seekerId, fichier);
+    modeEdition.value = false;
+    emit('video-presente', true);
+  } catch (err: any) {
+    erreur.value = err.message || "Impossible d'envoyer la vidéo.";
+  } finally {
+    enregistrement.value = false;
+  }
+}
 
 const idYouTube = computed(() =>
   video.value === null ? null : extraireIdYouTube(video.value.url),
@@ -131,8 +157,20 @@ async function supprimer(): Promise<void> {
       Vidéo refusée. Vous pouvez envoyer un nouveau lien.
     </Message>
 
-    <div v-if="idYouTube !== null" class="flex flex-col gap-3">
-      <LecteurYouTube :id-you-tube="idYouTube" titre="Ma vidéo de présentation" />
+    <div v-if="video !== null" class="flex flex-col gap-3">
+      <LecteurYouTube
+        v-if="idYouTube !== null"
+        :id-you-tube="idYouTube"
+        titre="Ma vidéo de présentation"
+      />
+      <!-- Direct link: the browser plays it, no need to leave the page. -->
+      <video
+        v-else
+        :src="urlMedia(video.url)"
+        controls
+        preload="metadata"
+        class="aspect-video w-full rounded-control bg-black"
+      />
 
       <div class="flex items-center gap-3">
         <Button
@@ -174,15 +212,38 @@ async function supprimer(): Promise<void> {
         placeholder="https://www.youtube.com/watch?v=…"
         class="w-full"
       />
-      <p class="text-[13px] text-ink-muted">
-        Deux minutes maximum. Seules les vidéos YouTube sont acceptées.
-      </p>
+      <p class="text-[13px] text-ink-muted">Deux minutes maximum.</p>
       <Button
         label="Enregistrer le lien"
         :disabled="enregistrement || lien.trim() === ''"
         class="mt-1 justify-center rounded-control font-heading text-[14px] font-bold"
         @click="enregistrer"
       />
+
+      <span class="my-1 h-px w-full bg-surface-line" aria-hidden="true" />
+
+      <!-- Hosted file: unlike a YouTube link, it previews on the profile cards
+           and contacts no third party. -->
+      <p class="font-heading text-[15px] font-semibold text-brand">Ou envoyer un fichier</p>
+      <input
+        ref="champFichier"
+        type="file"
+        accept="video/mp4,video/webm"
+        class="hidden"
+        aria-hidden="true"
+        tabindex="-1"
+        @change="envoyerFichier"
+      />
+      <Button
+        label="Choisir une vidéo"
+        severity="secondary"
+        outlined
+        :disabled="enregistrement"
+        :loading="enregistrement"
+        class="justify-center rounded-control font-heading text-[14px] font-semibold"
+        @click="champFichier?.click()"
+      />
+      <p class="text-[13px] text-ink-muted">Fichier MP4 ou WebM. {{ TAILLE_MAX_MO }} Mo maximum.</p>
     </div>
   </section>
 </template>

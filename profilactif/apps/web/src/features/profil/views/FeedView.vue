@@ -58,6 +58,7 @@ const resumes = computed<ProfilResume[]>(() =>
     competences: [],
     dureeVideo: 'Vidéo de présentation',
     certifie: estCertifie(profil.certificationRate),
+    videoUrl: profil.videoUrl,
     miniature: photoValidee(profil.photoStatus) ? urlPhotoProfil(profil.id) : heroStudio,
     to: peutOuvrirUneFiche.value
       ? { name: 'recruiter-candidate-profile', params: { id: profil.id } }
