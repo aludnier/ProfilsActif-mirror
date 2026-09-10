@@ -1,6 +1,6 @@
-# ProfilActif
+# Compétence+
 
-ProfilActif is a web application for job seekers and recruiters that helps them communicate and find employment opportunities.
+Compétence+ is a web application for job seekers and recruiters that helps them communicate and find employment opportunities.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ git clone git@github.com:aludnier/ProfilsActif-mirror.git
 #### 2. Go to the project directory
 
 ```bash
-cd ProfilsActif-mirror/profilactif
+cd ProfilsActif-mirror/compétenceplus
 ```
 
 #### 3. Install dependencies
@@ -51,7 +51,7 @@ First, create the database:
 ```sql
 sudo mysql
 
-CREATE DATABASE IF NOT EXISTS profilsactif;
+CREATE DATABASE IF NOT EXISTS compétenceplus;
 ```
 
 Then, create a MySQL user to access the database. Replace `USER` and `MDP` with your desired username and password:
@@ -61,7 +61,7 @@ CREATE USER IF NOT EXISTS 'USER'@'localhost'
 IDENTIFIED BY 'MDP';
 
 GRANT ALL PRIVILEGES
-ON profilsactif.*
+ON compétenceplus.*
 TO 'USER'@'localhost';
 
 FLUSH PRIVILEGES;
@@ -69,10 +69,10 @@ FLUSH PRIVILEGES;
 
 #### 5. Install the database schema
 
-From the `profilactif` directory, run:
+From the `compétenceplus` directory, run:
 
 ```bash
-mysql -u USER -p profilsactif < migration/schema.sql
+mysql -u USER -p compétenceplus < migration/schema.sql
 ```
 
 Replace `USER` with the MySQL username you created above.
@@ -109,5 +109,5 @@ You can then open `http://localhost:5173/` in your browser to access the website
 
 ## Project Structure
 
-* **Architecture**: An explanation of the website architecture is available in [`profilactif/docs/README.md`](profilactif/docs/README.md).
+* **Architecture**: An explanation of the website architecture is available in [`compétenceplus/docs/README.md`](compétenceplus/docs/README.md).
 * **REST API documentation**: Once the application is running, the REST API documentation is available at [`http://localhost:3000/api-docs`](http://localhost:3000/api-docs).
