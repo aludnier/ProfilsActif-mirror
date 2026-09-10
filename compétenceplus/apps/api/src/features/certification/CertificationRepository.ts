@@ -162,13 +162,49 @@ export class CertificationRepository {
     return this.getVersion(id)
   }
 
+  /*
+   * Starting a test closes the drafts left behind. Without this, every restart
+   * added an `in_progress` row and `getCurrentAttempt` kept offering to resume
+   * a test the candidate had already abandoned — even after passing.
+   */
   async createAttempt(data: CreateAttemptInput, seekerId: string): Promise<QuestionnaireAttempt> {
     const id = randomUUID()
-    await db.execute(
-      'INSERT INTO questionnaire_attempt (id, questionnaire_version_id, seeker_id, answers) VALUES (?, ?, ?, ?)',
-      [id, data.questionnaireVersionId, seekerId, JSON.stringify(data.answers)],
-    )
+    const connection = await db.getConnection()
+
+    try {
+      await connection.beginTransaction()
+      await connection.execute(
+        "UPDATE questionnaire_attempt SET status = 'abandoned' WHERE seeker_id = ? AND status = 'in_progress'",
+        [seekerId],
+      )
+      await connection.execute(
+        'INSERT INTO questionnaire_attempt (id, questionnaire_version_id, seeker_id, answers) VALUES (?, ?, ?, ?)',
+        [id, data.questionnaireVersionId, seekerId, JSON.stringify(data.answers)],
+      )
+      await connection.commit()
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
+
     return (await this.getAttempt(id, seekerId)) as QuestionnaireAttempt
+  }
+
+  /** Last submitted attempt: drives the retake delay and the candidate's status. */
+  async getLastSubmittedAttempt(seekerId: string): Promise<QuestionnaireAttempt | null> {
+    const [rows] = await db.query<QuestionnaireAttempt[]>(
+      `SELECT id, questionnaire_version_id AS questionnaireVersionId, seeker_id AS seekerId,
+        status, answers, score, started_at AS startedAt, submitted_at AS submittedAt, updated_at AS updatedAt
+       FROM questionnaire_attempt
+       WHERE seeker_id = ? AND status = 'submitted'
+       ORDER BY submitted_at DESC
+       LIMIT 1`,
+      [seekerId],
+    )
+    const row = rows[0]
+    return row ? { ...row, answers: parseJson(row.answers) } : null
   }
 
   async getAttempt(id: string, seekerId: string): Promise<QuestionnaireAttempt | null> {

@@ -8,6 +8,7 @@ import BarreLateraleCandidat from '@/features/profil/components/BarreLateraleCan
 import ProfileService from '@/services/ProfileService';
 import VideoService from '@/services/VideoService';
 import BadgeCertification from '@/shared/ui/BadgeCertification.vue';
+import { urlMedia } from '@/shared/media';
 import LecteurYouTube from '@/shared/ui/LecteurYouTube.vue';
 import { estCertifie, niveauBadge } from '@/shared/certification';
 import { photoValidee, urlPhotoProfil } from '@/shared/photoProfil';
@@ -19,6 +20,8 @@ const authStore = useAuthStore();
 
 const profil = ref<Profile | null>(null);
 const idVideo = ref<string | null>(null);
+// Kept aside: a non-YouTube link still has to be playable here.
+const urlVideo = ref<string | null>(null);
 const profilVideoEnLigne = ref(false);
 const competences = ref<string[]>([]);
 const chargement = ref(false);
@@ -45,7 +48,10 @@ const details = computed(() => {
     { libelle: 'Secteur ciblé', valeur: source.targetSector },
     { libelle: 'Type de contrat', valeur: source.employmentType },
     { libelle: 'Modalité de travail', valeur: source.workMode },
-    { libelle: "Années d'expérience", valeur: source.experienceYears === null ? null : String(source.experienceYears) + ' ans' },
+    {
+      libelle: "Années d'expérience",
+      valeur: source.experienceYears === null ? null : String(source.experienceYears) + ' ans',
+    },
     { libelle: 'Email', valeur: source.mail },
     { libelle: 'Téléphone', valeur: source.phone },
   ].filter((detail) => detail.valeur !== null && detail.valeur !== '');
@@ -71,6 +77,7 @@ async function charger(id: string): Promise<void> {
 
     const videos = await VideoService.getVideosBySeeker(id);
     idVideo.value = videos[0] === undefined ? null : extraireIdYouTube(videos[0].url);
+    urlVideo.value = videos[0]?.url ?? null;
     profilVideoEnLigne.value = videos[0]?.status === 'approved';
   } catch (err: any) {
     erreur.value = err.message || 'Impossible de charger votre profil.';
@@ -103,9 +110,14 @@ async function charger(id: string): Promise<void> {
 
       <Message v-if="erreur" severity="error" :closable="false">{{ erreur }}</Message>
 
-      <section v-if="profilIndisponible" class="rounded-card border border-surface-line bg-surface-page p-8 text-center">
+      <section
+        v-if="profilIndisponible"
+        class="rounded-card border border-surface-line bg-surface-page p-8 text-center"
+      >
         <h1 class="text-[24px] text-brand">Profil indisponible</h1>
-        <p class="mt-3 text-[15px] text-ink-muted">Ce profil n’est plus disponible dans le catalogue.</p>
+        <p class="mt-3 text-[15px] text-ink-muted">
+          Ce profil n’est plus disponible dans le catalogue.
+        </p>
       </section>
 
       <p v-if="chargement" class="text-[15px] text-ink-muted">Chargement…</p>
@@ -140,8 +152,9 @@ async function charger(id: string): Promise<void> {
             />
           </div>
 
+          <!-- A video exists whatever its provider: not only YouTube ones. -->
           <Tag
-            v-if="idVideo !== null"
+            v-if="urlVideo !== null"
             :value="profilVideoEnLigne ? 'Vidéo en ligne' : 'Vidéo en attente de validation'"
             class="ml-auto rounded-badge bg-surface-muted px-3 py-1.5 font-heading text-[12px] font-medium text-brand"
           />
@@ -197,6 +210,13 @@ async function charger(id: string): Promise<void> {
               v-if="idVideo !== null"
               :id-you-tube="idVideo"
               titre="Ma vidéo de présentation"
+            />
+            <video
+              v-else-if="urlVideo !== null"
+              :src="urlMedia(urlVideo)"
+              controls
+              preload="metadata"
+              class="aspect-video w-full rounded-control bg-black"
             />
             <p v-else class="text-[14px] text-ink-muted">
               Aucune vidéo publiée. C'est le premier élément que regarde un recruteur.

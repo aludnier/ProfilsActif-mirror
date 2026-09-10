@@ -18,12 +18,15 @@ watch(
 </script>
 
 <template>
+  <!-- `autoplay` is delegated on purpose: the src asks for autoplay=1, and a
+       cross-origin iframe without it stays paused — the click landed on our
+       button, not inside the frame. -->
   <iframe
     v-if="ouvert"
     :src="urlIntegrationYouTube(idYouTube)"
     :title="titre ?? 'Vidéo de présentation'"
     class="aspect-video w-full rounded-media"
-    allow="accelerometer; encrypted-media; picture-in-picture; fullscreen"
+    allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
     allowfullscreen
   />
 

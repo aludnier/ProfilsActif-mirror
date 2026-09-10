@@ -41,3 +41,8 @@ export function urlIntegrationYouTube(id: string): string {
 export function urlPubliqueYouTube(id: string): string {
   return `https://www.youtube.com/watch?v=${id}`;
 }
+
+// Thumbnail served by YouTube's image CDN: no cookie, unlike the iframe.
+export function urlVignetteYouTube(id: string): string {
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+}

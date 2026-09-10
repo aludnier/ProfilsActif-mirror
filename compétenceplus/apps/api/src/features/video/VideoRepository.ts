@@ -165,4 +165,18 @@ export class VideoRepository {
       [id],
     )
   }
+
+  // Serving a file needs the row behind it: status and owner drive access.
+  async findByUrl(url: string): Promise<Video | null> {
+    const [rows] = await db.query<Video[]>(
+      `SELECT id, seeker_id AS seekerId, url, title, description, status,
+              moderated_by AS moderatedBy, moderated_at AS moderatedAt,
+              moderation_reason AS moderationReason,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM video WHERE url = ? LIMIT 1`,
+      [url],
+    )
+
+    return rows[0] ?? null
+  }
 }

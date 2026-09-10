@@ -30,6 +30,21 @@ export class VideoService {
     const { data } = await axiosInstance.get<Video[]>(`/videos/seeker/${seekerId}`)
     return data
   }
+
+  /*
+   * `Content-Type: undefined` neutralises the JSON default of the shared axios
+   * instance: without it the browser never sets the multipart boundary and the
+   * server sees no file.
+   */
+  static async uploadVideo(seekerId: string, fichier: File): Promise<Video> {
+    const corps = new FormData()
+    corps.append('video', fichier)
+    corps.append('seekerId', seekerId)
+    const { data } = await axiosInstance.post<Video>('/videos/upload', corps, {
+      headers: { 'Content-Type': undefined },
+    })
+    return data
+  }
 }
 
 export default VideoService

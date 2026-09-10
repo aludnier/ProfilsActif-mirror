@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import ProfileService from '@/services/ProfileService'
 import { ApiError } from '@/shared/api-client'
+import { urlMedia } from '@/shared/media';
 import VideoService from '@/services/VideoService'
 import FavoriteService from '@/services/FavoriteService'
 import ContactService from '@/services/ContactService'
@@ -194,7 +195,12 @@ async function load() {
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     }
   } catch (err: any) {
-    if (err instanceof ApiError && err.errorCode === 'PROFIL_RETIRE_DU_CATALOGUE') {
+    // Withdrawn and never-existed must look identical: telling them apart
+    // would confirm the person had an account.
+    if (
+      err instanceof ApiError &&
+      (err.errorCode === 'PROFIL_RETIRE_DU_CATALOGUE' || err.errorCode === 'PROFIL_NON_TROUVE')
+    ) {
       profilIndisponible.value = true
     } else {
       error.value = err.message || 'Impossible de charger ce profil.'
@@ -264,10 +270,10 @@ onMounted(() => {
 
     <div v-else-if="profilIndisponible" class="mx-auto max-w-2xl rounded-card border border-surface-line bg-surface-page p-8 text-center">
       <h1 class="text-[24px] text-brand">Profil indisponible</h1>
-      <p class="mt-3 text-[15px] text-ink-muted">Ce profil n’est plus disponible dans le catalogue.</p>
+      <p class="mt-3 text-[15px] text-ink-muted">Ce profil n’est pas disponible.</p>
     </div>
 
-    <div v-else-if="error" class="mx-auto max-w-6xl rounded-card border border-red-200 bg-red-50 p-5 text-red-700">
+    <div v-else-if="error" class="mx-auto max-w-6xl rounded-card border border-surface-line bg-surface-page p-5 text-status-error">
       {{ error }}
     </div>
 
@@ -469,7 +475,7 @@ onMounted(() => {
               :id-you-tube="extraireIdYouTube(videos[0].url)!"
               :titre="videos[0].title || 'Vidéo de présentation'"
             />
-            <video v-else :src="videos[0].url" controls preload="metadata" class="aspect-video w-full" />
+            <video v-else :src="urlMedia(videos[0].url)" controls preload="metadata" class="aspect-video w-full" />
           </div>
 
           <div v-if="editCompetences.length" class="rounded-card border border-surface-line bg-surface-page p-6">
@@ -504,7 +510,7 @@ onMounted(() => {
                   :titre="video.title || 'Vidéo de présentation'"
                   class="mt-3"
                 />
-                <video v-else :src="video.url" controls preload="metadata" class="mt-3 aspect-video w-full rounded-control bg-black" />
+                <video v-else :src="urlMedia(video.url)" controls preload="metadata" class="mt-3 aspect-video w-full rounded-control bg-black" />
               </div>
             </div>
           </div>

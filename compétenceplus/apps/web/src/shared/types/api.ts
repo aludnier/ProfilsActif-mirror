@@ -64,6 +64,8 @@ export interface Profile {
   catalogVisible: boolean
   /** État de modération de la photo. `null` = aucune photo envoyée. */
   photoStatus?: 'pending' | 'approved' | 'rejected' | null
+  /** Vidéo validée du profil, `null` s'il n'y en a pas. */
+  videoUrl?: string | null
   bio: string | null
   competences?: string[]
   role: Role

@@ -27,7 +27,7 @@ const partCertifies = computed(() => {
   return Math.round((s.certifiedSeekers / s.activeSeekers) * 100);
 });
 
-type Carte = { libelle: string; valeur: number; suffixe?: string };
+type Carte = { libelle: string; valeur: number; suffixe?: string; precision?: string };
 type Groupe = { titre: string; cartes: Carte[] };
 
 const groupes = computed<Groupe[]>(() => {
@@ -45,7 +45,12 @@ const groupes = computed<Groupe[]>(() => {
     {
       titre: 'Certification',
       cartes: [
-        { libelle: 'Candidats certifiés', valeur: s.certifiedSeekers, suffixe: `${partCertifies.value} %` },
+        {
+          libelle: 'Candidats certifiés',
+          valeur: s.certifiedSeekers,
+          // A share is not a unit: as a suffix it read « 27 68 % ».
+          precision: `${partCertifies.value} % des candidats actifs`,
+        },
         { libelle: 'Score moyen', valeur: s.avgCertificationRate, suffixe: '%' },
         { libelle: 'Passations soumises', valeur: s.submittedAttempts },
       ],
@@ -114,10 +119,13 @@ onMounted(charger);
             >
               <p class="text-[13px] text-ink-muted">{{ carte.libelle }}</p>
               <p class="mt-1 font-heading text-[30px] font-bold text-brand">
-                {{ carte.valeur }}<span
-                  v-if="carte.suffixe"
-                  class="ml-1 text-[15px] font-medium text-ink-muted"
-                >{{ carte.suffixe }}</span>
+                {{ carte.valeur
+                }}<span v-if="carte.suffixe" class="ml-1 text-[15px] font-medium text-ink-muted">{{
+                  carte.suffixe
+                }}</span>
+              </p>
+              <p v-if="carte.precision" class="mt-1 text-[13px] text-ink-muted">
+                {{ carte.precision }}
               </p>
             </article>
           </div>
