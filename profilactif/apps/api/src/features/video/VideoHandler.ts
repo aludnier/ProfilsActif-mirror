@@ -3,6 +3,11 @@ import type { AuthVariables } from '../../infrastructure/auth.middleware.js'
 import { Interdit, ValidationInvalide } from '../../shared/errors.js'
 import { VideoService } from './VideoService.js'
 import {createVideoSchema, updateVideoSchema} from './VideoSchema.js'
+import {
+  detecterFormatVideo,
+  enregistrerVideo,
+  TAILLE_MAX_VIDEO,
+} from '../../infrastructure/videoStorage.js'
 
 const videoService = new VideoService()
 
@@ -107,3 +112,49 @@ export async function deleteVideoHandler(c: Context) {
 
   return c.body(null, 204)
 }
+
+/*
+ * Uploading a video file. The row keeps a relative URL (`/media/videos/…`) so
+ * the database never hardcodes a hostname; the front prefixes it.
+ */
+export async function uploadVideoHandler(c: Context) {
+  const body = await c.req.parseBody()
+  const fichier = body['video']
+  const seekerId = String(body['seekerId'] ?? '')
+
+  const user = c.get('user') as AuthVariables['user']
+  if (user.role !== 'admin' && user.id !== seekerId) {
+    throw new Interdit()
+  }
+
+  if (!(fichier instanceof File)) {
+    throw new ValidationInvalide('Aucun fichier reçu (champ « video »)', 'VIDEO_ABSENTE')
+  }
+
+  if (fichier.size > TAILLE_MAX_VIDEO) {
+    throw new ValidationInvalide('Vidéo trop lourde : 100 Mo maximum', 'VIDEO_TROP_LOURDE')
+  }
+
+  const octets = Buffer.from(await fichier.arrayBuffer())
+  const format = detecterFormatVideo(octets)
+
+  if (format === null) {
+    throw new ValidationInvalide(
+      'Format non reconnu : seuls MP4 et WebM sont acceptés',
+      'VIDEO_FORMAT_INVALIDE',
+    )
+  }
+
+  const nom = await enregistrerVideo(octets, format)
+
+  return c.json(
+    await videoService.createVideo({
+      seekerId,
+      url: `/media/videos/${nom}`,
+      title: typeof body['title'] === 'string' ? body['title'] : null,
+      description: null,
+    }),
+    201,
+  )
+}
+

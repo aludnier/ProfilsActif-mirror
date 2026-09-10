@@ -1,7 +1,9 @@
 import { Hono } from 'hono'
 import { requireAuth } from '../../infrastructure/auth.middleware.js'
+import { bodyLimit } from 'hono/body-limit'
 import {createVideoHandler, deleteVideoHandler, getVideoHandler, getVideosBySeekerHandler,
-    updateVideoHandler} from './VideoHandler.js'
+    updateVideoHandler, uploadVideoHandler} from './VideoHandler.js'
+import { TAILLE_MAX_VIDEO } from '../../infrastructure/videoStorage.js'
 
 export const videoRoutes = new Hono()
 videoRoutes.use('*', requireAuth)
@@ -103,3 +105,31 @@ videoRoutes.patch('/:id', updateVideoHandler)
  *         description: Vidéo supprimée
  */
 videoRoutes.delete('/:id', deleteVideoHandler)
+
+/**
+ * @openapi
+ * /videos/upload:
+ *   post:
+ *     tags: [Videos]
+ *     summary: Envoie un fichier vidéo (multipart, champ « video »)
+ *     security:
+ *       - Bearer: []
+ *     responses:
+ *       201:
+ *         description: Vidéo enregistrée, en attente de validation
+ *       413:
+ *         description: Fichier trop lourd (100 Mo maximum)
+ *       422:
+ *         description: Format non reconnu
+ */
+videoRoutes.post(
+  '/upload',
+  // Refuses the body before reading it: no 500 MB buffered just to be rejected.
+  bodyLimit({
+    maxSize: TAILLE_MAX_VIDEO,
+    onError: (c) =>
+      c.json({ code: 'VIDEO_TROP_LOURDE', message: 'Vidéo trop lourde : 100 Mo maximum' }, 413),
+  }),
+  uploadVideoHandler,
+)
+
