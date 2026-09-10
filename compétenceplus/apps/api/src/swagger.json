@@ -1,0 +1,13 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version" : "1.0.0",
+        "title": "compétenceplus Swagger title",
+        "description": "description ...",
+        "license": {
+            "name": "MIT",
+            "url": "https://opensourcer.org/license/MIT"
+        }
+
+    }
+}
