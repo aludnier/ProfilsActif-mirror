@@ -1,5 +1,4 @@
 # Compétences+ — Architecture
-
 > Réf. cahier des charges : JEB/DNI/2026-003
 > Ce document explique **pourquoi** le code est organisé comme il l'est. Pour lancer le projet, voir le README racine.
 
@@ -176,7 +175,6 @@ Le principe appliqué dans les deux sens : **un port là où il y a deux implém
 ## 9. Ce qui est volontairement hors périmètre
 
 Conformément au point 5 du cahier des charges, Compétences+ est un **outil de valorisation des compétences, pas un réseau social**. Il n'y a donc ni likes, ni partages, ni fil d'actualité, ni système de recommandation. Les seules interactions modélisées sont celles qui mènent à une mise en relation professionnelle : la vue, le favori et la prise de contact.
-
 ## Retrait du catalogue et consultations
 
 Un candidat peut retirer puis remettre son profil dans le catalogue depuis son espace, sans supprimer son compte. Le retrait masque le profil des listes publiques, recherches, favoris et profils consultés du recruteur ; un lien direct affiche uniquement « Profil indisponible ».
