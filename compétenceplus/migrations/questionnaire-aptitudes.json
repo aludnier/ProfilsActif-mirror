@@ -1,0 +1,795 @@
+{
+  "code": "aptitudes-pro-v1",
+  "title": "Certification Aptitudes professionnelles",
+  "content": {
+    "config": {
+      "passThreshold": 50,
+      "minCategoryScore": 0,
+      "retakeDelayDays": 0,
+      "badgeBands": [
+        { "min": 85, "level": "avancée" },
+        { "min": 70, "level": "intermédiaire" },
+        { "min": 50, "level": "initiale" }
+      ]
+    },
+    "categories": [
+      {
+        "code": "COMPR",
+        "label": "Compréhension des consignes",
+        "weight": 20
+      },
+      {
+        "code": "AUTO",
+        "label": "Autonomie et résolution de problèmes",
+        "weight": 20
+      },
+      {
+        "code": "FIAB",
+        "label": "Fiabilité et respect des délais",
+        "weight": 20
+      },
+      {
+        "code": "ADAPT",
+        "label": "Adaptabilité et apprentissage",
+        "weight": 20
+      },
+      {
+        "code": "PRO",
+        "label": "Posture professionnelle",
+        "weight": 20
+      }
+    ],
+    "questions": [
+      {
+        "id": "q01",
+        "category": "COMPR",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Lorsque vous recevez une mission ou une consigne, à quel point vous assurez-vous d’avoir compris ce qui est attendu avant de commencer ?",
+        "options": [
+          {
+            "id": "1",
+            "label": "1",
+            "points": 1
+          },
+          {
+            "id": "2",
+            "label": "2",
+            "points": 2
+          },
+          {
+            "id": "3",
+            "label": "3",
+            "points": 3
+          },
+          {
+            "id": "4",
+            "label": "4",
+            "points": 4
+          },
+          {
+            "id": "5",
+            "label": "5",
+            "points": 5
+          },
+          {
+            "id": "6",
+            "label": "6",
+            "points": 6
+          },
+          {
+            "id": "7",
+            "label": "7",
+            "points": 7
+          },
+          {
+            "id": "8",
+            "label": "8",
+            "points": 8
+          },
+          {
+            "id": "9",
+            "label": "9",
+            "points": 9
+          },
+          {
+            "id": "10",
+            "label": "10",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "id": "q02",
+        "category": "AUTO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Vous est-il déjà arrivé de rencontrer une difficulté sur une tâche sans savoir immédiatement comment la résoudre ?",
+        "options": [
+          {
+            "id": "oui",
+            "label": "Oui",
+            "points": 10
+          },
+          {
+            "id": "non",
+            "label": "Non",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q03",
+        "category": "AUTO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Face à une difficulté que vous ne pouvez pas résoudre seul, que faites-vous en premier ?",
+        "options": [
+          {
+            "id": "opt-1",
+            "label": "Je cherche une solution seul",
+            "points": 10
+          },
+          {
+            "id": "opt-2",
+            "label": "Je demande de l’aide",
+            "points": 7
+          },
+          {
+            "id": "opt-3",
+            "label": "Je signale le problème sans chercher de solution",
+            "points": 3
+          },
+          {
+            "id": "opt-4",
+            "label": "J’attends qu’on me donne une solution",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q04",
+        "category": "FIAB",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "À quel point respectez-vous les délais qui vous sont fixés ?",
+        "options": [
+          {
+            "id": "1",
+            "label": "1",
+            "points": 1
+          },
+          {
+            "id": "2",
+            "label": "2",
+            "points": 2
+          },
+          {
+            "id": "3",
+            "label": "3",
+            "points": 3
+          },
+          {
+            "id": "4",
+            "label": "4",
+            "points": 4
+          },
+          {
+            "id": "5",
+            "label": "5",
+            "points": 5
+          },
+          {
+            "id": "6",
+            "label": "6",
+            "points": 6
+          },
+          {
+            "id": "7",
+            "label": "7",
+            "points": 7
+          },
+          {
+            "id": "8",
+            "label": "8",
+            "points": 8
+          },
+          {
+            "id": "9",
+            "label": "9",
+            "points": 9
+          },
+          {
+            "id": "10",
+            "label": "10",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "id": "q05",
+        "category": "FIAB",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Si vous comprenez qu’un délai ne pourra pas être respecté, prévenez-vous la personne concernée avant l’échéance ?",
+        "options": [
+          {
+            "id": "oui",
+            "label": "Oui",
+            "points": 10
+          },
+          {
+            "id": "non",
+            "label": "Non",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q06",
+        "category": "PRO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Lorsqu’on vous fait une remarque ou vous signale une erreur, comment réagissez-vous généralement ?",
+        "options": [
+          {
+            "id": "opt-1",
+            "label": "Je cherche à comprendre et à corriger",
+            "points": 10
+          },
+          {
+            "id": "opt-2",
+            "label": "Je demande des explications",
+            "points": 7
+          },
+          {
+            "id": "opt-3",
+            "label": "Je me justifie d’abord",
+            "points": 3
+          },
+          {
+            "id": "opt-4",
+            "label": "Je préfère ne pas répondre",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q07",
+        "category": "ADAPT",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "À quel point êtes-vous à l’aise avec le fait de recevoir des instructions différentes de vos habitudes de travail ?",
+        "options": [
+          {
+            "id": "1",
+            "label": "1",
+            "points": 1
+          },
+          {
+            "id": "2",
+            "label": "2",
+            "points": 2
+          },
+          {
+            "id": "3",
+            "label": "3",
+            "points": 3
+          },
+          {
+            "id": "4",
+            "label": "4",
+            "points": 4
+          },
+          {
+            "id": "5",
+            "label": "5",
+            "points": 5
+          },
+          {
+            "id": "6",
+            "label": "6",
+            "points": 6
+          },
+          {
+            "id": "7",
+            "label": "7",
+            "points": 7
+          },
+          {
+            "id": "8",
+            "label": "8",
+            "points": 8
+          },
+          {
+            "id": "9",
+            "label": "9",
+            "points": 9
+          },
+          {
+            "id": "10",
+            "label": "10",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "id": "q08",
+        "category": "PRO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Lorsque vous commettez une erreur dans votre travail, la signalez-vous à la personne concernée ?",
+        "options": [
+          {
+            "id": "oui",
+            "label": "Oui",
+            "points": 10
+          },
+          {
+            "id": "non",
+            "label": "Non",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q09",
+        "category": "PRO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Parmi ces comportements, lequel décrit le mieux votre façon de travailler en équipe ?",
+        "options": [
+          {
+            "id": "opt-1",
+            "label": "Je partage les informations utiles",
+            "points": 10
+          },
+          {
+            "id": "opt-2",
+            "label": "Je demande régulièrement l’avis des autres",
+            "points": 7
+          },
+          {
+            "id": "opt-3",
+            "label": "Je privilégie mon propre travail",
+            "points": 3
+          },
+          {
+            "id": "opt-4",
+            "label": "Je préfère travailler sans solliciter l’équipe",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q10",
+        "category": "AUTO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "À quel point vous considérez-vous capable de travailler de manière autonome une fois les objectifs expliqués ?",
+        "options": [
+          {
+            "id": "1",
+            "label": "1",
+            "points": 1
+          },
+          {
+            "id": "2",
+            "label": "2",
+            "points": 2
+          },
+          {
+            "id": "3",
+            "label": "3",
+            "points": 3
+          },
+          {
+            "id": "4",
+            "label": "4",
+            "points": 4
+          },
+          {
+            "id": "5",
+            "label": "5",
+            "points": 5
+          },
+          {
+            "id": "6",
+            "label": "6",
+            "points": 6
+          },
+          {
+            "id": "7",
+            "label": "7",
+            "points": 7
+          },
+          {
+            "id": "8",
+            "label": "8",
+            "points": 8
+          },
+          {
+            "id": "9",
+            "label": "9",
+            "points": 9
+          },
+          {
+            "id": "10",
+            "label": "10",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "id": "q11",
+        "category": "COMPR",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Si deux personnes vous donnent des consignes contradictoires, que faites-vous ?",
+        "options": [
+          {
+            "id": "opt-1",
+            "label": "Je demande une clarification",
+            "points": 10
+          },
+          {
+            "id": "opt-2",
+            "label": "Je suis la dernière consigne reçue",
+            "points": 4
+          },
+          {
+            "id": "opt-3",
+            "label": "Je choisis celle qui me paraît la meilleure",
+            "points": 3
+          },
+          {
+            "id": "opt-4",
+            "label": "Je poursuis mon travail sans rien signaler",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q12",
+        "category": "ADAPT",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Vous est-il déjà arrivé de devoir apprendre rapidement une nouvelle méthode, un nouvel outil ou une nouvelle procédure pour réaliser une tâche ?",
+        "options": [
+          {
+            "id": "oui",
+            "label": "Oui",
+            "points": 10
+          },
+          {
+            "id": "non",
+            "label": "Non",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q13",
+        "category": "ADAPT",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "À quel point êtes-vous à l’aise avec l’apprentissage de nouvelles compétences dans le cadre professionnel ?",
+        "options": [
+          {
+            "id": "1",
+            "label": "1",
+            "points": 1
+          },
+          {
+            "id": "2",
+            "label": "2",
+            "points": 2
+          },
+          {
+            "id": "3",
+            "label": "3",
+            "points": 3
+          },
+          {
+            "id": "4",
+            "label": "4",
+            "points": 4
+          },
+          {
+            "id": "5",
+            "label": "5",
+            "points": 5
+          },
+          {
+            "id": "6",
+            "label": "6",
+            "points": 6
+          },
+          {
+            "id": "7",
+            "label": "7",
+            "points": 7
+          },
+          {
+            "id": "8",
+            "label": "8",
+            "points": 8
+          },
+          {
+            "id": "9",
+            "label": "9",
+            "points": 9
+          },
+          {
+            "id": "10",
+            "label": "10",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "id": "q14",
+        "category": "AUTO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Lorsque vous ne connaissez pas la réponse à une question professionnelle, que faites-vous ?",
+        "options": [
+          {
+            "id": "opt-1",
+            "label": "Je dis que je ne sais pas et cherche l’information",
+            "points": 10
+          },
+          {
+            "id": "opt-2",
+            "label": "Je demande immédiatement à quelqu’un d’autre",
+            "points": 6
+          },
+          {
+            "id": "opt-3",
+            "label": "Je donne la réponse qui me semble probable",
+            "points": 2
+          },
+          {
+            "id": "opt-4",
+            "label": "J’évite de répondre",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q15",
+        "category": "PRO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Respectez-vous les règles et procédures qui vous sont communiquées, même lorsque vous n’êtes pas d’accord avec celles-ci ?",
+        "options": [
+          {
+            "id": "oui",
+            "label": "Oui",
+            "points": 10
+          },
+          {
+            "id": "non",
+            "label": "Non",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q16",
+        "category": "FIAB",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "À quel point faites-vous attention à la qualité de votre travail avant de le considérer comme terminé ?",
+        "options": [
+          {
+            "id": "1",
+            "label": "1",
+            "points": 1
+          },
+          {
+            "id": "2",
+            "label": "2",
+            "points": 2
+          },
+          {
+            "id": "3",
+            "label": "3",
+            "points": 3
+          },
+          {
+            "id": "4",
+            "label": "4",
+            "points": 4
+          },
+          {
+            "id": "5",
+            "label": "5",
+            "points": 5
+          },
+          {
+            "id": "6",
+            "label": "6",
+            "points": 6
+          },
+          {
+            "id": "7",
+            "label": "7",
+            "points": 7
+          },
+          {
+            "id": "8",
+            "label": "8",
+            "points": 8
+          },
+          {
+            "id": "9",
+            "label": "9",
+            "points": 9
+          },
+          {
+            "id": "10",
+            "label": "10",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "id": "q17",
+        "category": "ADAPT",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Si une tâche vous paraît inutile ou inefficace, que faites-vous en priorité ?",
+        "options": [
+          {
+            "id": "opt-1",
+            "label": "Je la réalise puis propose une amélioration",
+            "points": 10
+          },
+          {
+            "id": "opt-2",
+            "label": "Je demande pourquoi elle est nécessaire",
+            "points": 7
+          },
+          {
+            "id": "opt-3",
+            "label": "Je la réalise sans rien dire",
+            "points": 4
+          },
+          {
+            "id": "opt-4",
+            "label": "Je ne la réalise pas",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q18",
+        "category": "PRO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Lorsque votre activité implique des informations confidentielles ou sensibles, savez-vous identifier ce qui ne doit pas être partagé ?",
+        "options": [
+          {
+            "id": "oui",
+            "label": "Oui",
+            "points": 10
+          },
+          {
+            "id": "non",
+            "label": "Non",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "id": "q19",
+        "category": "PRO",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "À quel point vous sentez-vous capable de rester professionnel face à une situation stressante ou conflictuelle ?",
+        "options": [
+          {
+            "id": "1",
+            "label": "1",
+            "points": 1
+          },
+          {
+            "id": "2",
+            "label": "2",
+            "points": 2
+          },
+          {
+            "id": "3",
+            "label": "3",
+            "points": 3
+          },
+          {
+            "id": "4",
+            "label": "4",
+            "points": 4
+          },
+          {
+            "id": "5",
+            "label": "5",
+            "points": 5
+          },
+          {
+            "id": "6",
+            "label": "6",
+            "points": 6
+          },
+          {
+            "id": "7",
+            "label": "7",
+            "points": 7
+          },
+          {
+            "id": "8",
+            "label": "8",
+            "points": 8
+          },
+          {
+            "id": "9",
+            "label": "9",
+            "points": 9
+          },
+          {
+            "id": "10",
+            "label": "10",
+            "points": 10
+          }
+        ]
+      },
+      {
+        "id": "q20",
+        "category": "COMPR",
+        "weight": 1,
+        "type": "single",
+        "scoring": "graded",
+        "prompt": "Lorsqu’un objectif vous est donné sans que toutes les étapes soient définies, quelle est votre réaction ?",
+        "options": [
+          {
+            "id": "opt-1",
+            "label": "Je clarifie les points importants puis je propose une manière d’avancer",
+            "points": 10
+          },
+          {
+            "id": "opt-2",
+            "label": "Je commence immédiatement sans poser de question",
+            "points": 4
+          },
+          {
+            "id": "opt-3",
+            "label": "J’attends des instructions détaillées",
+            "points": 2
+          },
+          {
+            "id": "opt-4",
+            "label": "Je considère que ce n’est pas réalisable",
+            "points": 0
+          }
+        ]
+      }
+    ]
+  }
+}
