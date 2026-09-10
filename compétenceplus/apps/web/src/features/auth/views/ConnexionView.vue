@@ -47,7 +47,7 @@ async function seConnecter(): Promise<void> {
       @submit.prevent="seConnecter"
     >
       <h1 class="text-[24px]">Connexion</h1>
-      <p class="mt-2 text-[15px] text-ink-muted">Accédez à votre espace Compétence+.</p>
+      <p class="mt-2 text-[15px] text-ink-muted">Accédez à votre espace Compétences+.</p>
 
       <Message v-if="erreur" severity="error" :closable="false" class="mt-6">
         {{ erreur }}

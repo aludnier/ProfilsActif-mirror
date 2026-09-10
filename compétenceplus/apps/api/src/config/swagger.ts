@@ -9,9 +9,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Compétence+ API',
+      title: 'Compétences+ API',
       version: '1.0.0',
-      description: 'Documentation de l\'API Compétence+.',
+      description: 'Documentation de l\'API Compétences+.',
     },
     servers: [{ url: 'http://localhost:3000' }],
     components: {
@@ -31,5 +31,5 @@ export const swaggerSpec = swaggerJSDoc(options)
 
 export const swaggerUi = swaggerUI({
   url: '/api-docs/openapi.json',
-  title: 'Compétence+ API Docs',
+  title: 'Compétences+ API Docs',
 })

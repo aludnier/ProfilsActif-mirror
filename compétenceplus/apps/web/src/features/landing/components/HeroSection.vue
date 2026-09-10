@@ -49,7 +49,7 @@ const actionPrincipale = computed(() => {
       </div>
 
       <p class="text-[18px] leading-[1.6]">
-        Compétence+ humanise la mise en relation entre candidats et recruteurs au sein de
+        Compétences+ humanise la mise en relation entre candidats et recruteurs au sein de
         l'écosystème de l'emploi français. Les candidats s'expriment en 90 secondes sur leur
         parcours, au-delà du CV papier.
       </p>

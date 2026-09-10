@@ -112,11 +112,11 @@ onBeforeUnmount(() => {
         <router-link
           :to="{ name: 'home' }"
           :aria-current="route.name === 'home' ? 'page' : undefined"
-          aria-label="Compétence+, retour à l'accueil"
+          aria-label="Compétences+, retour à l'accueil"
           class="-mx-2 flex items-center gap-4 rounded-control px-2 py-1 hover:bg-surface-subtle"
         >
           <span class="font-heading text-[18px] font-bold tracking-[-0.5px] text-brand">
-            Compétence+
+            Compétences+
           </span>
         </router-link>
       </template>
