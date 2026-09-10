@@ -16,7 +16,7 @@ export async function getProfilsPageHandler(c: Context) {
     limit: Math.min(20, Math.max(1, Number(query.limit ?? 20) || 20)),
     secteur: query.secteur?.trim() || undefined,
     localisation: query.localisation?.trim() || undefined,
-    competence: query.competence?.trim() || undefined,
+    competences: split(query.competences),
     niveau: query.niveau?.trim() || undefined,
     types: split(query.types),
     modalites: split(query.modalites),
@@ -124,10 +124,9 @@ export async function updateCompetencesHandler(c: Context<{ Variables: AuthVaria
   if (!id) throw new ValidationInvalide('Identifiant de profil invalide', 'PROFIL_ID_INVALIDE')
   if (
     currentUser.role !== 'admin' &&
-    currentUser.role !== 'recruiter' &&
     currentUser.id !== id
   ) {
-    throw new Interdit('Vous ne pouvez modifier que vos propres compétences', 'MODIFICATION_COMPETENCES_INTERDITE')
+    throw new Interdit('Vous ne pouvez modifier que vos propres compétences ou être administrateur', 'MODIFICATION_COMPETENCES_INTERDITE')
   }
   const result = updateCompetencesSchema.safeParse(await c.req.json())
   if (!result.success) throw new ValidationInvalide('Compétences invalides', 'COMPETENCES_INVALIDES')

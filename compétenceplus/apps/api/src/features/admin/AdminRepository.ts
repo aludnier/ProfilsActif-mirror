@@ -178,14 +178,29 @@ export class AdminRepository {
     id: string,
     data: UpdateUserStatusInput,
   ): Promise<void> {
-    await db.execute(
-      `
-      UPDATE app_user
-      SET status = ?
-      WHERE uuid = ?
-      `,
-      [data.status, id],
-    )
+    const connection = await db.getConnection()
+    try {
+      await connection.beginTransaction()
+      await connection.execute(
+        `UPDATE app_user SET status = ? WHERE uuid = ?`,
+        [data.status, id],
+      )
+
+      // Un compte suspendu ne doit plus apparaître dans le catalogue.
+      if (data.status === 'suspended') {
+        await connection.execute(
+          `UPDATE seeker SET catalog_visible = 0 WHERE id = ?`,
+          [id],
+        )
+      }
+
+      await connection.commit()
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
   }
 
   async updateUserRole(id: string, data: UpdateUserRoleInput): Promise<void> {

@@ -13,21 +13,21 @@ import { photoValidee, urlPhotoProfil } from '@/shared/photoProfil';
 import type { Profile } from '@/shared/types/api';
 import type { ProfilResume } from '@/shared/ui/CarteProfil.vue';
 
-const TAILLE_PAGE = 20;
-const profiles = ref<Profile[]>([]);
-const totalProfils = ref(0);
-const pageActuelle = ref(1);
-const loading = ref(true);
-const error = ref('');
-const niveau = ref('all');
-const types = ref<string[]>([]);
-const modalites = ref<string[]>([]);
-const secteur = ref('');
-const localisation = ref('');
-const competence = ref('');
-const contratDu = ref('');
-const contratAu = ref('');
-const certification = ref('');
+const TAILLE_PAGE = 20
+const profiles = ref<Profile[]>([])
+const totalProfils = ref(0)
+const pageActuelle = ref(1)
+const loading = ref(true)
+const error = ref('')
+const niveau = ref('all')
+const types = ref<string[]>([])
+const modalites = ref<string[]>([])
+const secteur = ref('')
+const localisation = ref('')
+const competences = ref<string[]>([])
+const contratDu = ref('')
+const contratAu = ref('')
+const certification = ref('')
 
 const niveauLabels: Record<string, string> = {
   junior: 'Junior (0 - 2 ans)',
@@ -47,32 +47,28 @@ const modaliteLabels: Record<string, string> = {
   remote: 'Teletravail',
 };
 
-const profils = computed<ProfilResume[]>(() =>
-  profiles.value.map((profile) => ({
-    nom: profile.firstName + ' ' + profile.lastName,
-    intitule: profile.targetSector || 'Candidat disponible',
-    ville: profile.location || 'Localisation non renseignee',
-    typeContrat: contratLabels[profile.employmentType ?? ''] || 'Contrat a definir',
-    modalite: modaliteLabels[profile.workMode ?? ''] || 'Modalite a definir',
-    experience:
-      profile.experienceYears !== null && profile.experienceYears !== undefined
-        ? Number(profile.experienceYears).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) +
-          ' ans d experience'
-        : 'Experience non renseignee',
-    competences: profile.competences ?? [],
-    dureeVideo: 'Video disponible',
-    certifie: estCertifie(profile.certificationRate),
-    videoUrl: profile.videoUrl,
-    miniature: photoValidee(profile.photoStatus) ? urlPhotoProfil(profile.id) : heroStudio,
-    to: { name: 'recruiter-candidate-profile', params: { id: profile.id } },
-  })),
-);
+const profils = computed<ProfilResume[]>(() => profiles.value.map((profile) => ({
+  id: profile.id,
+  nom: profile.firstName + ' ' + profile.lastName,
+  intitule: profile.targetSector || 'Candidat disponible',
+  ville: profile.location || 'Localisation non renseignee',
+  typeContrat: contratLabels[profile.employmentType ?? ''] || 'Contrat a definir',
+  modalite: modaliteLabels[profile.workMode ?? ''] || 'Modalite a definir',
+  experience: profile.experienceYears !== null && profile.experienceYears !== undefined
+    ? Number(profile.experienceYears).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' ans d experience'
+    : 'Experience non renseignee',
+  competences: profile.competences ?? [],
+  dureeVideo: profile.hasVideo ? 'Vidéo disponible' : 'Vidéo non disponible',
+  certifie: estCertifie(profile.certificationRate),
+  miniature: photoValidee(profile.photoStatus) ? urlPhotoProfil(profile.id) : heroStudio,
+  to: { name: 'recruiter-candidate-profile', params: { id: profile.id } },
+})))
 
 const filtresActifs = computed(() => [
   ...(niveau.value !== 'all' ? [niveauLabels[niveau.value]] : []),
   ...types.value.map((value) => typeLabels[value]),
   ...modalites.value.map((value) => modaliteLabels[value]),
-  ...(competence.value.trim() ? ['Compétence : ' + competence.value.trim()] : []),
+  ...competences.value.map((competence) => 'Compétence : ' + competence),
   ...(secteur.value.trim() ? ['Secteur : ' + secteur.value.trim()] : []),
   ...(localisation.value.trim() ? ['Localisation : ' + localisation.value.trim()] : []),
   ...(certification.value === 'certifiee' ? ['Certifiée'] : []),
@@ -93,7 +89,7 @@ async function chargerProfils(page = 1) {
       modalites: modalites.value,
       secteur: secteur.value.trim(),
       localisation: localisation.value.trim(),
-      competence: competence.value.trim(),
+      competences: competences.value,
       contratDu: contratDu.value,
       contratAu: contratAu.value,
       certification: certification.value,
@@ -109,15 +105,15 @@ async function chargerProfils(page = 1) {
 }
 
 function retirerFiltre(filtre: string) {
-  if (niveauLabels[niveau.value] === filtre) niveau.value = 'all';
-  types.value = types.value.filter((value) => typeLabels[value] !== filtre);
-  modalites.value = modalites.value.filter((value) => modaliteLabels[value] !== filtre);
-  if (filtre === 'Compétence : ' + competence.value.trim()) competence.value = '';
-  if (filtre === 'Secteur : ' + secteur.value.trim()) secteur.value = '';
-  if (filtre === 'Localisation : ' + localisation.value.trim()) localisation.value = '';
-  if (filtre === 'Certifiée' || filtre === 'Non certifiée') certification.value = '';
-  if (filtre === 'Contrat du : ' + contratDu.value) contratDu.value = '';
-  if (filtre === 'Contrat au : ' + contratAu.value) contratAu.value = '';
+  if (niveauLabels[niveau.value] === filtre) niveau.value = 'all'
+  types.value = types.value.filter((value) => typeLabels[value] !== filtre)
+  modalites.value = modalites.value.filter((value) => modaliteLabels[value] !== filtre)
+  if (filtre.startsWith('Compétence : ')) competences.value = competences.value.filter((competence) => 'Compétence : ' + competence !== filtre)
+  if (filtre === 'Secteur : ' + secteur.value.trim()) secteur.value = ''
+  if (filtre === 'Localisation : ' + localisation.value.trim()) localisation.value = ''
+  if (filtre === 'Certifiée' || filtre === 'Non certifiée') certification.value = ''
+  if (filtre === 'Contrat du : ' + contratDu.value) contratDu.value = ''
+  if (filtre === 'Contrat au : ' + contratAu.value) contratAu.value = ''
 }
 
 function changerPage(event: { page: number }) {

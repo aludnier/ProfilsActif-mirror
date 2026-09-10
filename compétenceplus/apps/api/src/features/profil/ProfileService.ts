@@ -15,7 +15,7 @@ export class ProfileService {constructor(private readonly profilRepository = new
     limit: number
     secteur?: string
     localisation?: string
-    competence?: string
+    competences?: string[]
     niveau?: string
     types?: string[]
     modalites?: string[]

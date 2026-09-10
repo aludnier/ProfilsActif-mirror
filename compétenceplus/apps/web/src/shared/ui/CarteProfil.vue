@@ -6,6 +6,7 @@ import { extraireIdYouTube, urlVignetteYouTube } from '@/shared/youtube';
 import { urlMedia } from '@/shared/media';
 
 export type ProfilResume = {
+  id?: string;
   nom: string;
   intitule: string;
   ville: string;

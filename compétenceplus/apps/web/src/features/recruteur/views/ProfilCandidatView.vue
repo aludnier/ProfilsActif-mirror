@@ -311,7 +311,7 @@ onMounted(() => {
             @click="ouvrirEdition"
           />
           <Button
-            v-if="canContact"
+            v-if="isAdmin"
             label="Modifier les compétences"
             severity="secondary"
             outlined
@@ -338,7 +338,7 @@ onMounted(() => {
         </div>
       </header>
 
-      <section v-if="canContact && competenceEditMode" class="rounded-card border border-brand/30 bg-surface-page p-6">
+      <section v-if="isAdmin && competenceEditMode" class="rounded-card border border-brand/30 bg-surface-page p-6">
         <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-[19px] text-brand">Modifier les compétences</h2>

@@ -24,7 +24,7 @@ const edit = ref({
   phone: '',
   mail: '',
   role: 'seeker' as 'seeker' | 'recruiter' | 'admin',
-  status: 'active' as 'active' | 'suspended' | 'deleted',
+  status: 'active' as 'active' | 'suspended',
 });
 const loading = ref(true);
 const saving = ref(false);
@@ -44,13 +44,16 @@ const roleLabels: Record<string, string> = {
 };
 const statusLabels: Record<string, string> = {
   active: 'Actif',
-  suspended: 'Suspendu',
-  deleted: 'Supprimé',
+  suspended: 'Désactivé',
+  deleted: 'Désactivé',
 };
 
 /* Les listes déroulantes réutilisent les mêmes tables : un libellé, un seul endroit. */
 const roleOptions = Object.entries(roleLabels).map(([value, label]) => ({ value, label }));
-const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({ value, label }));
+const statusOptions = [
+  { value: 'active', label: 'Actif' },
+  { value: 'suspended', label: 'Désactiver' },
+];
 
 /* Fonds de pastille par statut, pris dans les tokens. */
 const statusClasses: Record<string, string> = {
@@ -99,7 +102,7 @@ async function chooseUser(user: PublicUser): Promise<void> {
     phone: user.phone || '',
     mail: user.mail,
     role: user.role,
-    status: user.status,
+    status: user.status === 'active' ? 'active' : 'suspended',
   };
   success.value = '';
   await nextTick();

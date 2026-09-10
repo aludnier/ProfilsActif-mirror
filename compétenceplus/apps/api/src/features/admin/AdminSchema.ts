@@ -9,7 +9,8 @@ export const listUsersSchema = z.object({
 })
 
 export const updateUserStatusSchema = z.object({
-  status: z.enum(['active', 'suspended', 'deleted']),
+  // La suppression définitive passe exclusivement par DELETE /admin/users/:id.
+  status: z.enum(['active', 'suspended']),
 })
 
 export const updateUserRoleSchema = z.object({
