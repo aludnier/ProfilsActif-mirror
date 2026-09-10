@@ -10,6 +10,7 @@ import { skillRoutes } from './features/skill/SkillRoutes.js'
 import { recruiterRoutes } from './features/recruiter/RecruiterRoutes.js'
 import { profilRoutes } from './features/profil/ProfilRoutes.js'
 import { videoRoutes } from './features/video/VideoRoutes.js'
+import { videoFileRoutes } from './features/video/VideoFileRoutes.js'
 import { contactRoutes } from './features/contact/ContactRoutes.js'
 import { certificationRoutes } from './features/certification/CertificationRoutes.js'
 import { adminRoutes } from './features/admin/AdminRoutes.js'
@@ -44,6 +45,8 @@ app.route('/recruiters', recruiterRoutes)
 app.route('/profiles', profilRoutes)
 app.route('/favorites', favoriteRoutes)
 app.route('/videos', videoRoutes)
+// Outside `/videos`, whose whole scope needs a token a <video> tag cannot send.
+app.route('/media/videos', videoFileRoutes)
 app.route('/contacts', contactRoutes)
 app.route('/certifications', certificationRoutes)
 app.route('/admin', adminRoutes)

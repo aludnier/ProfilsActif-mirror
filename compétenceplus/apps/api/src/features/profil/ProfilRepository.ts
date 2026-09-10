@@ -25,6 +25,8 @@ export interface Profil extends RowDataPacket {
   catalogVisible: boolean
   /* `null` quand le candidat n'a jamais envoyé de photo. */
   photoStatus: 'pending' | 'approved' | 'rejected' | null
+  /* Approved video only: the grids must never preview a pending one. */
+  videoUrl: string | null
   role: 'seeker'
   status: 'active' | 'suspended' | 'deleted'
   createdAt: Date
@@ -88,7 +90,10 @@ export class ProfilRepository {
         s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio,
         s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus,
         u.role AS role, u.status AS status,
-        s.created_at AS createdAt, s.updated_at AS updatedAt
+        s.created_at AS createdAt, s.updated_at AS updatedAt,
+        (SELECT v.url FROM video v
+          WHERE v.seeker_id = s.id AND v.status = 'approved'
+          ORDER BY v.created_at DESC LIMIT 1) AS videoUrl
       FROM seeker s INNER JOIN app_user u ON u.uuid = s.id
       WHERE u.role = 'seeker' AND u.status = 'active' AND s.catalog_visible = 1
       ORDER BY s.updated_at DESC, s.id ASC
@@ -159,7 +164,7 @@ export class ProfilRepository {
     const page = Math.max(1, filters.page)
     const limit = Math.min(50, Math.max(1, filters.limit))
     const offset = (page - 1) * limit
-    const sql = 'SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName, u.mail AS mail, u.phone AS phone, u.age AS age, s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio, s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus, u.role AS role, u.status AS status, s.created_at AS createdAt, s.updated_at AS updatedAt, COALESCE((SELECT GROUP_CONCAT(page_skill.name ORDER BY page_skill.name SEPARATOR \'||\') FROM seeker_skill page_ss INNER JOIN skill page_skill ON page_skill.id = page_ss.skill_id WHERE page_ss.seeker_id = s.id), \'\') AS competencesRaw FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where + ' ORDER BY s.updated_at DESC, s.id ASC LIMIT ? OFFSET ?'
+    const sql = 'SELECT s.id AS id, u.first_name AS firstName, u.last_name AS lastName, u.mail AS mail, u.phone AS phone, u.age AS age, s.location AS location, s.target_sector AS targetSector, s.employment_type AS employmentType, s.contract_start_date AS contractStartDate, s.contract_end_date AS contractEndDate, s.work_mode AS workMode, s.experience_years AS experienceYears, s.bio AS bio, s.certification_rate AS certificationRate, s.catalog_visible AS catalogVisible, s.photo_status AS photoStatus, u.role AS role, u.status AS status, s.created_at AS createdAt, s.updated_at AS updatedAt, (SELECT v.url FROM video v WHERE v.seeker_id = s.id AND v.status = \'approved\' ORDER BY v.created_at DESC LIMIT 1) AS videoUrl, COALESCE((SELECT GROUP_CONCAT(page_skill.name ORDER BY page_skill.name SEPARATOR \'||\') FROM seeker_skill page_ss INNER JOIN skill page_skill ON page_skill.id = page_ss.skill_id WHERE page_ss.seeker_id = s.id), \'\') AS competencesRaw FROM seeker s INNER JOIN app_user u ON u.uuid = s.id ' + where + ' ORDER BY s.updated_at DESC, s.id ASC LIMIT ? OFFSET ?'
     const [rows] = await db.query<Profil[]>(sql, [...values, limit, offset])
     const data = rows.map((row) => ({
       ...row,

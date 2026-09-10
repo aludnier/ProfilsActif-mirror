@@ -14,6 +14,16 @@ const authStore = useAuthStore();
  * l'inscription n'a plus de sens : chacun repart vers son espace, et le
  * libellé suit la destination plutôt que de promettre une création de compte.
  */
+// Same target as the navbar's « Découvrir les profils » for a recruiter; a
+// visitor stays on the public feed, since the catalogue is role-guarded.
+const destinationProfils = computed(() => {
+  const role = authStore.user?.role;
+
+  return role === 'recruiter' || role === 'admin'
+    ? { name: 'recruiter-catalog' }
+    : { name: 'feed' };
+});
+
 const actionPrincipale = computed(() => {
   const compte = authStore.user;
 
@@ -54,12 +64,9 @@ const actionPrincipale = computed(() => {
           <img :src="flecheDroite" alt="" class="size-5" />
         </Button>
 
-        <!-- La grille publique, pas le catalogue recruteur : celui-ci est gardé
-             (`meta.roles`), il renvoyait le visiteur vers la connexion et le
-             candidat vers son tableau de bord. -->
         <Button
           as="router-link"
-          :to="{ name: 'feed' }"
+          :to="destinationProfils"
           class="rounded-control border-2 border-brand bg-transparent px-7 py-4 font-heading text-[16px] font-bold text-brand hover:bg-brand-50"
         >
           Les Profils

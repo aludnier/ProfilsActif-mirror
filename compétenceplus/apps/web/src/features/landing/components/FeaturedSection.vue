@@ -56,6 +56,7 @@ const resumes = computed<ProfilResume[]>(() =>
     competences: [],
     dureeVideo: 'Vidéo de présentation',
     certifie: estCertifie(profil.certificationRate),
+    videoUrl: profil.videoUrl,
     miniature: photoValidee(profil.photoStatus) ? urlPhotoProfil(profil.id) : heroStudio,
     // A visitor cannot open a sheet: the card invites them to sign up instead.
     to: peutOuvrirUneFiche.value

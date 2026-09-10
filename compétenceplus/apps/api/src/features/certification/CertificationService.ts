@@ -73,8 +73,45 @@ export class CertificationService {
 
 
   async createAttempt(data: CreateAttemptInput, seekerId: string) {
-    await this.getVersion(data.questionnaireVersionId)
+    const version = await this.getVersion(data.questionnaireVersionId)
+    await this.verifierDelaiReprise(version, seekerId)
+
     return this.repository.createAttempt(data, seekerId)
+  }
+
+  getLastSubmittedAttempt(seekerId: string) {
+    return this.repository.getLastSubmittedAttempt(seekerId)
+  }
+
+  /*
+   * `retakeDelayDays` was parsed and validated but never enforced: a candidate
+   * could retake immediately whatever the questionnaire said.
+   */
+  private async verifierDelaiReprise(
+    version: { content: unknown },
+    seekerId: string,
+  ): Promise<void> {
+    let questionnaire
+    try {
+      questionnaire = parseQuestionnaire(version.content)
+    } catch {
+      /* An unreadable version is rejected later, when scoring. */
+      return
+    }
+
+    const jours = questionnaire.config.retakeDelayDays
+    if (jours <= 0) return
+
+    const derniere = await this.repository.getLastSubmittedAttempt(seekerId)
+    if (!derniere?.submittedAt) return
+
+    const rouvertLe = new Date(derniere.submittedAt).getTime() + jours * 24 * 60 * 60 * 1000
+    if (Date.now() >= rouvertLe) return
+
+    throw new Conflit(
+      `Vous pourrez repasser le test à partir du ${new Date(rouvertLe).toLocaleDateString('fr-FR')}.`,
+      'DELAI_REPRISE_NON_ECOULE',
+    )
   }
 
   /* `null` et non une erreur : n'avoir aucune tentative en cours est le cas normal. */

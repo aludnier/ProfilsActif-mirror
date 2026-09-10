@@ -217,7 +217,10 @@ export class AdminRepository {
         (SELECT COUNT(*) FROM app_user WHERE role = 'seeker'    AND status = 'active')  AS activeSeekers,
         (SELECT COUNT(*) FROM app_user WHERE role = 'recruiter' AND status = 'active')  AS activeRecruiters,
         (SELECT COUNT(*) FROM app_user WHERE status = 'suspended')                      AS suspendedUsers,
-        (SELECT COUNT(*) FROM seeker WHERE certification_rate >= 70)                    AS certifiedSeekers,
+        -- 50 is the published questionnaire's passThreshold, the same value the
+        -- profile badges use. At 70 the admin counted fewer certified people
+        -- than the site displayed badges for.
+        (SELECT COUNT(*) FROM seeker WHERE certification_rate >= 50)                    AS certifiedSeekers,
         (SELECT CAST(COALESCE(ROUND(AVG(certification_rate)), 0) AS UNSIGNED) FROM seeker) AS avgCertificationRate,
         (SELECT COUNT(*) FROM questionnaire_attempt WHERE status = 'submitted')         AS submittedAttempts,
         (SELECT COUNT(*) FROM contact)                                                 AS totalContacts,
