@@ -127,7 +127,7 @@ watch(
     modalites,
     secteur,
     localisation,
-    competence,
+    competences,
     contratDu,
     contratAu,
     certification,
@@ -154,7 +154,7 @@ onMounted(() => void chargerProfils());
       v-model:modalites="modalites"
       v-model:secteur="secteur"
       v-model:localisation="localisation"
-      v-model:competence="competence"
+      v-model:competences="competences"
       v-model:contrat-du="contratDu"
       v-model:contrat-au="contratAu"
       v-model:certification="certification"
