@@ -411,7 +411,7 @@ ALTER TABLE video
 INSERT INTO app_user
   (uuid, first_name, last_name, mail, phone, password_hash, role, status)
 VALUES
-  (UUID(), 'superAdmin', 'Compétence+', 'superAdmin@compétencepluss.local', NULL,
+  (UUID(), 'superAdmin', 'Compétences+', 'superAdmin@compétencepluss.local', NULL,
    '$2a$10$RiQm6qc0gNmlrdMkjJ8q4.40U8ev52QXKTbC0e.ScmHVHPbtWixxu',
    'admin', 'active')
 ON DUPLICATE KEY UPDATE role = 'admin', status = 'active';

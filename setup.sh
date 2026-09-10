@@ -3,11 +3,11 @@
 set -e
 
 # ============================================================
-# Compétence+ - Development Setup Script
+# Compétences+ - Development Setup Script
 # ============================================================
 
 echo "========================================="
-echo "       Compétence+ - Setup"
+echo "       Compétences+ - Setup"
 echo "========================================="
 echo
 
@@ -226,12 +226,12 @@ echo
 echo "    npm run dev"
 echo
 
-read -rp "Start Compétence+ now? [Y/n]: " START_APP
+read -rp "Start Compétences+ now? [Y/n]: " START_APP
 
 if [[ ! "$START_APP" =~ ^[Nn]$ ]]; then
     echo
     echo "========================================="
-    echo "Starting Compétence+..."
+    echo "Starting Compétences+..."
     echo "========================================="
     echo
 

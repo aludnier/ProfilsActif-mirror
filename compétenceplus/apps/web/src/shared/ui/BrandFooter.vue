@@ -104,7 +104,7 @@ const annee = new Date().getFullYear();
   <footer class="flex flex-col items-start gap-10 bg-brand px-gutter pb-12 pt-16">
     <div class="flex w-full flex-wrap items-start justify-between gap-10">
       <div class="flex w-[400px] max-w-full flex-col gap-4">
-        <p class="font-heading text-[24px] font-bold text-on-brand">Compétence+</p>
+        <p class="font-heading text-[24px] font-bold text-on-brand">Compétences+</p>
         <p class="text-[15px] leading-[1.6] text-ink-invert">
           Le profil vidéo pour humaniser le premier contact entre candidats et recruteurs, sans
           photo de CV ni tri automatisé.
@@ -155,7 +155,7 @@ const annee = new Date().getFullYear();
       class="flex w-full flex-wrap items-start justify-between gap-4 font-heading text-[12px] text-ink-invert"
     >
       <p>
-        © {{ annee }} Compétence+. Démonstrateur technique, ne constitue pas un service public en
+        © {{ annee }} Compétences+. Démonstrateur technique, ne constitue pas un service public en
         exploitation.
       </p>
       <ul class="flex flex-wrap items-start gap-6">

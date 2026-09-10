@@ -1,6 +1,6 @@
-# Compétence+
+# Compétences+
 
-Compétence+ is a web application for job seekers and recruiters that helps them communicate and find employment opportunities.
+Compétences+ is a web application for job seekers and recruiters that helps them communicate and find employment opportunities.
 
 ## Prerequisites
 
